@@ -1,3 +1,5 @@
+from PyQt5 import QtCore
+from PyQt5.QtCore import QModelIndex
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.uic import loadUi
 from models.CFPModel import CFPModel
@@ -14,6 +16,16 @@ class CFPController(QMainWindow):
         super(CFPController, self).__init__()
         self.ui = loadUi("ui/main_window.ui", self)
 
+
+        self._model = QSqlQueryModel()
+        self._model.setQuery("SELECT * FROM cfp_gubernia")
+
+        self._model2 = QSqlQueryModel()
+        self._model2.setQuery("SELECT * FROM cfp_uezd")
+
+        self._model3 = QSqlQueryModel()
+        self._model3.setQuery("SELECT * FROM cfp_locality")
+
         self.table_view_cfp()
         self.tree_view_geo()
 
@@ -24,12 +36,16 @@ class CFPController(QMainWindow):
         self.ui.tableView_cfp.setModel(model.select())
 
     def tree_view_geo(self):
-        _model = QSqlQueryModel()
-        _model.setQuery("SELECT * FROM cfp_gubernia")
+        #_model.setHeaderData(0, Qt.Horizontal, "Name
 
-        _model2 = QSqlQueryModel()
-        _model2.setQuery("SELECT * FROM cfp_gubernia LEFT JOIN cfp_uezd ON cfp_gubernia.id = cfp_uezd.gubernia_id")
-        #_model.setHeaderData(0, Qt.Horizontal, "Name")
+        self.ui.treeView_geo.setModel(GEOModel(self._model, self._model2, (self._model, self._model2, self._model3)))
+        self.ui.treeView_geo.clicked.connect(self.test) # Note that the the signal is now a attribute of the widget.
 
-        model = GEOModel(_model2)
-        self.ui.treeView_geo.setModel(model)
+    @QtCore.pyqtSlot(QtCore.QModelIndex)
+    def test(self, index):
+        print("clicked")
+        indexItem = self._model.data(index)
+        print(index.row())
+        print(index.column())
+        parent = index.parent()
+        print(index.model().level(index))
