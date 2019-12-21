@@ -2,7 +2,7 @@ from PyQt5.Qt import Qt
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex
 
 
-class GEOItem(object):
+class SQLTreeItem(object):
     def __init__(self, data, level, parent=None):
         self._parent = parent
         self._data = data
@@ -28,55 +28,65 @@ class GEOItem(object):
         self._children.append(child)
 
     def row(self):
+        # root has not parent
         if self._parent:
             return self._parent._children.index(self)
 
         return 0
 
     def data(self, section):
-        try:
-            return self._data[section]
-        except IndexError:
-            return None
+        return self._data[section]
 
 
-class GEOModel(QAbstractItemModel):
 
-    def __init__(self, model, model2, data):
-        super(GEOModel, self).__init__()
+class SQLTreeModel(QAbstractItemModel):
+    """
+    Note theat we assumed that the first column is always the primary key,
+    and the second column is the foreign key related to the parent table
+    (except for the first, root level).
+    So these columns constitute the structure of the tree.
+    This class inherit QAbstractItemModel and therefore implement the
+    five pure virtual methods: columnCount, rowCount, index, parent and data.
+    """
+
+    def __init__(self, columns, data):
+        super(SQLTreeModel, self).__init__()
 
         self._data = data
 
-        self._root = GEOItem(("Территория", "Церковь"), 0)
+        self._columns = columns
+
+        self._root = SQLTreeItem(columns, 0)
 
         self.composeData(self._data)
 
-    def composeData(self, data, parent=None, pos=0, row=0):
+    """
+    Compose QSqlQueryModels into TreeView hierarchy.
+    Each next model is child of previous
+    """
+    def composeData(self, model, parent=None, pos=0, row=0):
         if not parent:
             parent = self._root
         i = 0
-        if len(data) > pos:
-            while i < data[pos].rowCount():
+        if pos < len(model):
+            while i < model[pos].rowCount():
                 if (pos == 0):
-                    item = GEOItem(
-                        (data[pos].data(data[pos].index(i, 1)), ""), 1, parent)
-                    self.composeData(data, item, 1, i)
+                    item = SQLTreeItem(
+                        (model[pos].data(model[pos].index(i, 1)), ""), pos, parent)
+                    self.composeData(model, item, 1, i)
                     parent.childAppend(item)
 
-                else:
-                    if data[pos].data(data[pos].index(i, 1)) == data[pos - 1].data(data[pos - 1].index(row, 0)):
-                        item = GEOItem(
-                            (data[pos].data(data[pos].index(i, 2)), ""), 1, parent)
-                        self.composeData(data, item, pos + 1, i)
-                        parent.childAppend(item)
+                elif model[pos].data(model[pos].index(i, 1)) == model[pos - 1].data(model[pos - 1].index(row, 0)):
+                    item = SQLTreeItem(
+                        (model[pos].data(model[pos].index(i, 2)), ""), pos, parent)
+                    self.composeData(model, item, pos + 1, i)
+                    parent.childAppend(item)
                 i += 1
 
     def columnCount(self, parent):
         if parent.isValid():
             return parent.internalPointer().columnCount()
         else:
-            #print("columnCount: ")
-            # print(self._root.columnCount())
             return self._root.columnCount()
 
     def rowCount(self, parent):
@@ -88,10 +98,11 @@ class GEOModel(QAbstractItemModel):
         else:
             parentItem = parent.internalPointer()
 
-        #print("child count",parentItem.childCount())
-
         return parentItem.childCount()
 
+    """
+    Returns QModelIndex to current TreeView item
+    """
     def index(self, row, column, parent):
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
@@ -100,23 +111,25 @@ class GEOModel(QAbstractItemModel):
             parentItem = self._root
         else:
             parentItem = parent.internalPointer()
-            # print("------------")
-            # print(parentItem.level())
-            # print("------------")
 
         childItem = parentItem.child(row)
-        #print("childItem: ", childItem)
+
         if childItem:
             index = self.createIndex(row, column, childItem)
-            # print("hehe")
             return index
         else:
             return QModelIndex()
 
+    """
+    Returns level of hierarchy from internalPointer(to SqlTreeItem) level
+    """
     def level(self, index):
         item = index.internalPointer()
         return item.level()
 
+    """
+    Returns data from internalPointer(to SqlTreeItem) column
+    """
     def parent(self, index):
         if not index.isValid():
             return QModelIndex()
@@ -129,6 +142,9 @@ class GEOModel(QAbstractItemModel):
 
         return self.createIndex(parentItem.row(), 0, parentItem)
 
+    """
+    Returns data from internalPointer(to Item model) column
+    """
     def data(self, index, role):
         if not index.isValid():
             return None
@@ -140,8 +156,11 @@ class GEOModel(QAbstractItemModel):
 
         return item.data(index.column())
 
+    """
+    Set column header to root node (passed to model class)
+    """
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return self._root.data(section)
+            return self._columns[section]
 
         return None

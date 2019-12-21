@@ -3,7 +3,7 @@ from PyQt5.QtCore import QModelIndex
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.uic import loadUi
 from models.CFPModel import CFPModel
-from models.GEOModel import GEOModel
+from models.SQLTreeModel import SQLTreeModel
 
 
 from PyQt5.QtSql import QSqlQueryModel
@@ -26,6 +26,9 @@ class CFPController(QMainWindow):
         self._model3 = QSqlQueryModel()
         self._model3.setQuery("SELECT * FROM cfp_locality")
 
+        self._model4 = QSqlQueryModel()
+        self._model4.setQuery("SELECT * FROM cfp_church")
+
         self.table_view_cfp()
         self.tree_view_geo()
 
@@ -38,7 +41,7 @@ class CFPController(QMainWindow):
     def tree_view_geo(self):
         #_model.setHeaderData(0, Qt.Horizontal, "Name
 
-        self.ui.treeView_geo.setModel(GEOModel(self._model, self._model2, (self._model, self._model2, self._model3)))
+        self.ui.treeView_geo.setModel(SQLTreeModel(("Территория",),(self._model, self._model2, self._model3, self._model4)))
         self.ui.treeView_geo.clicked.connect(self.test) # Note that the the signal is now a attribute of the widget.
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
