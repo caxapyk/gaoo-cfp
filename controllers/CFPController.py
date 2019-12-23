@@ -1,8 +1,8 @@
 from PyQt5 import QtCore
 from PyQt5.QtCore import QModelIndex
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QMenu
 from PyQt5.uic import loadUi
-from models.CFPModel import CFPModel
+from models import (CFPModel, GuberniaModel, UezdModel, LocalityModel, ChurchModel)
 from models.SQLTreeModel import SQLTreeModel
 
 
@@ -16,18 +16,20 @@ class CFPController(QMainWindow):
         super(CFPController, self).__init__()
         self.ui = loadUi("ui/main_window.ui", self)
 
+        self.m_gubernia = GuberniaModel()
+        self.m_uezd = UezdModel()
+        self.m_locality = LocalityModel()
+        self.m_church = ChurchModel()
 
-        self._model = QSqlQueryModel()
-        self._model.setQuery("SELECT * FROM cfp_gubernia")
+        self.tm = SQLTreeModel(("Территория",), (
+            self.m_gubernia,
+            self.m_uezd,
+            self.m_locality,
+            self.m_church
+        ))
 
-        self._model2 = QSqlQueryModel()
-        self._model2.setQuery("SELECT * FROM cfp_uezd")
+        self.index = 0;
 
-        self._model3 = QSqlQueryModel()
-        self._model3.setQuery("SELECT * FROM cfp_locality")
-
-        self._model4 = QSqlQueryModel()
-        self._model4.setQuery("SELECT * FROM cfp_church")
 
         self.table_view_cfp()
         self.tree_view_geo()
@@ -39,16 +41,20 @@ class CFPController(QMainWindow):
         self.ui.tableView_cfp.setModel(model.select())
 
     def tree_view_geo(self):
-        #_model.setHeaderData(0, Qt.Horizontal, "Name
+        self.ui.treeView_geo.setModel(self.tm)
 
-        self.ui.treeView_geo.setModel(SQLTreeModel(("Территория",),(self._model, self._model2, self._model3, self._model4)))
-        self.ui.treeView_geo.clicked.connect(self.test) # Note that the the signal is now a attribute of the widget.
+        self.ui.treeView_geo.clicked.connect(self.test)
+        self.ui.pushButton_add_ch.clicked.connect(self.insertRow)
 
     @QtCore.pyqtSlot(QtCore.QModelIndex)
     def test(self, index):
         print("clicked")
-        indexItem = self._model.data(index)
+        #indexItem = self._model.data(index)
         print(index.row())
         print(index.column())
         parent = index.parent()
         print(index.model().level(index))
+        self.index = index
+
+    def insertRow(self):
+        self.tm.insertRow( 0, self.index)
