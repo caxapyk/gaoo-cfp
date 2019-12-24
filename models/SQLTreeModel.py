@@ -35,6 +35,9 @@ class SQLTreeItem(object):
     def childAppend(self, child):
         self._children.append(child)
 
+    def childRemove(self, child):
+        self._children.remove(child)
+
     def row(self):
         # root has not parent
         if self._parent:
@@ -199,7 +202,7 @@ class SQLTreeModel(QAbstractItemModel):
 
         self._data[level].update(item.itemID(), value)
         #self.dataChanged.emit(index, index)
-        item.setData((value,)) # не нравится мне этот вариант, нужен reresh модели on dataChanged
+        item.setData((value,))
 
         #self.resetInternalData()
 
@@ -207,7 +210,31 @@ class SQLTreeModel(QAbstractItemModel):
 
     def insertRow(self, row, parent):
         self.beginInsertRows(parent, row, row)
-        parentItem = parent.internalPointer()
-        item = SQLTreeItem(("Тест", ""), 1, "100", parentItem)
-        parentItem.childAppend(item)
+
+        parent_item = parent.internalPointer()
+        child_item = parent_item.child(row)
+
+        level = child_item.level()
+
+        el_name = self._data[level].new_el_name()
+
+        m_id = self._data[level].insert(parent_item.itemID(), el_name)
+
+        if m_id:
+            item = SQLTreeItem((el_name, ""), level, m_id, parent_item)
+            parent_item.childAppend(item)
+
         self.endInsertRows()
+
+    def removeRow(self, row, parent):
+        self.beginRemoveRows(parent, row, row)
+
+        parent_item = parent.internalPointer()
+        child_item = parent_item.child(row)
+
+        level = child_item.level()
+
+        self._data[level].remove(child_item.itemID())
+        parent_item.childRemove(child_item)
+
+        self.endRemoveRows()

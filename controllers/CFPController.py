@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
-from PyQt5.QtCore import QModelIndex
-from PyQt5.QtWidgets import QMainWindow, QMenu
+from PyQt5.QtCore import QModelIndex, QItemSelection, QItemSelectionModel
+from PyQt5.QtWidgets import QMainWindow, QMenu, QMessageBox
 from PyQt5.uic import loadUi
 from models import (CFPModel, GuberniaModel, UezdModel, LocalityModel, ChurchModel)
 from models.SQLTreeModel import SQLTreeModel
@@ -28,13 +28,29 @@ class CFPController(QMainWindow):
             self.m_church
         ))
 
-        self.index = 0;
-
+        self.index = 0
 
         self.table_view_cfp()
         self.tree_view_geo()
 
         self.show()
+
+        self.ui.treeView_geo.customContextMenuRequested.connect(self.show_context_menu)
+
+        self.menu = QMenu(self)
+        insert_action = self.menu.addAction("Добавить")
+        del_action = self.menu.addAction("Удалить")
+        insert_action.triggered.connect(self.insertRow)
+        del_action.triggered.connect(self.removeRow)
+
+
+
+    def show_context_menu(self, point):
+
+        #action = self.menu.exec_(self.mapToGlobal(point.pos()))
+        #if action == quitAct:
+            #self.close()
+        self.menu.exec(self.mapToGlobal(point))
 
     def table_view_cfp(self):
         model = CFPModel()
@@ -57,4 +73,28 @@ class CFPController(QMainWindow):
         self.index = index
 
     def insertRow(self):
-        self.tm.insertRow( 0, self.index)
+        i = self.ui.treeView_geo.selectedIndexes()
+        self.tm.insertRow(i[0].internalPointer().childCount() - 1, i[0])
+        index = i[0].child(i[0].internalPointer().childCount() - 1, 0)
+        if not self.ui.treeView_geo.isExpanded(i[0]):
+            self.ui.treeView_geo.setExpanded(i[0], True)
+
+        selection = QItemSelection()
+        selection.select(index, index)
+        self.ui.treeView_geo.selectionModel().select(
+            selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear
+        )
+
+    def removeRow(self):
+        confirm = QMessageBox()
+        confirm.setText("Вы уверены что хотите удалить этот объект?")
+        confirm.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+        confirm.setDefaultButton(QMessageBox.No)
+        r = confirm.exec()
+        if r == QMessageBox.Yes:
+            i = self.ui.treeView_geo.selectedIndexes()
+            item = i[0].internalPointer()
+            print(item.itemID())
+            print("index")
+            print(i[0].row())
+            self.tm.removeRow(i[0].row(), i[0].parent())
