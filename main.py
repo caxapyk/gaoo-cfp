@@ -2,7 +2,10 @@ import sys
 from PyQt5.QtCore import QTranslator, QLocale
 from PyQt5.QtWidgets import QApplication
 import db
-from controllers.CFPController import CFPController
+
+from views.mainview import MainWindowView
+from views.geoview import GEOView
+
 
 app = QApplication(sys.argv)
 db = db.DBMySql()
@@ -13,5 +16,7 @@ translator = QTranslator()
 translator.load("qtbase_ru.ts")
 app.installTranslator(translator)
 
-main_window = CFPController()
+main_window = MainWindowView()
+geoview = GEOView(main_window)
+
 sys.exit(app.exec_())

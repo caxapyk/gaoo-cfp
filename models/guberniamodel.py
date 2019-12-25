@@ -1,9 +1,12 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtSql import QSqlQueryModel
 
+
 """
 Gubernia
 """
+
+
 class GuberniaModel(QSqlQueryModel):
 
     m_parent_id = None
@@ -17,5 +20,4 @@ class GuberniaModel(QSqlQueryModel):
     def refresh(self):
         query = "SELECT * FROM cfp_gubernia"
         self.setQuery(query)
-
 

@@ -22,7 +22,9 @@ class ChurchModel(QSqlQueryModel):
         query = "SELECT * FROM cfp_church"
 
         if self.m_parent_id:
-            query += " WHERE locality_id = ?"
+            query += " WHERE cfp_church.locality_id = ?"
+
+        query += " ORDER BY cfp_church.id"
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)
@@ -34,9 +36,12 @@ class ChurchModel(QSqlQueryModel):
 
         self.setQuery(sql_query)
 
+    def getId(self, row):
+        return self.data(self.index(row, 0))
+
     def update(self, ch_id, name):
         if ch_id and name:
-            query = "UPDATE cfp_church set name = ? WHERE id = ?"
+            query = "UPDATE cfp_church SET cfp_church.name = ? WHERE cfp_church.id = ?"
             sql_query = QSqlQuery()
             sql_query.prepare(query)
             sql_query.addBindValue(name)
@@ -45,15 +50,15 @@ class ChurchModel(QSqlQueryModel):
 
     def remove(self, ch_id):
         if ch_id:
-            query = "DELETE FROM cfp_church WHERE id = ?"
+            query = "DELETE FROM cfp_church WHERE cfp_church.id = ?"
             sql_query = QSqlQuery()
             sql_query.prepare(query)
             sql_query.addBindValue(ch_id)
             sql_query.exec_()
 
     def insert(self, locality_id, name):
-        if locality_id and locality_id:
-            query = "INSERT INTO cfp_church (name, locality_id) VALUES (?, ?)"
+        if locality_id and name:
+            query = "INSERT INTO cfp_church (cfp_church.name, cfp_church.locality_id) VALUES (?, ?)"
             sql_query = QSqlQuery()
             sql_query.prepare(query)
             sql_query.addBindValue(name)
@@ -61,12 +66,12 @@ class ChurchModel(QSqlQueryModel):
             sql_query.exec_()
 
             print(sql_query.lastError().text())
-        if sql_query.lastInsertId():
-            return sql_query.lastInsertId()
+            if sql_query.lastInsertId():
+                return sql_query.lastInsertId()
         return False
 
     def new_el_name(self):
-        query = "SELECT name FROM cfp_church WHERE cfp_church.name LIKE ? ORDER BY cfp_church.id DESC LIMIT 1"
+        query = "SELECT cfp_church.name FROM cfp_church WHERE cfp_church.name LIKE ? ORDER BY cfp_church.id DESC LIMIT 1"
 
         search_name = self.modelDisplayName + "_%"
         el_name = self.modelDisplayName + " 1"

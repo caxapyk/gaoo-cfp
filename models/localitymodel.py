@@ -32,3 +32,6 @@ class LocalityModel(QSqlQueryModel):
         sql_query.exec_()
 
         self.setQuery(sql_query)
+
+    def getId(self, row):
+        return self.data(self.index(row, 0))
