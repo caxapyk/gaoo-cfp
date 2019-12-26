@@ -8,7 +8,7 @@ Locality
 
 class LocalityModel(QSqlQueryModel):
 
-    m_parent_id = None
+    __m_parent_id = None
 
     def __init__(self):
         super(LocalityModel, self).__init__()
@@ -20,18 +20,21 @@ class LocalityModel(QSqlQueryModel):
     def refresh(self):
         query = "SELECT * FROM cfp_locality"
 
-        if self.m_parent_id:
+        if self.getParentId():
             query += " WHERE uezd_id = ?"
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)
 
-        if self.m_parent_id:
-            sql_query.addBindValue(self.m_parent_id)
+        if self.getParentId():
+            sql_query.addBindValue(self.getParentId())
 
         sql_query.exec_()
 
         self.setQuery(sql_query)
 
-    def getId(self, row):
-        return self.data(self.index(row, 0))
+    def getParentId(self):
+        return self.__m_parent_id
+
+    def setParentId(self, parent_id):
+        self.__m_parent_id = parent_id

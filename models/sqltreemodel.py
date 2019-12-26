@@ -1,6 +1,7 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex
 from .sqltreeitem import SQLTreeItem
+import re
 
 
 class SQLTreeModel(QAbstractItemModel):
@@ -10,15 +11,15 @@ class SQLTreeModel(QAbstractItemModel):
     (except for the first, root level), third is name displayed in a TreeView.
     So these columns constitute the structure of the tree.
     This class inherit QAbstractItemModel and therefore implement the
-    five pure virtual methods: columnCount, rowCount, index, parent and data.
+    virtual methods.
     """
 
     def __init__(self, data, columns):
         super(SQLTreeModel, self).__init__()
-        self._data = data
-        self._columns = columns
+        self.__data = data
+        self.__columns = columns
 
-        self.root = SQLTreeItem(columns, 0)
+        self.__root = SQLTreeItem(columns, 0)
 
         self.setupModelData()
 
@@ -31,15 +32,16 @@ class SQLTreeModel(QAbstractItemModel):
     """
 
     def setupModelData(self, parent=None, pos=0):
-        model = self._data[pos]
+        # create instance of model
+        model = self.__data[pos]()
 
         if not parent:
-            parent = self.root
+            parent = self.__root
             name_col_id = 1
 
         if pos != 0:
             # set foreign key to current model
-            model.m_parent_id = parent.itemID()
+            model.setParentId(parent.uid())
             name_col_id = 2
 
         model.refresh()
@@ -48,16 +50,17 @@ class SQLTreeModel(QAbstractItemModel):
         while i < model.rowCount():
             # tuple of columns with data
             item_data = (model.data(model.index(i, name_col_id)),)
+
             item_id = model.data(model.index(i, 0))
             item = SQLTreeItem(item_data, pos, item_id, parent, model)
 
-            if pos < len(self._data) - 1:
+            if pos < len(self.__data) - 1:
                 self.setupModelData(item, pos + 1)
 
             parent.childAppend(item)
             i += 1
     """
-    Set flags (enabled, selectable, editable)
+    (Implement) Set flags (enabled, selectable, editable)
     """
 
     def flags(self, index):
@@ -66,25 +69,33 @@ class SQLTreeModel(QAbstractItemModel):
 
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
 
+    """
+    Implement
+    """
+
     def columnCount(self, parent):
         if parent.isValid():
             return parent.internalPointer().columnCount()
         else:
-            return self.root.columnCount()
+            return self.__root.columnCount()
+
+    """
+    Implement
+    """
 
     def rowCount(self, parent):
         if parent.column() > 0:
             return 0
 
         if not parent.isValid():
-            parentItem = self.root
+            parentItem = self.__root
         else:
             parentItem = parent.internalPointer()
 
         return parentItem.childCount()
 
     """
-    Returns QModelIndex to current TreeView item
+    (Implement) Returns QModelIndex to current TreeView item
     """
 
     def index(self, row, column, parent):
@@ -92,7 +103,7 @@ class SQLTreeModel(QAbstractItemModel):
             return QModelIndex()
 
         if not parent.isValid():
-            parentItem = self.root
+            parentItem = self.__root
         else:
             parentItem = parent.internalPointer()
 
@@ -105,15 +116,7 @@ class SQLTreeModel(QAbstractItemModel):
             return QModelIndex()
 
     """
-    Returns level of hierarchy from internalPointer(to SqlTreeItem) level
-    """
-
-    def level(self, index):
-        item = index.internalPointer()
-        return item.level()
-
-    """
-    Returns data from internalPointer(to SqlTreeItem) column
+    (Implement) Returns parent QModelIndex
     """
 
     def parent(self, index):
@@ -123,13 +126,13 @@ class SQLTreeModel(QAbstractItemModel):
         childItem = index.internalPointer()
         parentItem = childItem.parent()
 
-        if parentItem == self.root:
+        if parentItem == self.__root:
             return QModelIndex()
 
         return self.createIndex(parentItem.row(), 0, parentItem)
 
     """
-    Returns data from internalPointer(to Item model) column
+    (Implement) Returns data from internalPointer(to SQLItemModel) column
     """
 
     def data(self, index, role):
@@ -144,17 +147,17 @@ class SQLTreeModel(QAbstractItemModel):
         return item.data(index.column())
 
     """
-    Set column header to root node (passed to model class)
+    (Implement) Set column header to root node (passed to model class)
     """
 
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return self._columns[section]
+            return self.__columns[section]
 
         return None
 
     """
-    Reimplement setData function (calls on edit)
+    (Implement) calls on item edit
     """
 
     def setData(self, index, value, role):
@@ -163,34 +166,61 @@ class SQLTreeModel(QAbstractItemModel):
 
         item = index.internalPointer()
 
-        item_model = item.model()
-        item_id = item_model.getId(item.row())
-
-        item_model.update(item_id, value)
+        item.model().update(item.uid(), value)
 
         item.setData((value,))
 
         return True
 
+    """
+    Implement insertRow function (calls on insert)
+    """
+
     def insertRow(self, row, parent):
         self.beginInsertRows(parent, row, row)
 
+        new_item = None
+
         parent_item = parent.internalPointer()
-        child_item = parent_item.child(row)
+        level = parent_item.level() + 1
 
-        parent_model = parent_item.model()
-        parent_id  = parent_model.getId(parent_item.row())
+        # create instance of model
+        model = self.__data[level]()
 
-        child_model = child_item.model()
-        el_name = child_model.new_el_name()
+        if level != 0:
+            # set foreign key (parent id) to the current model
+            model.setParentId(parent_item.uid())
 
-        result_id = child_model.insert(parent_id, el_name)
+        # refresh model for an empty branch
+        if parent_item.childCount() == 0:
+            model.refresh()
+
+        # set default name for a new item like Item 1/Item 2 etc.
+        i = 0
+        el_num = 1
+        while i < parent_item.childCount():
+            el_text = parent_item.child(i).data(0)
+            if re.fullmatch(r'\w+ \d+', el_text):
+                split_arr = str.split(el_text, " ", 1)
+                cur_num = int(split_arr[1])
+                if cur_num >= el_num:
+                    el_num = cur_num + 1
+            i += 1
+
+        el_name = model.getDisplayName() + " " + str(el_num)
+
+        result_id = model.insert(el_name)
 
         if result_id:
-            new_item = SQLTreeItem((el_name, ""), 0, result_id , parent_item, child_model)
+            new_item = SQLTreeItem(
+                (el_name,), level, result_id, parent_item, model)
             parent_item.childAppend(new_item)
 
         self.endInsertRows()
+
+    """
+    Implement removeRow function (calls on remove)
+    """
 
     def removeRow(self, row, parent):
         self.beginRemoveRows(parent, row, row)
@@ -198,9 +228,10 @@ class SQLTreeModel(QAbstractItemModel):
         parent_item = parent.internalPointer()
         child_item = parent_item.child(row)
 
-        level = child_item.level()
-
-        self._data[level].remove(child_item.itemID())
+        child_item.model().remove(child_item.uid())
         parent_item.childRemove(child_item)
 
         self.endRemoveRows()
+
+    def modelFactory(model):
+        pass

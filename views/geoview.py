@@ -15,7 +15,7 @@ class GEOView(QWidget):
         self.church_btn = main_window.ui.pushButton_add_ch
 
         self.model = SQLTreeModel(
-            (GuberniaModel(), UezdModel(), LocalityModel(), ChurchModel()),
+            (GuberniaModel, UezdModel, LocalityModel, ChurchModel),
             ("Территория",))
 
         self.menu = QMenu(self)
@@ -25,8 +25,6 @@ class GEOView(QWidget):
 
     def setupTriggers(self):
         self.tree_view.setModel(self.model)
-        self.tree_view.clicked.connect(self.item_clicked)
-
         self.church_btn.clicked.connect(self.insertItem)
 
     def setupContextMenu(self):
@@ -35,7 +33,7 @@ class GEOView(QWidget):
 
     def showContextMenu(self, point):
 
-        if self.currentIndex():
+        if self.tree_view.currentIndex():
 
             self.menu.clear()
 
@@ -47,34 +45,40 @@ class GEOView(QWidget):
             upd_action.triggered.connect(self.editItem)
             del_action.triggered.connect(self.removeItem)
 
+            # selected model
+            sel_model = self.tree_view.currentIndex().internalPointer().model()
+            if isinstance(sel_model, ChurchModel):
+                ins_action.setEnabled(False)
+
             self.menu.exec(QCursor.pos())
 
     def insertItem(self):
-        index = self.currentIndex()
+        index = self.tree_view.currentIndex()
         if index:
-            child_count = index.internalPointer().childCount() - 1
+            self.model.insertRow(0, index)
 
-            self.model.insertRow(child_count, index)
-
-            item = index.child(child_count + 1, 0)
+            # set branch expanded
             if not self.tree_view.isExpanded(index):
                 self.tree_view.setExpanded(index, True)
 
+            # select item selected
+            child = index.child(index.internalPointer().childCount() - 1, 0)
             selection = QItemSelection()
-            selection.select(item, item)
+            selection.select(child, child)
             self.tree_view.selectionModel().select(
                 selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear
             )
 
-            self.tree_view.edit(item)
+            # elect item edit state
+            self.tree_view.edit(child)
 
     def editItem(self):
-        index = self.currentIndex()
+        index = self.tree_view.currentIndex()
         if index:
             self.tree_view.edit(index)
 
     def removeItem(self):
-        index = self.currentIndex()
+        index = self.tree_view.currentIndex()
         if index:
             confirm = QMessageBox()
             confirm.setWindowTitle("Удаление объекта")
@@ -85,13 +89,3 @@ class GEOView(QWidget):
 
             if result == QMessageBox.Yes:
                 self.model.removeRow(index.row(), index.parent())
-
-    def currentIndex(self):
-        idx = self.tree_view.selectedIndexes()
-        if len(idx) > 0:
-            return idx[0]
-
-        return None
-
-    def item_clicked(self, index):
-        print("clicked")

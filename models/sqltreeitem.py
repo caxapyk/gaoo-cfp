@@ -2,51 +2,54 @@ from PyQt5.QtWidgets import QAbstractItemView
 
 
 class SQLTreeItem(QAbstractItemView):
-    def __init__(self, data, level, model_item_id=None, parent=None, model=None):
+    def __init__(self, data, level, uid=None, parent=None, model=None):
         super(SQLTreeItem, self).__init__()
-        self.parent_item = parent
-        self.child_items = []
-        self._data = data
-        self._level = level
-        self._id = model_item_id
-        self._model = model
+
+        self.__parent = parent
+        self.__children = []
+        self.__data = data
+        self.__level = level
+        self._uid = uid
+        self.__model = model
 
     def model(self):
-        return self._model
+        return self.__model
 
     def level(self):
-        return self._level
+        return self.__level
 
-    def itemID(self):
-        return self._id
-
-    def setData(self, data):
-        self._data = data
-
-    def columnCount(self):
-        return len(self._data)
+    def uid(self):
+        return self._uid
 
     def parent(self):
-        return self.parent_item
+        return self.__parent
 
     def child(self, row):
-        return self.child_items[row]
+        if row >= 0:
+            return self.__children[row]
+        return None
 
     def childCount(self):
-        return len(self.child_items)
+        return len(self.__children)
 
     def childAppend(self, child):
-        self.child_items.append(child)
+        self.__children.append(child)
 
     def childRemove(self, child):
-        self.child_items.remove(child)
+        self.__children.remove(child)
+
+    def columnCount(self):
+        return len(self.__data)
 
     def row(self):
         # root has no parent
-        if self.parent_item:
-            return self.parent_item.child_items.index(self)
+        if self.__parent:
+            return self.__parent.__children.index(self)
 
         return 0
 
+    def setData(self, data):
+        self.__data = data
+
     def data(self, section):
-        return self._data[section]
+        return self.__data[section]

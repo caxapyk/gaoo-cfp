@@ -8,7 +8,7 @@ Uezd
 
 class UezdModel(QSqlQueryModel):
 
-    m_parent_id = None
+    __m_parent_id = None
 
     def __init__(self):
         super(UezdModel, self).__init__()
@@ -21,16 +21,21 @@ class UezdModel(QSqlQueryModel):
         print("i am here")
         query = "SELECT * FROM cfp_uezd"
 
-        if self.m_parent_id:
+        if self.getParentId():
             query += " WHERE gub_id = ?"
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)
 
-        if self.m_parent_id:
-            sql_query.addBindValue(self.m_parent_id)
+        if self.getParentId():
+            sql_query.addBindValue(self.getParentId())
 
         sql_query.exec_()
 
         self.setQuery(sql_query)
 
+    def getParentId(self):
+        return self.__m_parent_id
+
+    def setParentId(self, parent_id):
+        self.__m_parent_id = parent_id

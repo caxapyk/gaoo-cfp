@@ -9,7 +9,7 @@ Gubernia
 
 class GuberniaModel(QSqlQueryModel):
 
-    m_parent_id = None
+    __m_parent_id = None
 
     def __init__(self):
         super(GuberniaModel, self).__init__()
@@ -21,3 +21,8 @@ class GuberniaModel(QSqlQueryModel):
         query = "SELECT * FROM cfp_gubernia"
         self.setQuery(query)
 
+    def getParentId(self):
+        return self.__m_parent_id
+
+    def setParentId(self, parent_id):
+        self.__m_parent_id = parent_id
