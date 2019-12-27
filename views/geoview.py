@@ -32,13 +32,13 @@ class GEOView(QWidget):
             self.showContextMenu)
 
     def showContextMenu(self, point):
-
-        if self.tree_view.currentIndex():
+        index = self.tree_view.indexAt(point)
+        if (index.isValid()):
 
             self.menu.clear()
 
             ins_action = self.menu.addAction("Добавить")
-            upd_action = self.menu.addAction("Изменить")
+            upd_action = self.menu.addAction("Переименовать")
             del_action = self.menu.addAction("Удалить")
 
             ins_action.triggered.connect(self.insertItem)
@@ -46,11 +46,12 @@ class GEOView(QWidget):
             del_action.triggered.connect(self.removeItem)
 
             # selected model
-            sel_model = self.tree_view.currentIndex().internalPointer().model()
+            sel_model = index.internalPointer().model()
             if isinstance(sel_model, ChurchModel):
                 ins_action.setEnabled(False)
 
-            self.menu.exec(QCursor.pos())
+            self.menu.exec(
+                self.tree_view.viewport().mapToGlobal(point))
 
     def insertItem(self):
         index = self.tree_view.currentIndex()

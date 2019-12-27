@@ -1,6 +1,7 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex
 from .sqltreeitem import SQLTreeItem
+from utils import ItemDefaultName
 import re
 
 
@@ -54,11 +55,38 @@ class SQLTreeModel(QAbstractItemModel):
             item_id = model.data(model.index(i, 0))
             item = SQLTreeItem(item_data, pos, item_id, parent, model)
 
-            if pos < len(self.__data) - 1:
-                self.setupModelData(item, pos + 1)
-
             parent.childAppend(item)
             i += 1
+
+    def hasChildren(self, index):
+        if not index.isValid():
+            return True
+
+        item = index.internalPointer()
+        child_level = item.level() + 1
+
+        if child_level < len(self.__data):
+            model = self.__data[child_level]()
+            model.setParentId(item.uid())
+
+            if model.count() > 0:
+                return True
+        return False
+
+    def canFetchMore(self, index):
+        if not index.isValid():
+            return False
+        item = index.internalPointer()
+
+        return not item.isMapped()
+
+    def fetchMore(self, index):
+        item = index.internalPointer()
+        child_level = item.level() + 1
+
+        self.setupModelData(item, child_level)
+        item.map()
+
     """
     (Implement) Set flags (enabled, selectable, editable)
     """
@@ -166,9 +194,8 @@ class SQLTreeModel(QAbstractItemModel):
 
         item = index.internalPointer()
 
-        item.model().update(item.uid(), value)
-
-        item.setData((value,))
+        if item.model().update(item.uid(), value):
+            item.setData((value,))
 
         return True
 
@@ -195,26 +222,22 @@ class SQLTreeModel(QAbstractItemModel):
         if parent_item.childCount() == 0:
             model.refresh()
 
-        # set default name for a new item like Item 1/Item 2 etc.
-        i = 0
-        el_num = 1
-        while i < parent_item.childCount():
-            el_text = parent_item.child(i).data(0)
-            if re.fullmatch(r'\w+ \d+', el_text):
-                split_arr = str.split(el_text, " ", 1)
-                cur_num = int(split_arr[1])
-                if cur_num >= el_num:
-                    el_num = cur_num + 1
-            i += 1
-
-        el_name = model.getDisplayName() + " " + str(el_num)
+        # set default name for a new item like Item 1/Item 2/... etc.
+        el_name = ItemDefaultName(
+            parent_item, model.getDisplayName()).process()
 
         result_id = model.insert(el_name)
 
         if result_id:
-            new_item = SQLTreeItem(
-                (el_name,), level, result_id, parent_item, model)
-            parent_item.childAppend(new_item)
+            # load child branch if not loaded
+            if not parent_item.isMapped():
+                self.setupModelData(parent_item, level)
+                parent_item.map()
+            # else append to existing branch
+            else:
+                new_item = SQLTreeItem(
+                    (el_name,), level, result_id, parent_item, model)
+                parent_item.childAppend(new_item)
 
         self.endInsertRows()
 
@@ -228,10 +251,7 @@ class SQLTreeModel(QAbstractItemModel):
         parent_item = parent.internalPointer()
         child_item = parent_item.child(row)
 
-        child_item.model().remove(child_item.uid())
-        parent_item.childRemove(child_item)
+        if child_item.model().remove(child_item.uid()):
+            parent_item.childRemove(child_item)
 
         self.endRemoveRows()
-
-    def modelFactory(model):
-        pass

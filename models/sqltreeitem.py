@@ -9,8 +9,15 @@ class SQLTreeItem(QAbstractItemView):
         self.__children = []
         self.__data = data
         self.__level = level
-        self._uid = uid
+        self.__uid = uid
         self.__model = model
+        self.__mapped = False
+
+    def map(self):
+        self.__mapped = True
+
+    def isMapped(self):
+        return self.__mapped
 
     def model(self):
         return self.__model
@@ -19,7 +26,7 @@ class SQLTreeItem(QAbstractItemView):
         return self.__level
 
     def uid(self):
-        return self._uid
+        return self.__uid
 
     def parent(self):
         return self.__parent
