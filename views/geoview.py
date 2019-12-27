@@ -1,5 +1,5 @@
 from PyQt5.Qt import Qt, QCursor
-from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
+from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel, QSortFilterProxyModel)
 from PyQt5.QtWidgets import (QWidget, QMenu, QMessageBox)
 from PyQt5.uic import loadUi
 from models import (CFPModel, GuberniaModel, UezdModel,
@@ -14,9 +14,19 @@ class GEOView(QWidget):
         self.tree_view = main_window.ui.treeView_geo
         self.church_btn = main_window.ui.pushButton_add_ch
 
-        self.model = SQLTreeModel(
-            (GuberniaModel, UezdModel, LocalityModel, ChurchModel),
+        model1 = GuberniaModel()
+        model2 = UezdModel()
+        model3 = LocalityModel()
+        model4 = ChurchModel()
+
+        abstract_model = SQLTreeModel(
+            (model1, model2, model3, model4),
             ("Территория",))
+
+        self.proxy = QSortFilterProxyModel()
+        self.proxy.setSourceModel(abstract_model)
+
+        self.model = self.proxy
 
         self.menu = QMenu(self)
 
@@ -28,11 +38,13 @@ class GEOView(QWidget):
         self.church_btn.clicked.connect(self.insertItem)
 
     def setupContextMenu(self):
+        pass
         self.tree_view.customContextMenuRequested.connect(
             self.showContextMenu)
 
     def showContextMenu(self, point):
         index = self.tree_view.indexAt(point)
+        self.proxy.mapToSource(index)
         if (index.isValid()):
 
             self.menu.clear()
@@ -48,7 +60,7 @@ class GEOView(QWidget):
             # selected model
             sel_model = index.internalPointer().model()
             if isinstance(sel_model, ChurchModel):
-                ins_action.setEnabled(False)
+               ins_action.setEnabled(False)
 
             self.menu.exec(
                 self.tree_view.viewport().mapToGlobal(point))

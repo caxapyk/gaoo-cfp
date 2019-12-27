@@ -69,6 +69,9 @@
           <property name="editTriggers">
            <set>QAbstractItemView::EditKeyPressed</set>
           </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item>
@@ -87,25 +90,6 @@
           </property>
           <property name="text">
            <string>Добавить церковь</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_add_loc">
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>400</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Добавить населенный пункт</string>
           </property>
          </widget>
         </item>

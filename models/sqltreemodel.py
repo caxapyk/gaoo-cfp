@@ -34,7 +34,7 @@ class SQLTreeModel(QAbstractItemModel):
 
     def setupModelData(self, parent=None, pos=0):
         # create instance of model
-        model = self.__data[pos]()
+        model = self.__data[pos]
 
         if not parent:
             parent = self.__root
@@ -66,7 +66,7 @@ class SQLTreeModel(QAbstractItemModel):
         child_level = item.level() + 1
 
         if child_level < len(self.__data):
-            model = self.__data[child_level]()
+            model = self.__data[child_level]
             model.setParentId(item.uid())
 
             if model.count() > 0:
@@ -212,7 +212,7 @@ class SQLTreeModel(QAbstractItemModel):
         level = parent_item.level() + 1
 
         # create instance of model
-        model = self.__data[level]()
+        model = self.__data[level]
 
         if level != 0:
             # set foreign key (parent id) to the current model
