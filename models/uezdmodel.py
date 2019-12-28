@@ -10,4 +10,4 @@ class UezdModel(GEOBaseModel):
         super(UezdModel, self).__init__()
         self.setTable("cfp_uezd")
         self.setForeignKey('gub_id')
-        self.setNewItemName("Новый уезд")
+        self.setNewItemName("Уезд")

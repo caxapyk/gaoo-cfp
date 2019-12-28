@@ -10,4 +10,4 @@ class LocalityModel(GEOBaseModel):
         super(LocalityModel, self).__init__()
         self.setTable("cfp_locality")
         self.setForeignKey('uezd_id')
-        self.setNewItemName("Новый населенный пункт")
+        self.setNewItemName("Населенный пункт")

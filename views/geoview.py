@@ -48,11 +48,11 @@ class GEOView(QWidget):
     def showContextMenu(self, point):
         proxy_index = self.tree_view.indexAt(point)
         index = self.proxy_model.mapToSource(proxy_index)
-        if (index.isValid()):
+        if index.isValid():
 
             self.c_menu.clear()
 
-            ins_action = self.c_menu.addAction("Добавить")
+            ins_action = self.c_menu.addAction("Новая запись")
             upd_action = self.c_menu.addAction("Переименовать")
             del_action = self.c_menu.addAction("Удалить")
 
@@ -68,11 +68,21 @@ class GEOView(QWidget):
             self.c_menu.exec(
                 self.tree_view.viewport().mapToGlobal(point))
 
+        else:
+            self.c_menu.clear()
+            ins_action = self.c_menu.addAction("Добавить губернию")
+            ins_action.triggered.connect(self.insertTopItem)
+            self.c_menu.exec(QCursor.pos())
+
     def filter(self, text):
         self.tree_view.expandAll()
-        #self.proxy_model.setRecursiveFilteringEnabled(True)
+        self.proxy_model.setRecursiveFilteringEnabled(True)
         self.proxy_model.setFilterRegExp(QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
         self.proxy_model.setFilterKeyColumn(0)
+
+    def resetFilter(self):
+        if len(self.filter_l_edit.text()) > 0:
+            self.filter_l_edit.setText("")
 
     def sort(self):
         if not self.sorted:
@@ -82,9 +92,14 @@ class GEOView(QWidget):
             self.proxy_model.sort(-1, Qt.AscendingOrder)
             self.sorted = False
 
+    def insertTopItem(self):
+        index = self.proxy_model.index(0,0)
+        print(index.data())
+
     def insertItem(self):
         index = self.tree_view.currentIndex()
         if index:
+            self.resetFilter()
             # set branch expanded before insert !important
             if not self.tree_view.isExpanded(index):
                 self.tree_view.setExpanded(index, True)

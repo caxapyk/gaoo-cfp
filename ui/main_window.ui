@@ -44,7 +44,11 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QLineEdit" name="lineEdit_geo_filter"/>
+         <widget class="QLineEdit" name="lineEdit_geo_filter">
+          <property name="placeholderText">
+           <string>Фильтр по справочнику...</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_sort">
@@ -172,7 +176,7 @@
      <x>0</x>
      <y>0</y>
      <width>908</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">

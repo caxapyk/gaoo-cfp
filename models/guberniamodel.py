@@ -1,6 +1,5 @@
 from models import GEOBaseModel
 
-
 """
 Gubernia Model
 """
