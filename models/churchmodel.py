@@ -11,4 +11,4 @@ class ChurchModel(GEOBaseModel):
         super(ChurchModel, self).__init__()
         self.setTable("cfp_church")
         self.setForeignKey('locality_id')
-        self.setDisplayName("Церковь")
+        self.setNewItemName("Новая церковь")

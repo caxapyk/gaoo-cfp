@@ -24,10 +24,10 @@ class GEOBaseModel(QSqlQueryModel):
     def setParentId(self, parent_id):
         self.__m_parent_id = parent_id
 
-    def getDisplayName(self):
+    def getNewItemName(self):
         return self.__m_diplay_name
 
-    def setDisplayName(self, name):
+    def setNewItemName(self, name):
         self.__m_diplay_name = name
 
     def setForeignKey(self, fk):

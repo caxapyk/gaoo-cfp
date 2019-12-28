@@ -203,9 +203,7 @@ class SQLTreeModel(QAbstractItemModel):
     Implement insertRow function (calls on insert)
     """
 
-    def insertRow(self, row, parent):
-        self.beginInsertRows(parent, row, row)
-
+    def insertRows(self, row, count, parent):
         new_item = None
 
         parent_item = parent.internalPointer()
@@ -223,35 +221,38 @@ class SQLTreeModel(QAbstractItemModel):
             model.refresh()
 
         # set default name for a new item like Item 1/Item 2/... etc.
-        el_name = ItemDefaultName(
-            parent_item, model.getDisplayName()).process()
+        el_name = model.getNewItemName()
 
-        result_id = model.insert(el_name)
+        result_id = model.insert(model.getNewItemName())
 
         if result_id:
-            # load child branch if not loaded
-            if not parent_item.isMapped():
-                self.setupModelData(parent_item, level)
-                parent_item.map()
-            # else append to existing branch
-            else:
-                new_item = SQLTreeItem(
-                    (el_name,), level, result_id, parent_item, model)
-                parent_item.childAppend(new_item)
+            self.beginInsertRows(parent, row, row)
 
-        self.endInsertRows()
+            new_item = SQLTreeItem(
+                (el_name,), level, result_id, parent_item, model)
+            parent_item.childAppend(new_item)
+
+            self.endInsertRows()
+
+            return True
+
+        return True
 
     """
     Implement removeRow function (calls on remove)
     """
 
-    def removeRow(self, row, parent):
-        self.beginRemoveRows(parent, row, row)
-
+    def removeRows(self, row, count, parent):
         parent_item = parent.internalPointer()
         child_item = parent_item.child(row)
 
         if child_item.model().remove(child_item.uid()):
+            self.beginRemoveRows(parent, row, row)
+
             parent_item.childRemove(child_item)
 
-        self.endRemoveRows()
+            self.endRemoveRows()
+
+            return True
+
+        return False

@@ -44,6 +44,28 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
+         <widget class="QLineEdit" name="lineEdit_geo_filter"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_sort">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Сортировка</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QTreeView" name="treeView_geo">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -70,26 +92,7 @@
            <set>QAbstractItemView::EditKeyPressed</set>
           </property>
           <property name="sortingEnabled">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButton_add_ch">
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>400</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Добавить церковь</string>
+           <bool>false</bool>
           </property>
          </widget>
         </item>
