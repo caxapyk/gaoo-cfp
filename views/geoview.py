@@ -2,9 +2,9 @@ from PyQt5.Qt import Qt, QCursor, QRegExp
 from PyQt5.QtCore import (QModelIndex, QItemSelection,
                           QItemSelectionModel, QSortFilterProxyModel)
 from PyQt5.QtWidgets import (QWidget, QMenu, QMessageBox)
-from PyQt5.uic import loadUi
 from models import (CFPModel, GuberniaModel, UezdModel,
-                    LocalityModel, ChurchModel, SQLTreeModel)
+                    LocalityModel, ChurchModel, SQLGeoModel)
+from dialogs import DocTypeDialog
 
 
 class GEOView(QWidget):
@@ -21,7 +21,7 @@ class GEOView(QWidget):
         model3 = LocalityModel()
         model4 = ChurchModel()
 
-        geo_model = SQLTreeModel(
+        geo_model = SQLGeoModel(
             (model1, model2, model3, model4),
             ("Территория",))
 
@@ -32,6 +32,7 @@ class GEOView(QWidget):
         self.sorted = False
 
         self.c_menu = QMenu(self)
+        self.doctype_menu = QMenu(self)
 
         self.setupTriggers()
         self.setupContextMenu()
@@ -60,10 +61,23 @@ class GEOView(QWidget):
             upd_action.triggered.connect(self.editItem)
             del_action.triggered.connect(self.removeItem)
 
+            if index.model().hasChildren(index):
+                del_action.setEnabled(False)
+
             # selected model
             sel_model = index.internalPointer().model()
+
             if isinstance(sel_model, ChurchModel):
                 ins_action.setEnabled(False)
+                ins_action.setVisible(False)
+
+                sep_acton = self.c_menu.addSeparator()
+
+                dtype_action = self.c_menu.addAction("Виды документов")
+                dtype_action.triggered.connect(self.selectDocType)
+
+                #self.setDoctypeMenu()
+
 
             self.c_menu.exec(
                 self.tree_view.viewport().mapToGlobal(point))
@@ -74,10 +88,18 @@ class GEOView(QWidget):
             ins_action.triggered.connect(self.insertTopItem)
             self.c_menu.exec(QCursor.pos())
 
+    def selectDocType(self):
+        doctype_dialog = DocTypeDialog()
+
+    def setDoctypeMenu(self):
+        self.doctype_menu = self.c_menu.addMenu("Типы документов")
+        self.doctype_menu.addAction("Тип 1").setCheckable(True)
+
     def filter(self, text):
         self.tree_view.expandAll()
         self.proxy_model.setRecursiveFilteringEnabled(True)
-        self.proxy_model.setFilterRegExp(QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
+        self.proxy_model.setFilterRegExp(
+            QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
         self.proxy_model.setFilterKeyColumn(0)
 
     def resetFilter(self):
@@ -93,8 +115,7 @@ class GEOView(QWidget):
             self.sorted = False
 
     def insertTopItem(self):
-        index = self.proxy_model.index(0,0)
-        print(index.data())
+        self.proxy_model.insertRows(1, 1, QModelIndex())
 
     def insertItem(self):
         index = self.tree_view.currentIndex()
@@ -104,23 +125,10 @@ class GEOView(QWidget):
             if not self.tree_view.isExpanded(index):
                 self.tree_view.setExpanded(index, True)
 
-            # map underlying model index
-            m_index = self.proxy_model.mapToSource(index)
-            m_rows = m_index.internalPointer().childCount()
-
-            self.proxy_model.insertRows(m_rows, 1, index)
+            self.proxy_model.insertRows(0, 1, index)
 
             # select new item
-            m_child = m_index.model().index(m_rows, 0, m_index)
-            proxy_child = self.proxy_model.mapFromSource(m_child)
-
-            selection = QItemSelection()
-            selection.select(proxy_child, proxy_child)
-            self.tree_view.selectionModel().select(
-                selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear)
-
-            # edit new item
-            self.tree_view.edit(proxy_child)
+            self.selectAndEditNewItem(index)
 
     def editItem(self):
         index = self.tree_view.currentIndex()
@@ -139,3 +147,19 @@ class GEOView(QWidget):
 
             if result == QMessageBox.Yes:
                 self.model.removeRows(index.row(), 1, index.parent())
+
+    def selectAndEditNewItem(self, parent):
+        # map underlying model index
+        m_parent = self.proxy_model.mapToSource(parent)
+        m_child_count = m_parent.internalPointer().childCount() - 1
+        m_new_item = m_parent.model().index(m_child_count, 0, m_parent)
+
+        proxy_child = self.proxy_model.mapFromSource(m_new_item)
+
+        selection = QItemSelection()
+        selection.select(proxy_child, proxy_child)
+        self.tree_view.selectionModel().select(
+            selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear)
+
+        # edit new item
+        self.tree_view.edit(proxy_child)

@@ -1,8 +1,9 @@
 from PyQt5.QtSql import QSqlQueryModel, QSqlQuery
 
 
-class GEOBaseModel(QSqlQueryModel):
+class GEOBaseModel(object):
 
+    __model = None
     __m_table = None
     __m_parent_id = None
     __m_diplay_name = "Элемент"
@@ -11,6 +12,16 @@ class GEOBaseModel(QSqlQueryModel):
 
     def __init__(self):
         super(GEOBaseModel, self).__init__()
+        self.__model = QSqlQueryModel()
+
+    def rowCount(self):
+        return self.__model.rowCount()
+
+    def data(self, index):
+        return self.__model.data(index)
+
+    def index(self, row, col):
+        return self.__model.index(row, col)
 
     def setTable(self, table_name):
         self.__m_table = table_name
@@ -46,14 +57,15 @@ class GEOBaseModel(QSqlQueryModel):
             sql_query.addBindValue(self.__m_parent_id)
 
         if sql_query.exec_():
-            self.setQuery(sql_query)
+            self.__model.setQuery(sql_query)
 
     def insert(self, name):
         if self.__m_parent_id and self.__m_fk:
-        	query = "INSERT INTO %s (name, %s) \
+            query = "INSERT INTO %s (name, %s) \
                 VALUES (?, ?)" % (self.__m_table, self.__m_fk)
         else:
             query = "INSERT INTO %s (name) VALUES (?)" % self.__m_table
+
         sql_query = QSqlQuery()
         sql_query.prepare(query)
 
@@ -109,7 +121,7 @@ class GEOBaseModel(QSqlQueryModel):
             sql_query.addBindValue(self.getParentId())
 
         if sql_query.exec_():
-            self.setQuery(sql_query)
+            self.__model.setQuery(sql_query)
             return int(self.data(self.index(0, 0)))
 
         print(sql_query.lastError().text())

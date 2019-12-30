@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import QAbstractItemView
 
 
-class SQLTreeItem(QAbstractItemView):
+class SQLGeoItem(QAbstractItemView):
     def __init__(self, data, level, uid=None, parent=None, model=None):
-        super(SQLTreeItem, self).__init__()
+        super(SQLGeoItem, self).__init__()
 
         self.__parent = parent
         self.__children = []

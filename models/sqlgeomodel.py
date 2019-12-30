@@ -1,11 +1,10 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex
-from .sqltreeitem import SQLTreeItem
+from .sqlgeoitem import SQLGeoItem
 from utils import ItemDefaultName
-import re
 
 
-class SQLTreeModel(QAbstractItemModel):
+class SQLGeoModel(QAbstractItemModel):
     """
     Note theat we assumed that the first column is always the primary key,
     and the second column is the foreign key related to the parent table
@@ -16,11 +15,11 @@ class SQLTreeModel(QAbstractItemModel):
     """
 
     def __init__(self, data, columns):
-        super(SQLTreeModel, self).__init__()
+        super(SQLGeoModel, self).__init__()
         self.__data = data
         self.__columns = columns
 
-        self.__root = SQLTreeItem(columns, 0)
+        self.__root = SQLGeoItem(columns, -1)
 
         self.setupModelData()
 
@@ -53,7 +52,7 @@ class SQLTreeModel(QAbstractItemModel):
             item_data = (model.data(model.index(i, name_col_id)),)
 
             item_id = model.data(model.index(i, 0))
-            item = SQLTreeItem(item_data, pos, item_id, parent, model)
+            item = SQLGeoItem(item_data, pos, item_id, parent, model)
 
             parent.childAppend(item)
             i += 1
@@ -204,9 +203,13 @@ class SQLTreeModel(QAbstractItemModel):
     """
 
     def insertRows(self, row, count, parent):
+        if parent.isValid():
+            parent_item = parent.internalPointer()
+        else:
+            parent_item = self.__root
+
         new_item = None
 
-        parent_item = parent.internalPointer()
         level = parent_item.level() + 1
 
         # create instance of model
@@ -224,11 +227,13 @@ class SQLTreeModel(QAbstractItemModel):
         el_name = model.getNewItemName()
 
         result_id = model.insert(model.getNewItemName())
+        child_count = parent_item.childCount()
 
         if result_id:
-            self.beginInsertRows(parent, row, row)
+            # use child_count to insert to top of branch, its needed for sort
+            self.beginInsertRows(parent, child_count, child_count)
 
-            new_item = SQLTreeItem(
+            new_item = SQLGeoItem(
                 (el_name,), level, result_id, parent_item, model)
             parent_item.childAppend(new_item)
 
@@ -243,7 +248,11 @@ class SQLTreeModel(QAbstractItemModel):
     """
 
     def removeRows(self, row, count, parent):
-        parent_item = parent.internalPointer()
+        if parent.isValid():
+            parent_item = parent.internalPointer()
+        else:
+            parent_item = self.__root
+
         child_item = parent_item.child(row)
 
         if child_item.model().remove(child_item.uid()):
