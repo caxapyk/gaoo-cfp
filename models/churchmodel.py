@@ -11,4 +11,5 @@ class ChurchModel(GEOBaseModel):
         super(ChurchModel, self).__init__()
         self.setTable("cfp_church")
         self.setForeignKey('locality_id')
-        self.setNewItemName("Церковь")
+        self.setNewItemName("Новая церковь")
+        self.setIconResource(":/icons/church-16.png")

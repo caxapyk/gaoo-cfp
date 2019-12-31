@@ -166,6 +166,10 @@ class SQLGeoModel(QAbstractItemModel):
         if not index.isValid():
             return None
 
+        if role == Qt.DecorationRole:
+            item_model = index.internalPointer().model()
+            return item_model.getIcon()
+
         if role != Qt.DisplayRole and role != Qt.EditRole:
             return None
 

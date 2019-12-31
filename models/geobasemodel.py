@@ -1,5 +1,5 @@
 from PyQt5.QtSql import QSqlQueryModel, QSqlQuery
-
+from PyQt5.QtGui import QIcon
 
 class GEOBaseModel(object):
 
@@ -9,6 +9,8 @@ class GEOBaseModel(object):
     __m_diplay_name = "Элемент"
 
     __m_fk = None
+
+    __icon_resource = ":/icons/folder-16.png"
 
     def __init__(self):
         super(GEOBaseModel, self).__init__()
@@ -43,6 +45,12 @@ class GEOBaseModel(object):
 
     def setForeignKey(self, fk):
         self.__m_fk = fk
+
+    def setIconResource(self, resource):
+        self.__icon_resource = resource
+
+    def getIcon(self):
+        return QIcon(self.__icon_resource)
 
     def refresh(self):
         query = "SELECT * FROM %s" % self.__m_table

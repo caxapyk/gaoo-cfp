@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/church-16.png</file>
+        <file>icons/church-24.png</file>
+        <file>icons/church-48.png</file>
+    	<file>icons/clear-filter-16.png</file>
+    	<file>icons/delete-16.png</file>
+        <file>icons/exit-16.png</file>
+        <file>icons/exit-24.png</file>
+        <file>icons/folder-16.png</file>
+        <file>icons/folder-new-16.png</file>
+        <file>icons/folder-delete-16.png</file>
+        <file>icons/rename-16.png</file>
+        <file>icons/search-file-16.png</file>
+        <file>icons/search-file-24.png</file>
+        <file>icons/sort19-16.png</file>
+        <file>icons/sort-az-16.png</file>
+        <file>icons/tree-16.png</file>
+        <file>icons/types-16.png</file>
+        <file>qtbase_ru.qm</file>
+    </qresource>
+</RCC>

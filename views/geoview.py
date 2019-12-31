@@ -1,4 +1,5 @@
 from PyQt5.Qt import Qt, QCursor, QRegExp
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import (QModelIndex, QItemSelection,
                           QItemSelectionModel, QSortFilterProxyModel)
 from PyQt5.QtWidgets import (QWidget, QMenu, QMessageBox)
@@ -12,9 +13,12 @@ class GEOView(QWidget):
     def __init__(self, main_window):
         super(GEOView, self).__init__()
 
+        self.main_window = main_window
+
         self.tree_view = main_window.ui.treeView_geo
-        self.sort_btn = main_window.ui.pushButton_sort
+        self.sort_btn = main_window.ui.toolButton_sort
         self.filter_l_edit = main_window.ui.lineEdit_geo_filter
+        self.clearfilter_btn = main_window.ui.toolButton_clearFilter
 
         model1 = GuberniaModel()
         model2 = UezdModel()
@@ -41,6 +45,7 @@ class GEOView(QWidget):
         self.tree_view.setModel(self.model)
         self.sort_btn.clicked.connect(self.sort)
         self.filter_l_edit.textChanged.connect(self.filter)
+        self.clearfilter_btn.clicked.connect(self.clearFilter)
 
     def setupContextMenu(self):
         self.tree_view.customContextMenuRequested.connect(
@@ -49,43 +54,63 @@ class GEOView(QWidget):
     def showContextMenu(self, point):
         proxy_index = self.tree_view.indexAt(point)
         index = self.proxy_model.mapToSource(proxy_index)
+
+        self.c_menu.clear()
+
         if index.isValid():
+            # selected model
+            sel_model = index.internalPointer().model()
 
-            self.c_menu.clear()
-
-            ins_action = self.c_menu.addAction("Новая запись")
+            ins_action = self.c_menu.addAction("Новый элемент")
             upd_action = self.c_menu.addAction("Переименовать")
             del_action = self.c_menu.addAction("Удалить")
 
+            # add icons
+            ins_action.setIcon(QIcon(":/icons/folder-new-16.png"))
+            upd_action.setIcon(QIcon(":/icons/rename-16.png"))
+            del_action.setIcon(QIcon(":/icons/folder-delete-16.png"))
+
+            if isinstance(sel_model, GuberniaModel):
+                ins_action.setText("Новый узед")
+
+            elif isinstance(sel_model, UezdModel):
+                ins_action.setText("Новый населенный пункт")
+
+            elif isinstance(sel_model, LocalityModel):
+                ins_action.setText("Новая церковь")
+                ins_action.setIcon(QIcon(":/icons/church-16.png"))
+
+            # set triggers
             ins_action.triggered.connect(self.insertItem)
             upd_action.triggered.connect(self.editItem)
             del_action.triggered.connect(self.removeItem)
-
-            if index.model().hasChildren(index):
-                del_action.setEnabled(False)
-
-            # selected model
-            sel_model = index.internalPointer().model()
 
             if isinstance(sel_model, ChurchModel):
                 ins_action.setEnabled(False)
                 ins_action.setVisible(False)
 
+                del_action.setIcon(QIcon(":/icons/delete-16.png"))
+
                 sep_acton = self.c_menu.addSeparator()
 
-                dtype_action = self.c_menu.addAction("Виды документов")
+                dtype_action = self.c_menu.addAction("Установить виды документов")
+                dtype_action.setIcon(QIcon(":/icons/types-16.png"))
                 dtype_action.triggered.connect(self.selectDocType)
 
-                #self.setDoctypeMenu()
+            # prevent delete if node has children
+            if index.model().hasChildren(index):
+                del_action.setEnabled(False)
 
+                # self.setDoctypeMenu()
 
             self.c_menu.exec(
                 self.tree_view.viewport().mapToGlobal(point))
 
         else:
-            self.c_menu.clear()
-            ins_action = self.c_menu.addAction("Добавить губернию")
+            ins_action = self.c_menu.addAction("Новая губерния")
+            ins_action.setIcon(QIcon(":/icons/folder-new-16.png"))
             ins_action.triggered.connect(self.insertTopItem)
+
             self.c_menu.exec(QCursor.pos())
 
     def selectDocType(self):
@@ -102,15 +127,17 @@ class GEOView(QWidget):
             QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
         self.proxy_model.setFilterKeyColumn(0)
 
-    def resetFilter(self):
+    def clearFilter(self):
         if len(self.filter_l_edit.text()) > 0:
             self.filter_l_edit.setText("")
 
     def sort(self):
         if not self.sorted:
+            self.sort_btn.setIcon(QIcon(":/icons/sort19-16.png"))
             self.proxy_model.sort(0, Qt.AscendingOrder)
             self.sorted = True
         else:
+            self.sort_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
             self.proxy_model.sort(-1, Qt.AscendingOrder)
             self.sorted = False
 
@@ -120,7 +147,7 @@ class GEOView(QWidget):
     def insertItem(self):
         index = self.tree_view.currentIndex()
         if index:
-            self.resetFilter()
+            self.clearFilter()
             # set branch expanded before insert !important
             if not self.tree_view.isExpanded(index):
                 self.tree_view.setExpanded(index, True)
@@ -138,12 +165,10 @@ class GEOView(QWidget):
     def removeItem(self):
         index = self.tree_view.currentIndex()
         if index:
-            confirm = QMessageBox()
-            confirm.setWindowTitle("Удаление объекта")
-            confirm.setText("Вы уверены что хотите удалить этот объект?")
-            confirm.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
-            confirm.setDefaultButton(QMessageBox.No)
-            result = confirm.exec()
+            result = QMessageBox().critical(
+                self.main_window, "Удаление объекта",
+                "Вы уверены что хотите удалить \"%s\"?" % index.data(),
+                QMessageBox.No | QMessageBox.Yes)
 
             if result == QMessageBox.Yes:
                 self.model.removeRows(index.row(), 1, index.parent())
