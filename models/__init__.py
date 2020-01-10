@@ -4,6 +4,6 @@ from .guberniamodel import GuberniaModel
 from .uezdmodel import UezdModel
 from .localitymodel import LocalityModel
 from .churchmodel import ChurchModel
-from .sqlgeomodel import SQLGeoModel
-from .sqlgeoitem import SQLGeoItem
-from .sqldoctypemodel import SQLDoctypeModel
+from .geomodel import GeoModel
+from .geoitem import GeoItem
+from .church_dt_model import ChurchDTModel

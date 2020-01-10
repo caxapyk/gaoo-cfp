@@ -3,6 +3,7 @@ from PyQt5.QtCore import (QSettings)
 from PyQt5.QtWidgets import (QMainWindow, QMessageBox)
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIcon, QPixmap
+from dialogs import DoctypeDialog
 
 
 class MainWindowView(QMainWindow):
@@ -14,10 +15,10 @@ class MainWindowView(QMainWindow):
         self.toobar = self.ui.toolBar
 
         tb_search_action = self.toobar.addAction("Поиск по указателю")
-        tb_search_action.setIcon(QIcon(":/icons/search-file-24.png"))
+        tb_search_action.setIcon(QIcon(":/icons/search-file-16.png"))
 
         tb_search_action = self.toobar.addAction("Выход из программы")
-        tb_search_action.setIcon(QIcon(":/icons/exit-24.png"))
+        tb_search_action.setIcon(QIcon(":/icons/exit-16.png"))
 
 
 
@@ -28,10 +29,16 @@ class MainWindowView(QMainWindow):
         if geometry:
             self.restoreGeometry(geometry)
 
+        self.ui.action_doctype.triggered.connect(self.openDoctypeDialog)
+
         self.ui.action_about.triggered.connect(self.aboutCFP)
         self.ui.action_aboutqt.triggered.connect(self.aboutQt5)
 
         self.show()
+
+    def openDoctypeDialog(self):
+        DoctypeDialog()
+
 
     def aboutCFP(self):
         text = "<b>Межфондовый указатель к документам духовного ведомства периода \

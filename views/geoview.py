@@ -4,8 +4,8 @@ from PyQt5.QtCore import (QModelIndex, QItemSelection,
                           QItemSelectionModel, QSortFilterProxyModel)
 from PyQt5.QtWidgets import (QWidget, QMenu, QMessageBox)
 from models import (CFPModel, GuberniaModel, UezdModel,
-                    LocalityModel, ChurchModel, SQLGeoModel)
-from dialogs import DocTypeDialog
+                    LocalityModel, ChurchModel, GeoModel)
+from dialogs import SetDTDialog
 
 
 class GEOView(QWidget):
@@ -25,7 +25,7 @@ class GEOView(QWidget):
         model3 = LocalityModel()
         model4 = ChurchModel()
 
-        geo_model = SQLGeoModel(
+        geo_model = GeoModel(
             (model1, model2, model3, model4),
             ("Территория",))
 
@@ -114,7 +114,10 @@ class GEOView(QWidget):
             self.c_menu.exec(QCursor.pos())
 
     def selectDocType(self):
-        doctype_dialog = DocTypeDialog()
+        index = self.tree_view.currentIndex()
+        s_index = self.proxy_model.mapToSource(index)
+
+        doctype_dialog = SetDTDialog(s_index)
 
     def setDoctypeMenu(self):
         self.doctype_menu = self.c_menu.addMenu("Типы документов")

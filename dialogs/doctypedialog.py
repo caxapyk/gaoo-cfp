@@ -1,47 +1,85 @@
 from PyQt5.Qt import Qt
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import (QDialog)
-from PyQt5.QtSql import (QSqlQuery, QSqlRelation, QSqlRelationalDelegate, QSqlRelationalTableModel, QSqlTableModel, QSqlQueryModel)
-
+from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QMessageBox)
 from PyQt5.uic import loadUi
-from models import SQLDoctypeModel
+from PyQt5.QtSql import QSqlTableModel
+from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
 
 
-class DocTypeDialog(QDialog):
+class DoctypeDialog(QDialog):
     def __init__(self):
-        super(DocTypeDialog, self).__init__()
+        super(DoctypeDialog, self).__init__()
         self.ui = loadUi("ui/doctype_dialog.ui", self)
 
-        self.model = QSqlQueryModel()
-        self.model.setQuery("SELECT * FROM cfp_uezd")
+        self.ui.buttonBox.button(QDialogButtonBox.Save).setDisabled(True)
 
-        # self.dt_model = SQLDoctypeModel(self.model)
-        standart_m = QStandardItemModel(2, 1)
+        model = QSqlTableModel()
+        model.setTable("cfp_doctype")
+        model.setEditStrategy(QSqlTableModel.OnRowChange)
+        model.select()
 
-        #item = QStandardItem("Item 1")
-        #item.setFlags(Qt.NoItemFlags)
-        #item.setCheckState(Qt.Checked)
-        #item2 = QStandardItem("Item 2")
-        #item2.setCheckState(Qt.Unchecked)
-        #item2.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
-        #standart_m.setItem(0, 0, item)
-        #standart_m.setItem(1, 0, item2)
-
-        model = QStandardItemModel()
-        #parentItem = model.invisibleRootItem()
-        for i in range(4):
-            item0 = QStandardItem("item %d" % i)
-            #parentItem.appendRow(item)
-            while self.model.query().next():
-            	val = self.model.query().value("name")
-            	item = QStandardItem(val)
-            	if val == "Орловский уезд":
-            		item.setCheckState(Qt.Checked)
-            	model.appendRow(item)
-            #parentItem = item
-
+        model.setHeaderData(0, Qt.Horizontal, "ID")
+        model.setHeaderData(1, Qt.Horizontal, "Имя")
 
         self.ui.listView_doctype.setModel(model)
-        self.ui.listView_doctype.setModelColumn(2)
+        self.ui.listView_doctype.setModelColumn(1)
+
+        self.ui.pushButton_create.clicked.connect(self.createAction)
+        self.ui.pushButton_remove.clicked.connect(self.removeAction)
+        self.ui.pushButton_edit.clicked.connect(self.editAction)
+        self.ui.buttonBox.button(
+            QDialogButtonBox.Save).clicked.connect(self.saveAction)
+        self.ui.buttonBox.rejected.connect(self.closeAction)
+
+        self.model = model
 
         self.show()
+
+    def createAction(self):
+        self.model.insertRow(self.model.rowCount())
+        index = self.model.index(self.model.rowCount() - 1, 1, QModelIndex())
+        self.model.setData(index, "Новая запись")
+
+        self.ui.buttonBox.button(QDialogButtonBox.Save).setDisabled(False)
+
+        selection = QItemSelection()
+        selection.select(index, index)
+        self.ui.listView_doctype.selectionModel().select(
+            selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear)
+
+        # edit new item
+        self.ui.listView_doctype.edit(index)
+
+    def removeAction(self):
+        index = self.listView_doctype.selectedIndexes()
+        if index:
+            result = QMessageBox().critical(
+                self, "Удаление объекта",
+                "Вы уверены что хотите удалить \"%s\"?" % index[0].data(),
+                QMessageBox.No | QMessageBox.Yes)
+
+            if result == QMessageBox.Yes:
+                self.model.beginRemoveRows(QModelIndex(), index[0].row(), index[0].row())
+                self.model.removeRow(index[0].row())
+                self.model.endRemoveRows()
+                self.ui.buttonBox.button(
+                    QDialogButtonBox.Save).setDisabled(False)
+
+    def editAction(self):
+        index = self.listView_doctype.currentIndex()
+        self.ui.listView_doctype.edit(index)
+        self.ui.buttonBox.button(QDialogButtonBox.Save).setDisabled(False)
+
+    def saveAction(self):
+        self.model.submitAll()
+        self.ui.buttonBox.button(QDialogButtonBox.Save).setDisabled(True)
+
+    def closeAction(self):
+        if self.ui.buttonBox.button(QDialogButtonBox.Save).isEnabled():
+            result = QMessageBox().critical(self, "Сохранить данные",
+                                            "Сохранить изменения?",
+                                            QMessageBox.No | QMessageBox.Yes)
+            if result == QMessageBox.Yes:
+                self.saveAction()
+            else:
+                self.model.revertAll()
+        self.close()

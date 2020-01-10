@@ -223,8 +223,15 @@
     </property>
     <addaction name="action_2"/>
    </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>Справочники</string>
+    </property>
+    <addaction name="action_doctype"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menu_3"/>
+   <addaction name="menu_4"/>
    <addaction name="menu_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -265,6 +272,11 @@
    </property>
    <property name="text">
     <string>Поиск по указателю</string>
+   </property>
+  </action>
+  <action name="action_doctype">
+   <property name="text">
+    <string>Виды документов</string>
    </property>
   </action>
  </widget>
