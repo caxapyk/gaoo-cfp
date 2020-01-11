@@ -10,12 +10,14 @@ class ListViewDialog(QDialog):
 
     def __init__(self):
         super(ListViewDialog, self).__init__()
-        self.ui = loadUi("ui/listview_dialog.ui", self)
-        self.ui.setWindowIcon(QIcon(":/icons/church-16.png"))
+        ui = loadUi("ui/listview_dialog.ui", self)
+        ui.setWindowIcon(QIcon(":/icons/church-16.png"))
 
-        self.ui.pushButton_create.clicked.connect(self.createAction)
-        self.ui.pushButton_remove.clicked.connect(self.removeAction)
-        self.ui.pushButton_edit.clicked.connect(self.editAction)
+        ui.pushButton_create.clicked.connect(self.createAction)
+        ui.pushButton_remove.clicked.connect(self.removeAction)
+        ui.pushButton_edit.clicked.connect(self.editAction)
+
+        self.ui = ui
 
         self.show()
 

@@ -6,8 +6,7 @@ from PyQt5.QtWidgets import QMessageBox
 class Connection():
 
     def __init__(self):
-        super(Connection, self).__init__()
-        db = QSqlDatabase().addDatabase("QMYSQL")
+        db = QSqlDatabase().addDatabase("QMYSQL", "MariaDB")
 
         db.setHostName("services.lsk.gaorel.ru")
         db.setDatabaseName('cfp')
@@ -33,5 +32,5 @@ class Connection():
                                  \n\nНажмите Отмена для выхода."
                                  % self.db.lastError().text(),
                                  QMessageBox.Cancel)
-            sys.exit()
+            return False
         return True

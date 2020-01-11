@@ -189,9 +189,16 @@
     <addaction name="action_doctype"/>
     <addaction name="action_docflag"/>
    </widget>
+   <widget class="QMenu" name="menu_5">
+    <property name="title">
+     <string>Сервис</string>
+    </property>
+    <addaction name="action_dbsettings"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menu_3"/>
    <addaction name="menu_4"/>
+   <addaction name="menu_5"/>
    <addaction name="menu_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -231,6 +238,11 @@
   <action name="action_docflag">
    <property name="text">
     <string>Доп. сведения (флаги)</string>
+   </property>
+  </action>
+  <action name="action_dbsettings">
+   <property name="text">
+    <string>Настройка подключения</string>
    </property>
   </action>
  </widget>

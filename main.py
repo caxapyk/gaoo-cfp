@@ -3,7 +3,7 @@ from PyQt5.QtCore import (QCoreApplication, QSettings)
 from PyQt5.QtWidgets import (QMainWindow, QMessageBox)
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIcon, QPixmap
-from dialogs import (DoctypeDialog, DocflagDialog)
+from dialogs import (DoctypeDialog, DocflagDialog, DbSettingsDialog)
 from views.geoview import GEOView
 
 
@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
 
         self.ui.action_doctype.triggered.connect(DoctypeDialog)
         self.ui.action_docflag.triggered.connect(DocflagDialog)
+        self.ui.action_dbsettings.triggered.connect(DbSettingsDialog)
 
         self.ui.action_about.triggered.connect(self.aboutCFP)
         self.ui.action_aboutqt.triggered.connect(self.aboutQt5)
