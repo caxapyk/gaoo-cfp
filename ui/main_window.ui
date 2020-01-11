@@ -139,54 +139,13 @@
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QSplitter" name="splitter">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
+         <widget class="QListView" name="listView">
+          <property name="autoFillBackground">
+           <bool>false</bool>
           </property>
-          <widget class="QTabWidget" name="tabWidget">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <widget class="QWidget" name="tab_7">
-            <attribute name="icon">
-             <iconset resource="../resources.qrc">
-              <normaloff>:/icons/church-16.png</normaloff>:/icons/church-16.png</iconset>
-            </attribute>
-            <attribute name="title">
-             <string>Метрические книги</string>
-            </attribute>
-            <layout class="QVBoxLayout" name="verticalLayout_2">
-             <property name="spacing">
-              <number>6</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QListView" name="listView">
-               <property name="autoFillBackground">
-                <bool>false</bool>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">border:none;</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </widget>
+          <property name="styleSheet">
+           <string notr="true">border:none;</string>
+          </property>
          </widget>
         </item>
        </layout>
@@ -228,6 +187,7 @@
      <string>Справочники</string>
     </property>
     <addaction name="action_doctype"/>
+    <addaction name="action_docflag"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_3"/>
@@ -235,17 +195,6 @@
    <addaction name="menu_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="toolBar">
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-  </widget>
   <action name="action_about">
    <property name="text">
     <string>О программе</string>
@@ -277,6 +226,11 @@
   <action name="action_doctype">
    <property name="text">
     <string>Виды документов</string>
+   </property>
+  </action>
+  <action name="action_docflag">
+   <property name="text">
+    <string>Доп. сведения (флаги)</string>
    </property>
   </action>
  </widget>

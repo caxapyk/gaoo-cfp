@@ -1,10 +1,9 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex
-from .geoitem import GeoItem
-from utils import ItemDefaultName
+from .sqltreeitem import SqlTreeItem
 
 
-class GeoModel(QAbstractItemModel):
+class SqlTreeModel(QAbstractItemModel):
     """
     Note theat we assumed that the first column is always the primary key,
     and the second column is the foreign key related to the parent table
@@ -15,11 +14,11 @@ class GeoModel(QAbstractItemModel):
     """
 
     def __init__(self, data, columns):
-        super(GeoModel, self).__init__()
+        super(SqlTreeModel, self).__init__()
         self.__data = data
         self.__columns = columns
 
-        self.__root = GeoItem(columns, -1)
+        self.__root = SqlTreeItem(columns, -1)
 
         self.setupModelData()
 
@@ -52,7 +51,7 @@ class GeoModel(QAbstractItemModel):
             item_data = (model.data(model.index(i, name_col_id)),)
 
             item_id = model.data(model.index(i, 0))
-            item = GeoItem(item_data, pos, item_id, parent, model)
+            item = SqlTreeItem(item_data, pos, item_id, parent, model)
 
             parent.childAppend(item)
             i += 1
@@ -237,7 +236,7 @@ class GeoModel(QAbstractItemModel):
             # use child_count to insert to top of branch, its needed for sort
             self.beginInsertRows(parent, child_count, child_count)
 
-            new_item = GeoItem(
+            new_item = SqlTreeItem(
                 (el_name,), level, result_id, parent_item, model)
             parent_item.childAppend(new_item)
 

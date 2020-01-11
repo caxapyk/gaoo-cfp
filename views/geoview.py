@@ -2,10 +2,9 @@ from PyQt5.Qt import Qt, QCursor, QRegExp
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import (QModelIndex, QItemSelection,
                           QItemSelectionModel, QSortFilterProxyModel)
-from PyQt5.QtWidgets import (QWidget, QMenu, QMessageBox)
-from models import (CFPModel, GuberniaModel, UezdModel,
-                    LocalityModel, ChurchModel, GeoModel)
-from dialogs import SetDTDialog
+from PyQt5.QtWidgets import (QWidget, QMenu, QAction, QMessageBox)
+from models import (GuberniaModel, UezdModel,
+                    LocalityModel, ChurchModel, SqlTreeModel)
 
 
 class GEOView(QWidget):
@@ -25,7 +24,7 @@ class GEOView(QWidget):
         model3 = LocalityModel()
         model4 = ChurchModel()
 
-        geo_model = GeoModel(
+        geo_model = SqlTreeModel(
             (model1, model2, model3, model4),
             ("Территория",))
 
@@ -91,11 +90,14 @@ class GEOView(QWidget):
 
                 del_action.setIcon(QIcon(":/icons/delete-16.png"))
 
-                sep_acton = self.c_menu.addSeparator()
+                # sep_acton = self.c_menu.addSeparator()
 
-                dtype_action = self.c_menu.addAction("Установить виды документов")
-                dtype_action.setIcon(QIcon(":/icons/types-16.png"))
-                dtype_action.triggered.connect(self.selectDocType)
+                open_action = QAction(
+                    QIcon(":/icons/docs-folder-16.png"), "Открыть документы")
+
+                self.c_menu.insertAction(ins_action, open_action)
+
+                #open_action.triggered.connect(self.openDocs)
 
             # prevent delete if node has children
             if index.model().hasChildren(index):
