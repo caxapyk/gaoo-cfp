@@ -23,7 +23,7 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QWidget" name="widget" native="true">
+      <widget class="QWidget" name="widget_geo" native="true">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
          <horstretch>3</horstretch>
@@ -45,90 +45,7 @@
        <property name="toolTip">
         <string/>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <property name="leftMargin">
-           <number>3</number>
-          </property>
-          <property name="topMargin">
-           <number>3</number>
-          </property>
-          <item>
-           <widget class="QLineEdit" name="lineEdit_geo_filter">
-            <property name="placeholderText">
-             <string>Фильтр по справочнику...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton_clearFilter">
-            <property name="toolTip">
-             <string>Сбросить фильтр</string>
-            </property>
-            <property name="text">
-             <string>...</string>
-            </property>
-            <property name="icon">
-             <iconset resource="../resources.qrc">
-              <normaloff>:/icons/clear-filter-16.png</normaloff>:/icons/clear-filter-16.png</iconset>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="toolButton_sort">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Сортировка справочника:&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/icons/sort19-16.png&quot;/&gt;&lt;span style=&quot; color:#555753;&quot;&gt;&amp;nbsp;сортировка по алфавиту&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;:/icons/sort-az-16.png&quot;/&gt;&lt;span style=&quot; color:#555753;&quot;&gt;&amp;nbsp;сортировка по списку заполнения&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>...</string>
-            </property>
-            <property name="icon">
-             <iconset resource="../resources.qrc">
-              <normaloff>:/icons/sort-az-16.png</normaloff>:/icons/sort-az-16.png</iconset>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QTreeView" name="treeView_geo">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>400</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="contextMenuPolicy">
-           <enum>Qt::CustomContextMenu</enum>
-          </property>
-          <property name="horizontalScrollBarPolicy">
-           <enum>Qt::ScrollBarAsNeeded</enum>
-          </property>
-          <property name="sizeAdjustPolicy">
-           <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
-          </property>
-          <property name="editTriggers">
-           <set>QAbstractItemView::EditKeyPressed</set>
-          </property>
-          <property name="sortingEnabled">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <layout class="QVBoxLayout" name="verticalLayout"/>
       </widget>
       <widget class="QWidget" name="widget_2" native="true">
        <property name="sizePolicy">

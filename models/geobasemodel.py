@@ -56,6 +56,8 @@ class GEOBaseModel(QSqlQueryModel):
 
         if sql_query.exec_():
             self.setQuery(sql_query)
+        else:
+            self.printError(sql_query)
 
     def insert(self, name):
         if self.__m_parent_id and self.__m_fk:
@@ -75,7 +77,7 @@ class GEOBaseModel(QSqlQueryModel):
         if sql_query.exec_() and sql_query.lastInsertId():
             return sql_query.lastInsertId()
 
-        print(sql_query.lastError().text())
+        self.printError(sql_query)
 
         return False
 
@@ -89,7 +91,7 @@ class GEOBaseModel(QSqlQueryModel):
         if sql_query.exec_():
             return True
 
-        print(sql_query.lastError().text())
+        self.printError(sql_query)
 
         return False
 
@@ -102,7 +104,7 @@ class GEOBaseModel(QSqlQueryModel):
         if sql_query.exec_():
             return True
 
-        print(sql_query.lastError().text())
+        self.printError(sql_query)
 
         return False
 
@@ -122,6 +124,10 @@ class GEOBaseModel(QSqlQueryModel):
             self.setQuery(sql_query)
             return int(self.data(self.index(0, 0)))
 
-        print(sql_query.lastError().text())
+        self.printError(sql_query)
 
         return 0
+
+    def printError(self, sql_query):
+        print("%s: %s" %
+              (self.__class__.__name__, sql_query.lastError().text()))

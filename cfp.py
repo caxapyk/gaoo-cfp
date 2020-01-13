@@ -1,21 +1,5 @@
-import sys, resources
-from PyQt5.QtCore import (QTranslator, QLocale)
-from PyQt5.QtWidgets import QApplication
-from connection import Connection
+import sys
+from application import Application
 
-from main import MainWindow
-
-app = QApplication(sys.argv)
-
-# russian translation
-qtTranslator = QTranslator()
-if qtTranslator.load(QLocale(), ":/qtbase_ru.qm"):
-    app.installTranslator(qtTranslator)
-
-# connect to database
-Connection().connect()
-
-# open main window
-MainWindow().show()
-
+app = Application(sys.argv)
 sys.exit(app.exec_())

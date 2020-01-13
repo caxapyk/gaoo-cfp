@@ -10,11 +10,7 @@ from views.geoview import GEOView
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.ui = loadUi("ui/main_window.ui", self)
-        self.ui.setWindowIcon(QIcon(":/icons/church-16.png"))
-
-        QCoreApplication.setOrganizationName("GAOO")
-        QCoreApplication.setApplicationName("cfp")
+        ui = loadUi("ui/main_window.ui", self)
 
         self.settings = QSettings()
 
@@ -23,14 +19,17 @@ class MainWindow(QMainWindow):
         if geometry:
             self.restoreGeometry(geometry)
 
-        self.ui.action_doctype.triggered.connect(DoctypeDialog)
-        self.ui.action_docflag.triggered.connect(DocflagDialog)
-        self.ui.action_dbsettings.triggered.connect(DbSettingsDialog)
+        ui.action_doctype.triggered.connect(DoctypeDialog)
+        ui.action_docflag.triggered.connect(DocflagDialog)
+        ui.action_dbsettings.triggered.connect(DbSettingsDialog)
 
-        self.ui.action_about.triggered.connect(self.aboutCFP)
-        self.ui.action_aboutqt.triggered.connect(self.aboutQt5)
+        ui.action_about.triggered.connect(self.aboutCFP)
+        ui.action_aboutqt.triggered.connect(self.aboutQt5)
 
-        geoview = GEOView(self)
+        self.geo_view = GEOView(self)
+        ui.widget_geo.layout().addWidget(self.geo_view.mainWidget())
+
+        self.ui = ui
 
     def aboutCFP(self):
         text = "<b>Межфондовый указатель к документам духовного ведомства периода \

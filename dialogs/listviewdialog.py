@@ -11,7 +11,6 @@ class ListViewDialog(QDialog):
     def __init__(self):
         super(ListViewDialog, self).__init__()
         ui = loadUi("ui/listview_dialog.ui", self)
-        ui.setWindowIcon(QIcon(":/icons/church-16.png"))
 
         ui.pushButton_create.clicked.connect(self.createAction)
         ui.pushButton_remove.clicked.connect(self.removeAction)
