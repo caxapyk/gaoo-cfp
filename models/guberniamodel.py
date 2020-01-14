@@ -1,9 +1,4 @@
-from PyQt5.QtSql import QSqlQueryModel
 from models import GEOBaseModel
-
-"""
-Gubernia Model
-"""
 
 
 class GuberniaModel(GEOBaseModel):

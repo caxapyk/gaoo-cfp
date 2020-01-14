@@ -1,9 +1,9 @@
 from PyQt5.Qt import Qt, QCursor, QRegExp
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import (QModelIndex, QItemSelection,
-                          QItemSelectionModel, QSortFilterProxyModel)
-from PyQt5.QtWidgets import (QFrame, QHBoxLayout, QVBoxLayout, QLineEdit,
-                             QToolButton, QTreeView, QMenu, QAction, QMessageBox)
+                          QItemSelectionModel, QSortFilterProxyModel, QSize)
+from PyQt5.QtWidgets import (QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout,
+                             QLineEdit, QToolButton, QTreeView, QMenu, QAction, QMessageBox)
 from models import (GuberniaModel, UezdModel,
                     LocalityModel, ChurchModel, SqlTreeModel)
 from views import View
@@ -59,6 +59,11 @@ class GEOView(View):
         v_layout.addWidget(filter_panel)
         v_layout.addWidget(tree_view)
 
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(15)
+        main.setSizePolicy(sizePolicy)
+        main.setMinimumSize(QSize(250, 0))
+
         self.sort_btn = sort_btn
         self.geo_filter = geo_filter
         self.clearfilter_btn = clearfilter_btn
@@ -92,7 +97,6 @@ class GEOView(View):
             self.showContextMenu)
 
     def showContextMenu(self, point):
-        print("contex")
         proxy_index = self.tree_view.indexAt(point)
         index = self.model.mapToSource(proxy_index)
 
@@ -166,6 +170,7 @@ class GEOView(View):
     def clearFilter(self):
         if len(self.geo_filter.text()) > 0:
             self.geo_filter.setText("")
+            self.tree_view.collapseAll()
             self.clearfilter_btn.setDisabled(True)
 
     def sort(self):

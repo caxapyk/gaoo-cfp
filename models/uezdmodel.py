@@ -1,9 +1,5 @@
 from models import GEOBaseModel
 
-"""
-Uezd Model
-"""
-
 
 class UezdModel(GEOBaseModel):
     def __init__(self):

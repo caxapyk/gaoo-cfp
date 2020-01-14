@@ -9,9 +9,7 @@ from mainwindow import MainWindow
 class Application(QApplication):
     def __init__(self, argv):
         super(Application, self).__init__(argv)
-
         self.initializeDefaults()
-        self.initializeLanguage()
         self.openConnection()
 
         main_window = MainWindow()
@@ -21,14 +19,13 @@ class Application(QApplication):
         QCoreApplication.setOrganizationName("GAOO")
         QCoreApplication.setApplicationName("cfp")
 
+        qtTranslator = QTranslator()
+        if qtTranslator.load(QLocale(), ":/qtbase_ru.qm"):
+            QCoreApplication.installTranslator(qtTranslator)
+
         self.setWindowIcon(QIcon(":/icons/church-16.png"))
 
     def openConnection(self):
         conn = Connection()
         if conn.connect():
             print("Connected to database.")
-
-    def initializeLanguage(self):
-        qtTranslator = QTranslator()
-        if qtTranslator.load(QLocale(), ":/qtbase_ru.qm"):
-            self.installTranslator(qtTranslator)

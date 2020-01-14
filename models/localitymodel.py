@@ -1,9 +1,5 @@
 from models import GEOBaseModel
 
-"""
-Locality Model
-"""
-
 
 class LocalityModel(GEOBaseModel):
     def __init__(self):
