@@ -4,16 +4,24 @@ from PyQt5.QtCore import (QCoreApplication, QTranslator, QLocale)
 from PyQt5.QtGui import QIcon
 from connection import Connection
 from mainwindow import MainWindow
+from dialogs import DbSettingsDialog
 
 
 class Application(QApplication):
     def __init__(self, argv):
         super(Application, self).__init__(argv)
-        self.initializeDefaults()
-        self.openConnection()
 
-        main_window = MainWindow()
-        main_window.show()
+        self.initializeDefaults()
+        self.initialize()
+
+    def initialize(self):
+        if self.dbConnect():
+            main_window = MainWindow()
+            main_window.show()
+        else:
+            dbsettings_dialog = DbSettingsDialog()
+            dbsettings_dialog.show()
+            dbsettings_dialog.accepted.connect(self.initialize)
 
     def initializeDefaults(self):
         QCoreApplication.setOrganizationName("GAOO")
@@ -25,7 +33,8 @@ class Application(QApplication):
 
         self.setWindowIcon(QIcon(":/icons/church-16.png"))
 
-    def openConnection(self):
+    def dbConnect(self):
         conn = Connection()
         if conn.connect():
-            print("Connected to database.")
+            return True
+        return False

@@ -13,5 +13,3 @@ class DoctypeDialog(ListViewDialog):
         model.setEditStrategy(QSqlTableModel.OnFieldChange)
 
         self.setModel(model)
-
-        self.show()

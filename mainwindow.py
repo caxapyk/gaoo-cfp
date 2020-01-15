@@ -101,13 +101,16 @@ class MainWindow(QMainWindow):
         return QMessageBox.aboutQt(self)
 
     def openDoctypeDialog(self):
-        return DoctypeDialog()
+        doctype_dialog = DoctypeDialog()
+        doctype_dialog.show()
 
     def openDocflagDialog(self):
-        return DocflagDialog()
+        docflag_dialog = DocflagDialog()
+        docflag_dialog.show()
 
     def openDbSettingsDialog(self):
-        return DbSettingsDialog()
+        dbsettings_dialog = DbSettingsDialog()
+        dbsettings_dialog.show()
 
     def closeEvent(self, event):
         geometry = self.saveGeometry()

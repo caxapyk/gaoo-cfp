@@ -14,7 +14,7 @@ class GEOView(View):
         super(GEOView, self).__init__()
 
         self.parent = parent
-        self.sorted = False
+        self.az_sorted = False
 
         self.setUi()
         self.setModels()
@@ -38,14 +38,22 @@ class GEOView(View):
         clearfilter_btn.setToolTip("Сбросить фильтр")
         clearfilter_btn.setDisabled(True)
 
-        sort_btn = QToolButton(filter_panel)
-        sort_btn.setObjectName("sort_btn")
-        sort_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
-        sort_btn.setToolTip("<html><head/><body><p>Сортировка справочника:</p><p><img src=\":/icons/sort19-16.png\"/><span style=\" color:#555753;\">&nbsp;сортировка по алфавиту</span></p><p><img src=\":/icons/sort-az-16.png\"/><span style=\" color:#555753;\">&nbsp;сортировка по списку заполнения</span></p></body></html>")
+        sort_inc_btn = QToolButton(filter_panel)
+        sort_inc_btn.setObjectName("sort_az_btn")
+        sort_inc_btn.setIcon(QIcon(":/icons/sort19-16.png"))
+        sort_inc_btn.setToolTip("Cортировка по списку заполнения")
+        sort_inc_btn.setCheckable(True)
+        sort_inc_btn.setChecked(True)
+
+        sort_az_btn = QToolButton(filter_panel)
+        sort_az_btn.setObjectName("sort_az_btn")
+        sort_az_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
+        sort_az_btn.setToolTip("Cортировка по алфавиту")
 
         f_layout.addWidget(geo_filter)
         f_layout.addWidget(clearfilter_btn)
-        f_layout.addWidget(sort_btn)
+        f_layout.addWidget(sort_inc_btn)
+        f_layout.addWidget(sort_az_btn)
 
         main = QFrame()
         v_layout = QVBoxLayout(main)
@@ -64,7 +72,8 @@ class GEOView(View):
         main.setSizePolicy(sizePolicy)
         main.setMinimumSize(QSize(250, 0))
 
-        self.sort_btn = sort_btn
+        self.sort_inc_btn = sort_inc_btn
+        self.sort_az_btn = sort_az_btn
         self.geo_filter = geo_filter
         self.clearfilter_btn = clearfilter_btn
         self.tree_view = tree_view
@@ -90,7 +99,8 @@ class GEOView(View):
         self.model = proxy_model
 
     def setTriggers(self):
-        self.sort_btn.clicked.connect(self.sort)
+        self.sort_az_btn.clicked.connect(self.sort_az)
+        self.sort_inc_btn.clicked.connect(self.sort_inc)
         self.geo_filter.textChanged.connect(self.filter)
         self.clearfilter_btn.clicked.connect(self.clearFilter)
         self.tree_view.customContextMenuRequested.connect(
@@ -173,15 +183,25 @@ class GEOView(View):
             self.tree_view.collapseAll()
             self.clearfilter_btn.setDisabled(True)
 
-    def sort(self):
-        if not self.sorted:
-            self.sort_btn.setIcon(QIcon(":/icons/sort19-16.png"))
+    def sort_az(self):
+        if not self.az_sorted:
+            self.sort_az_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
             self.model.sort(0, Qt.AscendingOrder)
-            self.sorted = True
+            self.az_sorted = True
         else:
-            self.sort_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
-            self.model.sort(-1, Qt.AscendingOrder)
-            self.sorted = False
+            self.sort_az_btn.setIcon(QIcon(":/icons/sort-za-16.png"))
+            self.model.sort(0, Qt.DescendingOrder)
+            self.az_sorted = False
+        self.sort_inc_btn.setChecked(False)
+
+    def sort_inc(self):
+        self.sort_az_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
+        self.az_sorted = False
+
+        if not self.az_sorted:
+            self.sort_inc_btn.setChecked(True)
+
+        self.model.sort(-1, Qt.AscendingOrder)
 
     def insertTopItem(self):
         self.model.insertRows(1, 1, QModelIndex())
