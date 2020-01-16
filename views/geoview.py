@@ -20,8 +20,6 @@ class GEOView(View):
         self.setModels()
         self.setTriggers()
 
-        self.tree_view.setModel(self.model)
-
     def setUi(self):
         filter_panel = QFrame()
         f_layout = QHBoxLayout(filter_panel)
@@ -61,7 +59,6 @@ class GEOView(View):
         v_layout.setSpacing(0)
 
         tree_view = QTreeView(main)
-        tree_view.setObjectName("tree_view")
         tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
 
         v_layout.addWidget(filter_panel)
@@ -95,6 +92,8 @@ class GEOView(View):
 
         proxy_model = QSortFilterProxyModel()
         proxy_model.setSourceModel(geo_model)
+
+        self.tree_view.setModel(proxy_model)
 
         self.model = proxy_model
 

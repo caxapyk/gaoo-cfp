@@ -8,6 +8,8 @@ class Connection():
 
     def __init__(self):
         db = QSqlDatabase().addDatabase("QMYSQL")
+        db.setConnectOptions(
+            "MYSQL_OPT_CONNECT_TIMEOUT=10;MYSQL_OPT_RECONNECT=1")
 
         settings = QSettings()
 

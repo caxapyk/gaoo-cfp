@@ -1,12 +1,17 @@
 from PyQt5.QtCore import QObject
+from PyQt5.QtWidgets import QWidget
 
 
 class View(QObject):
+    __m_widget__ = None
+
     def __init__(self):
         super(View, self).__init__()
 
     def setMainWidget(self, widget):
-        self.m_widget = widget
+        self.__m_widget__ = widget
 
     def mainWidget(self):
-        return self.m_widget
+        if self.__m_widget__:
+            return self.__m_widget__
+        return QWidget()

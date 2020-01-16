@@ -1,5 +1,6 @@
 from PyQt5.QtSql import QSqlTableModel
 from .listviewdialog import ListViewDialog
+from models import SqlListModel
 
 
 class DocflagDialog(ListViewDialog):
@@ -8,7 +9,7 @@ class DocflagDialog(ListViewDialog):
 
         self.setWindowTitle("Справочник - Дополнительные сведения (флаги)")
 
-        model = QSqlTableModel()
+        model = SqlListModel()
         model.setTable("cfp_docflag")
         model.setEditStrategy(QSqlTableModel.OnFieldChange)
 

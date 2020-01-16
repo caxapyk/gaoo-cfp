@@ -1,5 +1,6 @@
 from PyQt5.QtSql import QSqlTableModel
 from .listviewdialog import ListViewDialog
+from models import SqlListModel
 
 
 class DoctypeDialog(ListViewDialog):
@@ -8,7 +9,7 @@ class DoctypeDialog(ListViewDialog):
 
         self.setWindowTitle("Справочник - Виды документов")
 
-        model = QSqlTableModel()
+        model = SqlListModel()
         model.setTable("cfp_doctype")
         model.setEditStrategy(QSqlTableModel.OnFieldChange)
 

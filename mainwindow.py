@@ -5,7 +5,7 @@ from PyQt5.uic import loadUi
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (QSizePolicy, QMenuBar, QSplitter, QTreeView)
 from dialogs import (DoctypeDialog, DocflagDialog, DbSettingsDialog)
-from views.geoview import GEOView
+from views import (GEOView, DocView)
 
 
 class MainWindow(QMainWindow):
@@ -31,18 +31,14 @@ class MainWindow(QMainWindow):
     def setUi(self):
         # load views
         geo_view = GEOView(self)
+        doc_view = DocView(self)
 
         splitter = QSplitter(self)
         splitter.addWidget(geo_view.mainWidget())
-
-        tree_view = QTreeView()
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(85)
-        tree_view.setSizePolicy(sizePolicy)
-
-        splitter.addWidget(tree_view)
+        splitter.addWidget(doc_view.mainWidget())
 
         self.geo_view = geo_view
+        self.doc_view = doc_view
 
         self.setCentralWidget(splitter)
 
