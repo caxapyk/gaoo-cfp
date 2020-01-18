@@ -19,6 +19,7 @@ class SqlTreeModel(QAbstractItemModel):
         self.__columns = columns
 
         self.__root = SqlTreeItem(columns, -1)
+        self.__root.map()
 
         self.setupModelData()
 
@@ -238,9 +239,13 @@ class SqlTreeModel(QAbstractItemModel):
 
             new_item = SqlTreeItem(
                 (el_name,), level, result_id, parent_item, model)
-            parent_item.childAppend(new_item)
+
+            # append if parent item already mapped
+            if parent_item.isMapped():
+                parent_item.childAppend(new_item)
 
             self.endInsertRows()
+            print(parent_item.childCount())
 
             return True
 

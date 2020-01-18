@@ -3,7 +3,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import (QModelIndex, QItemSelection,
                           QItemSelectionModel, QSortFilterProxyModel, QSize)
 from PyQt5.QtWidgets import (QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout,
-                             QLineEdit, QToolButton, QTreeView, QMenu, QAction, QMessageBox)
+                             QLineEdit, QToolButton, QTreeView, QMenu, QAction, QMessageBox, QItemDelegate)
 from models import (GuberniaModel, UezdModel,
                     LocalityModel, ChurchModel, SqlTreeModel)
 from views import View
@@ -15,6 +15,7 @@ class GEOView(View):
 
         self.parent = parent
         self.az_sorted = False
+        self.filtered = False
 
         self.setUi()
         self.setModels()
@@ -47,6 +48,7 @@ class GEOView(View):
         sort_az_btn.setObjectName("sort_az_btn")
         sort_az_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
         sort_az_btn.setToolTip("Cортировка по алфавиту")
+        sort_az_btn.setCheckable(True)
 
         f_layout.addWidget(geo_filter)
         f_layout.addWidget(clearfilter_btn)
@@ -94,10 +96,14 @@ class GEOView(View):
         proxy_model.setSourceModel(geo_model)
 
         self.tree_view.setModel(proxy_model)
+        self.delegate = QItemDelegate()
+        #self.tree_view.setItemDelegateForColumn(1, self.delegate)
 
         self.model = proxy_model
+        self.base_model = geo_model
 
     def setTriggers(self):
+        self.delegate.closeEditor.connect(self.sort)
         self.sort_az_btn.clicked.connect(self.sort_az)
         self.sort_inc_btn.clicked.connect(self.sort_inc)
         self.geo_filter.textChanged.connect(self.filter)
@@ -175,14 +181,21 @@ class GEOView(View):
         self.model.setFilterRegExp(
             QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
         self.model.setFilterKeyColumn(0)
+        self.filtered = True
 
     def clearFilter(self):
         if len(self.geo_filter.text()) > 0:
             self.geo_filter.setText("")
-            self.tree_view.collapseAll()
             self.clearfilter_btn.setDisabled(True)
 
+    def sort(self):
+        print("sdfsdfsf")
+        self.sort_az(self)
+
     def sort_az(self):
+        self.sort_az_btn.setChecked(True)
+        self.sort_inc_btn.setChecked(False)
+
         if not self.az_sorted:
             self.sort_az_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
             self.model.sort(0, Qt.AscendingOrder)
@@ -191,14 +204,11 @@ class GEOView(View):
             self.sort_az_btn.setIcon(QIcon(":/icons/sort-za-16.png"))
             self.model.sort(0, Qt.DescendingOrder)
             self.az_sorted = False
-        self.sort_inc_btn.setChecked(False)
 
     def sort_inc(self):
+        self.sort_inc_btn.setChecked(True)
+        self.sort_az_btn.setChecked(False)
         self.sort_az_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
-        self.az_sorted = False
-
-        if not self.az_sorted:
-            self.sort_inc_btn.setChecked(True)
 
         self.model.sort(-1, Qt.AscendingOrder)
 
@@ -208,14 +218,17 @@ class GEOView(View):
     def insertItem(self):
         index = self.tree_view.currentIndex()
         if index:
-            self.clearFilter()
-            # set branch expanded before insert !important
-            if not self.tree_view.isExpanded(index):
-                self.tree_view.setExpanded(index, True)
-
             self.model.insertRows(0, 1, index)
 
-            # select new item
+            if self.filtered:
+                m_index = self.model.mapToSource(index)
+
+                self.clearFilter()
+
+                index = self.model.mapFromSource(m_index)
+                self.tree_view.setCurrentIndex(index)
+
+            self.tree_view.setExpanded(index, True)
             self.selectAndEditNewItem(index)
 
     def editItem(self):
