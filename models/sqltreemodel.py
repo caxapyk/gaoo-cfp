@@ -224,28 +224,30 @@ class SqlTreeModel(QAbstractItemModel):
             model.setParentId(parent_item.uid())
 
         # refresh model for an empty branch
-        if parent_item.childCount() == 0:
-            model.refresh()
+        #if parent_item.childCount() == 0:
+            #model.refresh()
 
-        # set default name for a new item like Item 1/Item 2/... etc.
+        # set default name for a new item
         el_name = model.getNewItemName()
 
         result_id = model.insert(model.getNewItemName())
         child_count = parent_item.childCount()
 
         if result_id:
+            # map parent if it has no children
+            # it needed to refresh proxy model of qtreevew before expand
+            if parent_item.childCount() == 0:
+                parent_item.map()
+
             # use child_count to insert to top of branch, its needed for sort
             self.beginInsertRows(parent, child_count, child_count)
 
             new_item = SqlTreeItem(
                 (el_name,), level, result_id, parent_item, model)
 
-            # append if parent item already mapped
-            if parent_item.isMapped():
-                parent_item.childAppend(new_item)
+            parent_item.childAppend(new_item)
 
             self.endInsertRows()
-            print(parent_item.childCount())
 
             return True
 

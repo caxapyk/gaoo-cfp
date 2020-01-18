@@ -218,17 +218,19 @@ class GEOView(View):
     def insertItem(self):
         index = self.tree_view.currentIndex()
         if index:
-            self.model.insertRows(0, 1, index)
-
             if self.filtered:
+                # store source model index to reload after clearFilter()
+                # because index of proxy model will be changed 
                 m_index = self.model.mapToSource(index)
-
                 self.clearFilter()
-
+                # restore index
                 index = self.model.mapFromSource(m_index)
                 self.tree_view.setCurrentIndex(index)
-
+            
+            # !important: branch must be expanded before insert
             self.tree_view.setExpanded(index, True)
+
+            self.model.insertRows(0, 1, index)
             self.selectAndEditNewItem(index)
 
     def editItem(self):
