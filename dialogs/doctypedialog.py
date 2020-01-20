@@ -1,19 +1,18 @@
 from PyQt5.QtSql import QSqlTableModel
-from PyQt5.QtCore import QObject
 from .listviewdialog import ListViewDialog
+from models import (DoctypeModel, SqlListProxyModel)
 
 
-class DoctypeDialog(QObject):
+class DoctypeDialog(ListViewDialog):
     def __init__(self):
         super(DoctypeDialog, self).__init__()
+        self.setWindowTitle("Справочник - Виды документов")
 
-        model = QSqlTableModel()
-        model.setTable("cfp_doctype")
+        model = DoctypeModel()
         model.setEditStrategy(QSqlTableModel.OnFieldChange)
         model.select()
 
-        listviewdialog = ListViewDialog(model)
-        listviewdialog.setWindowTitle("Справочник - Виды документов")
-        listviewdialog.show()
+        list_model = SqlListProxyModel(2)
+        list_model.setSourceModel(model)
 
-        #self.setModel(model, 1, 2)
+        self.setModel(list_model)

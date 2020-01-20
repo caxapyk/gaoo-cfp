@@ -7,56 +7,37 @@ from models import SqlListProxyModel
 
 class ListViewDialog(QDialog):
 
-    def __init__(self, model, proxy_model=None):
+    def __init__(self):
         super(ListViewDialog, self).__init__()
-        self.ui = loadUi("ui/listview_dialog.ui", self)
+        ui = loadUi("ui/listview_dialog.ui", self)
 
-        self.model = model
-        self.proxy_model = proxy_model
+        ui.pushButton_create.clicked.connect(self.insertAction)
+        ui.pushButton_remove.clicked.connect(self.removeAction)
+        ui.pushButton_edit.clicked.connect(self.editAction)
+        ui.listView_doctype.pressed.connect(self.setButtonState)
 
-        self.setTriggers()
+        self.model = None
+        self.ui = ui
+
         self.setButtonState()
 
-    def setTriggers(self):
-        self.ui.pushButton_create.clicked.connect(self.insertAction)
-        self.ui.pushButton_remove.clicked.connect(self.removeAction)
-        self.ui.pushButton_edit.clicked.connect(self.editAction)
+    def setModel(self, model):
+        self.model = model
+        self.model.dataChanged.connect(self.dataChangedAction)
 
-        self.ui.listView_doctype.pressed.connect(self.setButtonState)
-
-    def setModels(self):
-        pass
-    #def setModel(self, model, model_column=1, default_column=None):
-    #    model.select()
-    #    model.dataChanged.connect(self.dataChangedAction)
-
-        # if model has default items load proxy model
-    #    if default_column:
-    #        list_model = SqlListProxyModel(default_column)
-    #        list_model.setSourceModel(model)
-    #        self.ui.listView_doctype.setModel(list_model)
-    #        self.__proxy_model = list_model
-    #    else:
-    #        self.ui.listView_doctype.setModel(model)
-
-    #    self.ui.listView_doctype.setModelColumn(model_column)
-
-    #    self.__model = model
+        self.ui.listView_doctype.setModel(self.model)
+        self.ui.listView_doctype.setModelColumn(1)
 
     def insertAction(self):
-        total = self.__model.rowCount()
+        total = self.model.rowCount()
         column = self.listView_doctype.modelColumn()
 
-        self.__model.insertRow(total)
+        self.model.insertRow(total)
 
-        index = self.__model.index(total, column, QModelIndex())
-        self.__model.setData(index, "Новая запись", Qt.EditRole)
+        index = self.model.index(total, column, QModelIndex())
+        self.model.setData(index, "Новая запись", Qt.EditRole)
 
-        self.__model.submit()
-
-        # map index from source model
-        if self.proxy_model:
-            index = self.__proxy_model.mapFromSource(index)
+        self.model.submit()
 
         selection = QItemSelection()
         selection.select(index, index)
@@ -78,14 +59,15 @@ class ListViewDialog(QDialog):
 
             if result == QMessageBox.Yes:
                 column = self.listView_doctype.modelColumn()
-                self.__model.removeRows(idx[0].row(), column, QModelIndex())
-                self.__model.select()
+                self.model.removeRows(idx[0].row(), column, QModelIndex())
+                self.model.sourceModel().select()
 
                 self.setButtonState()
 
     def editAction(self):
-        index = self.listView_doctype.selectedIndexes()[0]
-        self.ui.listView_doctype.edit(index)
+        idx = self.listView_doctype.selectedIndexes()
+        if idx:
+            self.ui.listView_doctype.edit(idx[0])
 
     def dataChangedAction(self):
         self.ui.buttonBox.button(QDialogButtonBox.Cancel).setDisabled(True)

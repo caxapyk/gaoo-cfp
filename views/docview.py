@@ -10,10 +10,20 @@ class DocView(View):
         super(DocView, self).__init__()
         self.parent = parent
 
-        self.setUi()
-        self.setModels()
+        self.initUi()
 
-    def setUi(self):
+        docs = QSqlRelationalTableModel()
+        docs.setTable("cfp_church")
+        docs.select()
+
+        #proxy_model = QSortFilterProxyModel()
+        #proxy_model.setSourceModel(geo_model)
+
+        self.tree_view.setModel(docs)
+
+        #self.model = proxy_model
+
+    def initUi(self):
         actions_panel = QFrame()
         f_layout = QHBoxLayout(actions_panel)
         f_layout.setContentsMargins(2, 5, 2, 5)
@@ -37,15 +47,3 @@ class DocView(View):
         self.tree_view = tree_view
 
         self.setMainWidget(main)
-
-    def setModels(self):
-        docs = QSqlRelationalTableModel()
-        docs.setTable("cfp_church")
-        docs.select()
-
-        #proxy_model = QSortFilterProxyModel()
-        #proxy_model.setSourceModel(geo_model)
-
-        self.tree_view.setModel(docs)
-
-        #self.model = proxy_model

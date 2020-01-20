@@ -16,14 +16,30 @@ class GEOView(View):
         self.parent = parent
         # 0 - sort by ID asc, 1 - sort by name asc, 2 - sort by name desc
         self.currentSortType = 0
-        self.az_sorted = False
         self.filtered = False
 
-        self.setUi()
-        self.setModels()
-        self.setTriggers()
+        self.initUi()
+        
+        gubernia = GuberniaModel()
+        uezd = UezdModel()
+        locality = LocalityModel()
+        church = ChurchModel()
 
-    def setUi(self):
+        geo_model = SqlTreeModel(
+            (gubernia, uezd, locality, church),
+            ("Территория",))
+
+        proxy_model = QSortFilterProxyModel()
+        proxy_model.setSourceModel(geo_model)
+        # disable auto filtering
+        proxy_model.setDynamicSortFilter(False)
+
+        self.tree_view.setModel(proxy_model)
+
+        self.model = proxy_model
+        self.geo_model = geo_model
+
+    def initUi(self):
         filter_panel = QFrame()
         f_layout = QHBoxLayout(filter_panel)
         f_layout.setContentsMargins(2, 5, 2, 5)
@@ -31,11 +47,13 @@ class GEOView(View):
 
         geo_filter = QLineEdit(filter_panel)
         geo_filter.setPlaceholderText("Фильтр по справочнику...")
+        geo_filter.textChanged.connect(self.filter)
 
         clearfilter_btn = QPushButton(filter_panel)
         clearfilter_btn.setIcon(QIcon(":/icons/clear-filter-16.png"))
         clearfilter_btn.setToolTip("Сбросить фильтр")
         clearfilter_btn.setDisabled(True)
+        clearfilter_btn.clicked.connect(self.clearFilter)
 
         f_layout.addWidget(geo_filter)
         f_layout.addWidget(clearfilter_btn)
@@ -57,6 +75,8 @@ class GEOView(View):
             sort_group.addButton(sort_btn, i)
             f_layout.addWidget(sort_btn)
 
+        sort_group.buttonClicked[int].connect(self.sort)
+
         main = QFrame()
         v_layout = QVBoxLayout(main)
         v_layout.setContentsMargins(2, 0, 0, 0)
@@ -64,7 +84,12 @@ class GEOView(View):
 
         tree_view = QTreeView(main)
         tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        tree_view.customContextMenuRequested.connect(
+            self.showContextMenu)
+
         tree_view_delegate = QItemDelegate()
+        tree_view_delegate.closeEditor.connect(self.onEditorClosed)
+
         tree_view.setItemDelegateForColumn(0, tree_view_delegate)
 
         v_layout.addWidget(filter_panel)
@@ -75,44 +100,14 @@ class GEOView(View):
         main.setSizePolicy(sizePolicy)
         main.setMinimumSize(QSize(250, 0))
 
-        self.sort_group = sort_group
         self.geo_filter = geo_filter
         self.clearfilter_btn = clearfilter_btn
         self.tree_view = tree_view
-        self.tree_view_delegate = tree_view_delegate
 
         self.c_menu = QMenu(tree_view)
 
         # set main ad default widget
         self.setMainWidget(main)
-
-    def setModels(self):
-        gubernia = GuberniaModel()
-        uezd = UezdModel()
-        locality = LocalityModel()
-        church = ChurchModel()
-
-        geo_model = SqlTreeModel(
-            (gubernia, uezd, locality, church),
-            ("Территория",))
-
-        proxy_model = QSortFilterProxyModel()
-        proxy_model.setSourceModel(geo_model)
-        # disable auto filtering
-        proxy_model.setDynamicSortFilter(False)
-
-        self.tree_view.setModel(proxy_model)
-
-        self.model = proxy_model
-        self.geo_model = geo_model
-
-    def setTriggers(self):
-        self.tree_view_delegate.closeEditor.connect(self.onEditorClosed)
-        self.sort_group.buttonClicked[int].connect(self.sort)
-        self.geo_filter.textChanged.connect(self.filter)
-        self.clearfilter_btn.clicked.connect(self.clearFilter)
-        self.tree_view.customContextMenuRequested.connect(
-            self.showContextMenu)
 
     def showContextMenu(self, point):
         proxy_index = self.tree_view.indexAt(point)
@@ -190,6 +185,7 @@ class GEOView(View):
         if len(self.geo_filter.text()) > 0:
             self.geo_filter.setText("")
             self.model.invalidateFilter()
+            self.sort(self.currentSortType)
             self.clearfilter_btn.setDisabled(True)
 
     def sort(self, sort_type):
@@ -243,7 +239,12 @@ class GEOView(View):
             if result == QMessageBox.Yes:
                 self.model.removeRows(index.row(), 1, index.parent())
 
-    def onEditorClosed(self):
+    def onEditorClosed(self, line_edit):
+        if len(line_edit.text()) == 0:
+            pass
+            #line_edit.undoAvailable = True
+            #line_edit.undo()
+           # dont apply changes
         self.sort(self.currentSortType)
 
     def openItemEditor(self, parent):

@@ -20,7 +20,7 @@ class MainWindow(QMainWindow):
         # if (self.settings):
 
         self.restoreSession()
-        self.setUi()
+        self.initUi()
 
     def restoreSession(self):
         if self.settings.contains("geometry"):
@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         else:
             self.resize(900, 600)
 
-    def setUi(self):
+    def initUi(self):
         # load views
         geo_view = GEOView(self)
         doc_view = DocView(self)
@@ -37,38 +37,37 @@ class MainWindow(QMainWindow):
         splitter.addWidget(geo_view.mainWidget())
         splitter.addWidget(doc_view.mainWidget())
 
-        self.geo_view = geo_view
-        self.doc_view = doc_view
-
-        self.setCentralWidget(splitter)
-
-        self.setMenu()
-
-    def setMenu(self):
         menubar = QMenuBar(self)
 
         file_menu = menubar.addMenu("Файл")
         exit_action = file_menu.addAction(
             QIcon(":/icons/exit-16.png"), "Выход")
+        exit_action.triggered.connect(self.close)
 
         cat_menu = menubar.addMenu("Cправочники")
         doctype_action = cat_menu.addAction("Виды документов")
+        doctype_action.triggered.connect(self.openDoctypeDialog)
+
         docflag_action = cat_menu.addAction("Доп. сведения (флаги)")
+        docflag_action.triggered.connect(self.openDocflagDialog)
 
         help_menu = menubar.addMenu("Помощь")
         dbsettings_action = help_menu.addAction("Настройки соединения с БД")
-        help_menu.addSeparator()
-        about_action = help_menu.addAction("О программе")
-        aboutqt_action = help_menu.addAction("O Qt")
-
-        exit_action.triggered.connect(self.close)
-        doctype_action.triggered.connect(self.openDoctypeDialog)
-        docflag_action.triggered.connect(self.openDocflagDialog)
         dbsettings_action.triggered.connect(self.openDbSettingsDialog)
+        help_menu.addSeparator()
+        
+        about_action = help_menu.addAction("О программе")
         about_action.triggered.connect(self.aboutCFP)
+
+        aboutqt_action = help_menu.addAction("O Qt")
         aboutqt_action.triggered.connect(self.aboutQt5)
 
         self.setMenuBar(menubar)
+
+        self.setCentralWidget(splitter)
+
+        self.geo_view = geo_view
+        self.doc_view = doc_view
 
     def aboutCFP(self):
         text = "<b>Межфондовый указатель к документам духовного ведомства периода \
@@ -98,12 +97,15 @@ class MainWindow(QMainWindow):
 
     def openDoctypeDialog(self):
         doctype_dialog = DoctypeDialog()
+        doctype_dialog.show()
 
     def openDocflagDialog(self):
         docflag_dialog = DocflagDialog()
+        docflag_dialog.show()
 
     def openDbSettingsDialog(self):
         dbsettings_dialog = DbSettingsDialog()
+        dbsettings_dialog.show()
 
     def closeEvent(self, event):
         geometry = self.saveGeometry()

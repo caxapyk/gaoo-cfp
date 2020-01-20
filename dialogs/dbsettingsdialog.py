@@ -32,8 +32,6 @@ class DbSettingsDialog(QDialog):
 
         self.ui = ui
 
-        self.show()
-
     def testAction(self):
         db = QSqlDatabase()
         if not db.contains("db_test"):
