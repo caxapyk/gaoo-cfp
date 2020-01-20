@@ -1,16 +1,20 @@
 from PyQt5.QtSql import QSqlTableModel
+from PyQt5.QtCore import QObject
 from .listviewdialog import ListViewDialog
-from models import SqlListModel
 
 
-class DocflagDialog(ListViewDialog):
+class DocflagDialog(QObject):
     def __init__(self):
         super(DocflagDialog, self).__init__()
 
-        self.setWindowTitle("Справочник - Дополнительные сведения (флаги)")
-
-        model = SqlListModel()
+        model = QSqlTableModel()
         model.setTable("cfp_docflag")
         model.setEditStrategy(QSqlTableModel.OnFieldChange)
+        model.select()
 
-        self.setModel(model)
+        listviewdialog = ListViewDialog(model)
+        listviewdialog.setWindowTitle(
+            "Справочник - Дополнительные сведения (флаги)")
+        listviewdialog.show()
+
+        #self.setModel(model, 1, 2)

@@ -98,15 +98,12 @@ class MainWindow(QMainWindow):
 
     def openDoctypeDialog(self):
         doctype_dialog = DoctypeDialog()
-        doctype_dialog.show()
 
     def openDocflagDialog(self):
         docflag_dialog = DocflagDialog()
-        docflag_dialog.show()
 
     def openDbSettingsDialog(self):
         dbsettings_dialog = DbSettingsDialog()
-        dbsettings_dialog.show()
 
     def closeEvent(self, event):
         geometry = self.saveGeometry()

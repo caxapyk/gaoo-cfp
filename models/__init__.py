@@ -5,4 +5,4 @@ from .localitymodel import LocalityModel
 from .churchmodel import ChurchModel
 from .sqltreemodel import SqlTreeModel
 from .sqltreeitem import SqlTreeItem
-from .sqllistmodel import SqlListModel
+from .sqllistproxymodel import SqlListProxyModel

@@ -1,55 +1,69 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QMessageBox)
-from PyQt5.QtGui import QIcon, QBrush
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
+from models import SqlListProxyModel
 
 
 class ListViewDialog(QDialog):
 
-    __model = None
-
-    def __init__(self):
+    def __init__(self, model, proxy_model=None):
         super(ListViewDialog, self).__init__()
-        ui = loadUi("ui/listview_dialog.ui", self)
+        self.ui = loadUi("ui/listview_dialog.ui", self)
 
-        ui.pushButton_create.clicked.connect(self.insertAction)
-        ui.pushButton_remove.clicked.connect(self.removeAction)
-        ui.pushButton_edit.clicked.connect(self.editAction)
+        self.model = model
+        self.proxy_model = proxy_model
 
-        ui.listView_doctype.pressed.connect(self.setButtonsState)
+        self.setTriggers()
+        self.setButtonState()
 
-        self.ui = ui
-        self.setButtonsState()
+    def setTriggers(self):
+        self.ui.pushButton_create.clicked.connect(self.insertAction)
+        self.ui.pushButton_remove.clicked.connect(self.removeAction)
+        self.ui.pushButton_edit.clicked.connect(self.editAction)
 
-    def setModel(self, model):
-        self.__model = model
-        self.__model.select()
+        self.ui.listView_doctype.pressed.connect(self.setButtonState)
 
-        model.dataChanged.connect(self.dataChangedAction)
+    def setModels(self):
+        pass
+    #def setModel(self, model, model_column=1, default_column=None):
+    #    model.select()
+    #    model.dataChanged.connect(self.dataChangedAction)
 
-        self.ui.listView_doctype.setModel(model)
-        self.ui.listView_doctype.setModelColumn(1)
+        # if model has default items load proxy model
+    #    if default_column:
+    #        list_model = SqlListProxyModel(default_column)
+    #        list_model.setSourceModel(model)
+    #        self.ui.listView_doctype.setModel(list_model)
+    #        self.__proxy_model = list_model
+    #    else:
+    #        self.ui.listView_doctype.setModel(model)
 
-    def setModelColumn(self, column):
-        self.ui.listView_doctype.setModelColumn(column)
+    #    self.ui.listView_doctype.setModelColumn(model_column)
+
+    #    self.__model = model
 
     def insertAction(self):
         total = self.__model.rowCount()
+        column = self.listView_doctype.modelColumn()
 
         self.__model.insertRow(total)
 
-        index = self.__model.index(total, 1, QModelIndex())
+        index = self.__model.index(total, column, QModelIndex())
         self.__model.setData(index, "Новая запись", Qt.EditRole)
 
         self.__model.submit()
+
+        # map index from source model
+        if self.proxy_model:
+            index = self.__proxy_model.mapFromSource(index)
 
         selection = QItemSelection()
         selection.select(index, index)
         self.ui.listView_doctype.selectionModel().select(
             selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear)
 
-        self.setButtonsState()
+        self.setButtonState()
 
         # edit new item
         self.ui.listView_doctype.edit(index)
@@ -63,10 +77,11 @@ class ListViewDialog(QDialog):
                 QMessageBox.No | QMessageBox.Yes)
 
             if result == QMessageBox.Yes:
-                self.__model.removeRows(idx[0].row(), 1, QModelIndex())
+                column = self.listView_doctype.modelColumn()
+                self.__model.removeRows(idx[0].row(), column, QModelIndex())
                 self.__model.select()
 
-                self.setButtonsState()
+                self.setButtonState()
 
     def editAction(self):
         index = self.listView_doctype.selectedIndexes()[0]
@@ -75,13 +90,8 @@ class ListViewDialog(QDialog):
     def dataChangedAction(self):
         self.ui.buttonBox.button(QDialogButtonBox.Cancel).setDisabled(True)
 
-    def setButtonsState(self):
-        self.ui.pushButton_remove.setDisabled(True)
-        self.ui.pushButton_edit.setDisabled(True)
+    def setButtonState(self):
+        isSelected = len(self.listView_doctype.selectedIndexes()) > 0
 
-        idx = self.listView_doctype.selectedIndexes()
-
-        if idx:
-            default_item = isinstance(idx[0].data(Qt.ForegroundRole), QBrush)
-            self.ui.pushButton_remove.setDisabled(default_item)
-            self.ui.pushButton_edit.setDisabled(default_item)
+        self.ui.pushButton_remove.setDisabled(not isSelected)
+        self.ui.pushButton_edit.setDisabled(not isSelected)

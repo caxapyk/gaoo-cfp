@@ -14,6 +14,8 @@ class GEOView(View):
         super(GEOView, self).__init__()
 
         self.parent = parent
+        # 0 - sort by ID asc, 1 - sort by name asc, 2 - sort by name desc
+        self.currentSortType = 0
         self.az_sorted = False
         self.filtered = False
 
@@ -43,7 +45,7 @@ class GEOView(View):
             (":/icons/sort19-16.png", "Cортировка по списку заполнения"),
             (":/icons/sort-az-16.png", "Cортировка по алфавиту (по возрастанию)"),
             (":/icons/sort-za-16.png", "Cортировка по алфавиту (по убыванию)"),
-            )
+        )
         for i, button in enumerate(sort_buttons):
             sort_btn = QPushButton(filter_panel)
             sort_btn.setIcon(QIcon(button[0]))
@@ -62,6 +64,8 @@ class GEOView(View):
 
         tree_view = QTreeView(main)
         tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        tree_view_delegate = QItemDelegate()
+        tree_view.setItemDelegateForColumn(0, tree_view_delegate)
 
         v_layout.addWidget(filter_panel)
         v_layout.addWidget(tree_view)
@@ -72,12 +76,10 @@ class GEOView(View):
         main.setMinimumSize(QSize(250, 0))
 
         self.sort_group = sort_group
-        #self.sort_inc_btn = sort_inc_btn
-        #self.sort_az_btn = sort_az_btn
-        #self.sort_za_btn = sort_za_btn
         self.geo_filter = geo_filter
         self.clearfilter_btn = clearfilter_btn
         self.tree_view = tree_view
+        self.tree_view_delegate = tree_view_delegate
 
         self.c_menu = QMenu(tree_view)
 
@@ -96,21 +98,17 @@ class GEOView(View):
 
         proxy_model = QSortFilterProxyModel()
         proxy_model.setSourceModel(geo_model)
+        # disable auto filtering
+        proxy_model.setDynamicSortFilter(False)
 
         self.tree_view.setModel(proxy_model)
-        self.delegate = QItemDelegate()
-        #self.tree_view.setItemDelegateForColumn(1, self.delegate)
 
         self.model = proxy_model
-        self.base_model = geo_model
+        self.geo_model = geo_model
 
     def setTriggers(self):
-        self.delegate.closeEditor.connect(self.sort)
+        self.tree_view_delegate.closeEditor.connect(self.onEditorClosed)
         self.sort_group.buttonClicked[int].connect(self.sort)
-        #self.sort_group.buttonClicked.connect(self.sort_az)
-        #self.sort_group.buttonClicked.connect(self.sort_za)
-        #self.sort_az_btn.clicked.connect(self.sort_az)
-        #self.sort_inc_btn.clicked.connect(self.sort_inc)
         self.geo_filter.textChanged.connect(self.filter)
         self.clearfilter_btn.clicked.connect(self.clearFilter)
         self.tree_view.customContextMenuRequested.connect(
@@ -194,65 +192,40 @@ class GEOView(View):
             self.model.invalidateFilter()
             self.clearfilter_btn.setDisabled(True)
 
-    def sort(self, typ):
-        print(typ)
-        print(self.sort_group.checkedId())
-        print("sdfsdfsf")
-        #self.sort_az(self)
+    def sort(self, sort_type):
+        if sort_type == 0:
+            self.model.sort(-1)
+        elif sort_type == 1:
+            self.model.sort(0, Qt.AscendingOrder)
+        elif sort_type == 2:
+            self.model.sort(0, Qt.DescendingOrder)
+        else:
+            self.sort(self.currentSortType)
 
-    def sort_az(self):
-        #self.sort_az_btn.setChecked(True)
-        #self.sort_inc_btn.setChecked(False)
-
-        #if not self.az_sorted:
-        #    self.sort_az_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
-        self.model.sort(0, Qt.AscendingOrder)
-        #    self.az_sorted = True
-        #else:
-        #    self.sort_az_btn.setIcon(QIcon(":/icons/sort-za-16.png"))
-        #    self.model.sort(0, Qt.DescendingOrder)
-        #    self.az_sorted = False
-
-    def sort_za(self):
-        #self.sort_az_btn.setChecked(True)
-        #self.sort_inc_btn.setChecked(False)
-
-        #if not self.az_sorted:
-        #self.sort_az_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
-        #    self.model.sort(0, Qt.AscendingOrder)
-        #self.az_sorted = True
-        #else:
-        #    self.sort_az_btn.setIcon(QIcon(":/icons/sort-za-16.png"))
-        self.model.sort(0, Qt.DescendingOrder)
-        #    self.az_sorted = False
-
-    def sort_inc(self):
-        #self.sort_inc_btn.setChecked(True)
-        #self.sort_az_btn.setChecked(False)
-        #self.sort_az_btn.setIcon(QIcon(":/icons/sort-az-16.png"))
-
-        self.model.sort(-1, Qt.AscendingOrder)
+        self.currentSortType = sort_type
 
     def insertTopItem(self):
         self.model.insertRows(1, 1, QModelIndex())
+
+        self.openItemEditor(QModelIndex())
 
     def insertItem(self):
         index = self.tree_view.currentIndex()
         if index:
             if self.filtered:
                 # store source model index to reload after clearFilter()
-                # because index of proxy model will be changed 
+                # because index of proxy model will be changed
                 m_index = self.model.mapToSource(index)
                 self.clearFilter()
                 # restore index
                 index = self.model.mapFromSource(m_index)
                 self.tree_view.setCurrentIndex(index)
-            
-            # !important: branch must be expanded before insert
+
+            # !important: branch must be expanded before new row inserted
             self.tree_view.setExpanded(index, True)
 
             self.model.insertRows(0, 1, index)
-            self.selectAndEditNewItem(index)
+            self.openItemEditor(index)
 
     def editItem(self):
         index = self.tree_view.currentIndex()
@@ -270,18 +243,22 @@ class GEOView(View):
             if result == QMessageBox.Yes:
                 self.model.removeRows(index.row(), 1, index.parent())
 
-    def selectAndEditNewItem(self, parent):
-        # map underlying model index
-        m_parent = self.model.mapToSource(parent)
-        m_child_count = m_parent.internalPointer().childCount() - 1
-        m_new_item = m_parent.model().index(m_child_count, 0, m_parent)
+    def onEditorClosed(self):
+        self.sort(self.currentSortType)
 
-        proxy_child = self.model.mapFromSource(m_new_item)
+    def openItemEditor(self, parent):
+        # map underlying model index
+        geo_parent = self.model.mapToSource(parent)
+        geo_index = self.geo_model.index(self.geo_model.rowCount(
+            geo_parent) - 1, 0, geo_parent)
+
+        # map back to proxy model
+        index = self.model.mapFromSource(geo_index)
 
         selection = QItemSelection()
-        selection.select(proxy_child, proxy_child)
+        selection.select(index, index)
         self.tree_view.selectionModel().select(
             selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear)
 
         # edit new item
-        self.tree_view.edit(proxy_child)
+        self.tree_view.edit(index)

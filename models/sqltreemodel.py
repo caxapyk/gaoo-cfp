@@ -200,7 +200,9 @@ class SqlTreeModel(QAbstractItemModel):
         if item.model().update(item.uid(), value):
             item.setData((value,))
 
-        return True
+            return True
+
+        return False
 
     """
     Implement insertRow function (calls on insert)
@@ -224,8 +226,8 @@ class SqlTreeModel(QAbstractItemModel):
             model.setParentId(parent_item.uid())
 
         # refresh model for an empty branch
-        #if parent_item.childCount() == 0:
-            #model.refresh()
+        # if parent_item.childCount() == 0:
+            # model.refresh()
 
         # set default name for a new item
         el_name = model.getNewItemName()
@@ -251,7 +253,7 @@ class SqlTreeModel(QAbstractItemModel):
 
             return True
 
-        return True
+        return False
 
     """
     Implement removeRow function (calls on remove)
