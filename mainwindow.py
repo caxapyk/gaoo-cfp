@@ -6,6 +6,7 @@ from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (QSizePolicy, QMenuBar, QSplitter, QTreeView)
 from dialogs import (DoctypeDialog, DocflagDialog, DbSettingsDialog)
 from views import (GEOView, DocView)
+from models import ChurchModel
 
 
 class MainWindow(QMainWindow):
@@ -30,8 +31,9 @@ class MainWindow(QMainWindow):
 
     def initUi(self):
         # load views
-        geo_view = GEOView(self)
         doc_view = DocView(self)
+        geo_view = GEOView(self)
+        geo_view.tree_view.doubleClicked.connect(self.showDocs)
 
         splitter = QSplitter(self)
         splitter.addWidget(geo_view.mainWidget())
@@ -55,7 +57,7 @@ class MainWindow(QMainWindow):
         dbsettings_action = help_menu.addAction("Настройки соединения с БД")
         dbsettings_action.triggered.connect(self.openDbSettingsDialog)
         help_menu.addSeparator()
-        
+
         about_action = help_menu.addAction("О программе")
         about_action.triggered.connect(self.aboutCFP)
 
@@ -68,6 +70,13 @@ class MainWindow(QMainWindow):
 
         self.geo_view = geo_view
         self.doc_view = doc_view
+
+    def showDocs(self, index):
+        index = self.geo_view.model.mapToSource(index)
+        sql_model = index.internalPointer()
+
+        if isinstance(sql_model.model(), ChurchModel):
+            self.doc_view.load(index)
 
     def aboutCFP(self):
         text = "<b>Межфондовый указатель к документам духовного ведомства периода \

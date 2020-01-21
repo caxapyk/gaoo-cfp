@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout,
                              QLineEdit, QToolButton, QTreeView, QMenu, QAction, QMessageBox)
 from PyQt5.QtSql import QSqlRelationalTableModel
 from views import View
+from models import DocModel
 
 
 class DocView(View):
@@ -12,16 +13,26 @@ class DocView(View):
 
         self.initUi()
 
-        docs = QSqlRelationalTableModel()
-        docs.setTable("cfp_church")
-        docs.select()
+        self.model = DocModel()
+
+        self.tree_view.setModel(self.model)
 
         #proxy_model = QSortFilterProxyModel()
         #proxy_model.setSourceModel(geo_model)
 
-        self.tree_view.setModel(docs)
+    def load(self, index):
+        church_id = index.internalPointer().uid()
 
-        #self.model = proxy_model
+        self.model.setChurchId(church_id)
+        self.model.refresh()
+
+        self.model.setHeaderData(2, Qt.Horizontal, "Фонд")
+        self.model.setHeaderData(3, Qt.Horizontal, "Опись")
+        self.model.setHeaderData(4, Qt.Horizontal, "Дело")
+        self.model.setHeaderData(5, Qt.Horizontal, "Кол. листов")
+
+        self.tree_view.hideColumn(0)
+        self.tree_view.hideColumn(1)
 
     def initUi(self):
         actions_panel = QFrame()

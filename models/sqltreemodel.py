@@ -197,8 +197,9 @@ class SqlTreeModel(QAbstractItemModel):
 
         item = index.internalPointer()
 
-        if item.model().update(item.uid(), value):
-            item.setData((value,))
+        if len(value) > 0:
+            if item.model().update(item.uid(), value):
+                item.setData((value,))
 
             return True
 

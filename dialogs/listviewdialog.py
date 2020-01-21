@@ -2,7 +2,6 @@ from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QMessageBox)
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
-from models import SqlListProxyModel
 
 
 class ListViewDialog(QDialog):

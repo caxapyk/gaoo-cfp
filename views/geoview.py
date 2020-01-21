@@ -2,11 +2,11 @@ from PyQt5.Qt import Qt, QCursor, QRegExp
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import (QModelIndex, QItemSelection,
                           QItemSelectionModel, QSortFilterProxyModel, QSize)
-from PyQt5.QtWidgets import (QWidget, QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout,
-                             QLineEdit, QButtonGroup, QPushButton, QTreeView, QMenu, QAction, QMessageBox, QItemDelegate)
+from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout, QLineEdit,
+                             QButtonGroup, QPushButton, QTreeView, QMenu, QAction, QMessageBox)
 from models import (GuberniaModel, UezdModel,
                     LocalityModel, ChurchModel, SqlTreeModel)
-from views import View
+from views import (View, GeoItemDelegate)
 
 
 class GEOView(View):
@@ -14,12 +14,13 @@ class GEOView(View):
         super(GEOView, self).__init__()
 
         self.parent = parent
+
         # 0 - sort by ID asc, 1 - sort by name asc, 2 - sort by name desc
         self.currentSortType = 0
         self.filtered = False
 
         self.initUi()
-        
+
         gubernia = GuberniaModel()
         uezd = UezdModel()
         locality = LocalityModel()
@@ -83,11 +84,12 @@ class GEOView(View):
         v_layout.setSpacing(0)
 
         tree_view = QTreeView(main)
+        tree_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         tree_view.customContextMenuRequested.connect(
             self.showContextMenu)
 
-        tree_view_delegate = QItemDelegate()
+        tree_view_delegate = GeoItemDelegate()
         tree_view_delegate.closeEditor.connect(self.onEditorClosed)
 
         tree_view.setItemDelegateForColumn(0, tree_view_delegate)
@@ -116,51 +118,31 @@ class GEOView(View):
         self.c_menu.clear()
 
         if index.isValid():
-            # selected model
-            sel_model = index.internalPointer().model()
+            sql_model = index.internalPointer()
 
-            ins_action = self.c_menu.addAction("Новый элемент")
-            upd_action = self.c_menu.addAction("Переименовать")
-            del_action = self.c_menu.addAction("Удалить")
+            default_actions = (
+                (":/icons/folder-new-16.png", "Создать новый",
+                    self.insertItem),
+                (":/icons/rename-16.png", "Переименовать", self.editItem),
+                (":/icons/delete-16.png", "Удалить", self.removeItem),
+            )
 
-            # add icons
-            ins_action.setIcon(QIcon(":/icons/folder-new-16.png"))
-            upd_action.setIcon(QIcon(":/icons/rename-16.png"))
-            del_action.setIcon(QIcon(":/icons/folder-delete-16.png"))
+            church_actions = (
+                (":/icons/docs-folder-16.png", "Открыть документы",
+                 lambda: self.parent.showDocs(proxy_index)),
+                (":/icons/rename-16.png", "Переименовать", self.editItem),
+                (":/icons/delete-16.png", "Удалить", self.removeItem),
+            )
 
-            if isinstance(sel_model, GuberniaModel):
-                ins_action.setText("Новый узед")
+            if isinstance(sql_model.model(), ChurchModel):
+                actions_list = church_actions
+            else:
+                actions_list = default_actions
 
-            elif isinstance(sel_model, UezdModel):
-                ins_action.setText("Новый населенный пункт")
-
-            elif isinstance(sel_model, LocalityModel):
-                ins_action.setText("Новая церковь")
-                ins_action.setIcon(QIcon(":/icons/church-16.png"))
-
-            # set triggers
-            ins_action.triggered.connect(self.insertItem)
-            upd_action.triggered.connect(self.editItem)
-            del_action.triggered.connect(self.removeItem)
-
-            if isinstance(sel_model, ChurchModel):
-                ins_action.setEnabled(False)
-                ins_action.setVisible(False)
-
-                del_action.setIcon(QIcon(":/icons/delete-16.png"))
-
-                # sep_acton = self.c_menu.addSeparator()
-
-                open_action = QAction(
-                    QIcon(":/icons/docs-folder-16.png"), "Открыть документы")
-
-                self.c_menu.insertAction(ins_action, open_action)
-
-                # open_action.triggered.connect(self.openDocs)
-
-            # prevent delete if node has children
-            if index.model().hasChildren(index):
-                del_action.setEnabled(False)
+            for icon, text, func in actions_list:
+                action = self.c_menu.addAction(text)
+                action.setIcon(QIcon(icon))
+                action.triggered.connect(func)
 
             self.c_menu.exec(
                 self.tree_view.viewport().mapToGlobal(point))
@@ -237,14 +219,12 @@ class GEOView(View):
                 QMessageBox.No | QMessageBox.Yes)
 
             if result == QMessageBox.Yes:
-                self.model.removeRows(index.row(), 1, index.parent())
+                if not self.model.removeRows(index.row(), 1, index.parent()):
+                    QMessageBox().critical(self.parent, "Удаление объекта",
+                                           "Не удалось удалить объект!\nПроверьте нет ли связей с другими объектами",
+                                           QMessageBox.Yes)
 
-    def onEditorClosed(self, line_edit):
-        if len(line_edit.text()) == 0:
-            pass
-            #line_edit.undoAvailable = True
-            #line_edit.undo()
-           # dont apply changes
+    def onEditorClosed(self):
         self.sort(self.currentSortType)
 
     def openItemEditor(self, parent):

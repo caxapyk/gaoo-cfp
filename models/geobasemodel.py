@@ -9,7 +9,7 @@ class GEOBaseModel(QSqlQueryModel):
         self.m_parent_id = None
         self.m_fk = None
 
-        self.diplay_name = "Элемент"
+        self.diplay_name = "Новый элемент"
         self.icon_resource = ":/icons/folder-16.png"
 
     def setTable(self, table_name):

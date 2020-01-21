@@ -8,3 +8,4 @@ from .sqltreeitem import SqlTreeItem
 from .sqllistproxymodel import SqlListProxyModel
 from .doctypemodel import DoctypeModel
 from .docflagmodel import DocflagModel
+from .docmodel import DocModel
