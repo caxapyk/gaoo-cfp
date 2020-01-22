@@ -59,6 +59,12 @@ class ListViewDialog(QDialog):
             if result == QMessageBox.Yes:
                 column = self.listView_doctype.modelColumn()
                 self.model.removeRows(idx[0].row(), column, QModelIndex())
+
+                if not self.model.removeRows(idx[0].row(), column, QModelIndex()):
+                    QMessageBox().critical(self, "Удаление объекта",
+                                           "Не удалось удалить объект!\nПроверьте нет ли связей с другими объектами",
+                                           QMessageBox.Ok)
+
                 self.model.sourceModel().select()
 
                 self.setButtonState()

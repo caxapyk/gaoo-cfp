@@ -2,7 +2,8 @@ from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout,
                              QLineEdit, QToolButton, QTreeView, QMenu, QAction, QMessageBox)
 from PyQt5.QtSql import QSqlRelationalTableModel
-from views import View
+from PyQt5.QtCore import QModelIndex
+from views import (View, StorageUnitDelegate)
 from models import DocModel
 
 
@@ -13,9 +14,7 @@ class DocView(View):
 
         self.initUi()
 
-        self.model = DocModel()
-
-        self.tree_view.setModel(self.model)
+        self.model = None
 
         #proxy_model = QSortFilterProxyModel()
         #proxy_model.setSourceModel(geo_model)
@@ -23,16 +22,38 @@ class DocView(View):
     def load(self, index):
         church_id = index.internalPointer().uid()
 
+        self.model = DocModel()
+
         self.model.setChurchId(church_id)
-        self.model.refresh()
+        #self.model.setFilter("church_id=\"%s\"" % church_id)
+        self.model.select()
 
-        self.model.setHeaderData(2, Qt.Horizontal, "Фонд")
-        self.model.setHeaderData(3, Qt.Horizontal, "Опись")
-        self.model.setHeaderData(4, Qt.Horizontal, "Дело")
-        self.model.setHeaderData(5, Qt.Horizontal, "Кол. листов")
+        #storageunit_delegate = StorageUnitDelegate(self)
 
-        self.tree_view.hideColumn(0)
+        self.tree_view.setModel(self.model)
+        #self.tree_view.setItemDelegateForColumn(1, storageunit_delegate)
+
+
+        self.tree_view.setColumnWidth(0, 50)
         self.tree_view.hideColumn(1)
+        self.tree_view.setColumnWidth(2, 150)
+        self.tree_view.hideColumn(3)
+        self.tree_view.setColumnWidth(4, 200)
+        self.tree_view.hideColumn(5)
+        self.tree_view.hideColumn(6)
+        self.tree_view.hideColumn(7)
+
+        #self.model.setHeaderData(1, Qt.Horizontal, "Ед. хранения")
+        #self.tree_view.setColumnWidth(1, 200)
+
+        #self.model.setHeaderData(2, Qt.Horizontal, "Тип док-та")
+        #self.tree_view.setColumnWidth(2, 100)
+        #self.model.setHeaderData(3, Qt.Horizontal, "Кол. листов")
+        #self.tree_view.setColumnWidth(2, 50)
+
+        #self.tree_view.hideColumn(1)
+        #self.tree_view.hideColumn(5)
+        #self.tree_view.hideColumn(6)
 
     def initUi(self):
         actions_panel = QFrame()

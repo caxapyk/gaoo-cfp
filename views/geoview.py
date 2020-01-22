@@ -222,7 +222,7 @@ class GEOView(View):
                 if not self.model.removeRows(index.row(), 1, index.parent()):
                     QMessageBox().critical(self.parent, "Удаление объекта",
                                            "Не удалось удалить объект!\nПроверьте нет ли связей с другими объектами",
-                                           QMessageBox.Yes)
+                                           QMessageBox.Ok)
 
     def onEditorClosed(self):
         self.sort(self.currentSortType)

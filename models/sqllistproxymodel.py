@@ -9,7 +9,7 @@ class SqlListProxyModel(QIdentityProxyModel):
 
     def flags(self, index):
         if not index.isValid():
-            return Qt.NoItemFlags
+            return Qt.ItemIsEnabled
 
         rec = self.sourceModel().record(index.row())
         if (rec.value(self.default_column) == 1):
