@@ -7,7 +7,7 @@ class DocflagDialog(ListViewDialog):
     def __init__(self):
         super(DocflagDialog, self).__init__()
         self.setWindowTitle(
-            "Справочник - Дополнительные сведения (флаги)")
+            "Справочник - Флаги")
 
         model = DocflagModel()
         model.setEditStrategy(QSqlTableModel.OnFieldChange)

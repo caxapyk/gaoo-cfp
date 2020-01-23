@@ -1,4 +1,6 @@
 from PyQt5.Qt import Qt
+from PyQt5.QtCore import (QModelIndex, QItemSelection,
+                          QItemSelectionModel, QSortFilterProxyModel, QSize)
 from PyQt5.QtWidgets import (QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout,
                              QLineEdit, QToolButton, QTreeView, QMenu, QAction, QMessageBox)
 from PyQt5.QtSql import QSqlRelationalTableModel
@@ -14,46 +16,34 @@ class DocView(View):
 
         self.initUi()
 
-        self.model = None
+        self.doc_model = DocModel()
+        proxy_model = QSortFilterProxyModel()
+        proxy_model.setSourceModel(self.doc_model)
 
-        #proxy_model = QSortFilterProxyModel()
-        #proxy_model.setSourceModel(geo_model)
+        self.tree_view.setModel(proxy_model)
+
+        #self.proxy_model = proxy_model
 
     def load(self, index):
-        church_id = index.internalPointer().uid()
+        #church_id = index.internalPointer().uid()
 
-        self.model = DocModel()
+        #self.doc_model.setChurchId(church_id)
+        #self.doc_model.refresh()
 
-        self.model.setChurchId(church_id)
-        #self.model.setFilter("church_id=\"%s\"" % church_id)
-        self.model.select()
-
-        #storageunit_delegate = StorageUnitDelegate(self)
-
-        self.tree_view.setModel(self.model)
-        #self.tree_view.setItemDelegateForColumn(1, storageunit_delegate)
-
-
-        self.tree_view.setColumnWidth(0, 50)
-        self.tree_view.hideColumn(1)
-        self.tree_view.setColumnWidth(2, 150)
-        self.tree_view.hideColumn(3)
-        self.tree_view.setColumnWidth(4, 200)
-        self.tree_view.hideColumn(5)
-        self.tree_view.hideColumn(6)
-        self.tree_view.hideColumn(7)
-
-        #self.model.setHeaderData(1, Qt.Horizontal, "Ед. хранения")
-        #self.tree_view.setColumnWidth(1, 200)
-
-        #self.model.setHeaderData(2, Qt.Horizontal, "Тип док-та")
-        #self.tree_view.setColumnWidth(2, 100)
-        #self.model.setHeaderData(3, Qt.Horizontal, "Кол. листов")
+        #self.tree_view.setColumnWidth(0, 50)
+        #self.tree_view.hideColumn(not self.tree_view.isColumnHidden(1))
         #self.tree_view.setColumnWidth(2, 50)
+        #self.tree_view.hideColumn(not self.tree_view.isColumnHidden(3))
+        #self.tree_view.setColumnWidth(4, 200)
+        #self.tree_view.hideColumn(not self.tree_view.isColumnHidden(5))
+        #self.tree_view.hideColumn(not self.tree_view.isColumnHidden(6))
+        #self.tree_view.hideColumn(not self.tree_view.isColumnHidden(7))
+        #self.tree_view.setColumnWidth(8, 55)
+        #self.tree_view.setColumnWidth(9, 150)
+        #self.tree_view.setColumnWidth(10, 200)
 
-        #self.tree_view.hideColumn(1)
-        #self.tree_view.hideColumn(5)
-        #self.tree_view.hideColumn(6)
+        #print(self.proxy_model.sortColumn())
+        pass
 
     def initUi(self):
         actions_panel = QFrame()
@@ -72,6 +62,7 @@ class DocView(View):
 
         tree_view = QTreeView(main)
         tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        tree_view.setSortingEnabled(True)
 
         v_layout.addWidget(actions_panel)
         v_layout.addWidget(tree_view)

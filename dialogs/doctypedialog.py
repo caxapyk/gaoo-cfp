@@ -6,7 +6,7 @@ from models import (DoctypeModel, SqlListProxyModel)
 class DoctypeDialog(ListViewDialog):
     def __init__(self):
         super(DoctypeDialog, self).__init__()
-        self.setWindowTitle("Справочник - Виды документов")
+        self.setWindowTitle("Справочник - Типы документов")
 
         model = DoctypeModel()
         model.setEditStrategy(QSqlTableModel.OnFieldChange)

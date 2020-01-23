@@ -47,10 +47,10 @@ class MainWindow(QMainWindow):
         exit_action.triggered.connect(self.close)
 
         cat_menu = menubar.addMenu("Cправочники")
-        doctype_action = cat_menu.addAction("Виды документов")
+        doctype_action = cat_menu.addAction("Типы документов")
         doctype_action.triggered.connect(self.openDoctypeDialog)
 
-        docflag_action = cat_menu.addAction("Доп. сведения (флаги)")
+        docflag_action = cat_menu.addAction("Флаги")
         docflag_action.triggered.connect(self.openDocflagDialog)
 
         help_menu = menubar.addMenu("Помощь")
@@ -76,6 +76,11 @@ class MainWindow(QMainWindow):
         sql_model = index.internalPointer()
 
         if isinstance(sql_model.model(), ChurchModel):
+            church_id = index.internalPointer().uid()
+
+            self.doc_view.doc_model.setChurchId(church_id)
+            self.doc_view.doc_model.refresh()
+
             self.doc_view.load(index)
 
     def aboutCFP(self):
