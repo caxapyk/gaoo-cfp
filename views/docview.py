@@ -17,21 +17,24 @@ class DocView(View):
         self.initUi()
 
         self.doc_model = DocModel()
-        proxy_model = QSortFilterProxyModel()
-        proxy_model.setSourceModel(self.doc_model)
-
-        self.tree_view.setModel(proxy_model)
+        self.proxy_model = QSortFilterProxyModel()
+        self.proxy_model.setSourceModel(self.doc_model)
+        self.tree_view.setModel(self.proxy_model)
+        
 
         #self.proxy_model = proxy_model
 
-    def load(self, index):
+    def loadData(self, index):
+
         #church_id = index.internalPointer().uid()
 
-        #self.doc_model.setChurchId(church_id)
-        #self.doc_model.refresh()
+        self.doc_model.setChurchId(index)
+        self.doc_model.refresh()
 
-        #self.tree_view.setColumnWidth(0, 50)
-        #self.tree_view.hideColumn(not self.tree_view.isColumnHidden(1))
+        self.tree_view.setColumnWidth(0, 50)
+        print(self.tree_view.isColumnHidden(1))
+        if not self.tree_view.isColumnHidden(1):
+            self.tree_view.hideColumn(1)
         #self.tree_view.setColumnWidth(2, 50)
         #self.tree_view.hideColumn(not self.tree_view.isColumnHidden(3))
         #self.tree_view.setColumnWidth(4, 200)

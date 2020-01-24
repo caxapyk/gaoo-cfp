@@ -78,10 +78,7 @@ class MainWindow(QMainWindow):
         if isinstance(sql_model.model(), ChurchModel):
             church_id = index.internalPointer().uid()
 
-            self.doc_view.doc_model.setChurchId(church_id)
-            self.doc_view.doc_model.refresh()
-
-            self.doc_view.load(index)
+            self.doc_view.loadData(church_id)
 
     def aboutCFP(self):
         text = "<b>Межфондовый указатель к документам духовного ведомства периода \

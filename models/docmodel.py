@@ -48,24 +48,26 @@ class DocModel(QSqlQueryModel):
                 return item.row() + 1
 
             elif item.column() == 2:
-                rec = self.query().record()
+                rec = self.record(item.row())
                 doctype_abbr = AbbrString().make(
                     rec.value("cfp_doctype.name"))
 
                 return doctype_abbr
 
             elif item.column() == 4:
-                rec = self.query().record()
+                rec = self.record(item.row())
 
                 storage_unit = "Ф. %s Оп. %s Д. %s" % (
                     rec.value("cfp_doc.fund"),
                     rec.value("cfp_doc.inventory"),
                     rec.value("cfp_doc.unit"))
 
+                print(rec.value("cfp_doc.unit"))
+
                 return storage_unit
 
             elif item.column() == 9:
-                rec = self.query().record()
+                rec = self.record(item.row())
                 year_rel = self.yearRelation(rec.value("cfp_doc.id"))
 
                 years_list = ""
@@ -76,7 +78,7 @@ class DocModel(QSqlQueryModel):
                     return years_list[:-1]
 
             elif item.column() == 10:
-                rec = self.query().record()
+                rec = self.record(item.row())
                 flag_rel = self.flagRelation(rec.value("cfp_doc.id"))
 
                 flags_list = ""
