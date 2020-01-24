@@ -21,6 +21,7 @@ class SqlTreeModel(QAbstractItemModel):
         self.__root = SqlTreeItem(columns, -1)
         self.__root.map()
 
+    def select(self):
         self.setupModelData()
 
     """

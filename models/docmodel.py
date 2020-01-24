@@ -17,26 +17,28 @@ class DocModel(QSqlQueryModel):
         if role == Qt.DisplayRole:
             data = "#"
             if section == 1:
-                data = "ID"
-            elif section == 2:
                 data = "Тип документа"
+            elif section == 2:
+                data = "ID"
             elif section == 3:
-                data = "ID (тип документа)"
+                data = "Тип документа"
             elif section == 4:
-                data = "Ед. хранения"
+                data = "ID (тип документа)"
             elif section == 5:
-                data = "Фонд"
+                data = "Ед. хранения"
             elif section == 6:
-                data = "Опись"
+                data = "Фонд"
             elif section == 7:
-                data = "Дело"
+                data = "Опись"
             elif section == 8:
-                data = "Листов"
+                data = "Дело"
             elif section == 9:
-                data = "Годы документов"
+                data = "Листов"
             elif section == 10:
-                data = "Другие сведения"
+                data = "Годы документов"
             elif section == 11:
+                data = "Другие сведения"
+            elif section == 12:
                 data = "Комментарий"
 
             return data
@@ -47,14 +49,14 @@ class DocModel(QSqlQueryModel):
             if item.column() == 0:
                 return item.row() + 1
 
-            elif item.column() == 2:
+            elif item.column() == 1:
                 rec = self.record(item.row())
                 doctype_abbr = AbbrString().make(
                     rec.value("cfp_doctype.name"))
 
                 return doctype_abbr
 
-            elif item.column() == 4:
+            elif item.column() == 5:
                 rec = self.record(item.row())
 
                 storage_unit = "Ф. %s Оп. %s Д. %s" % (
@@ -62,11 +64,9 @@ class DocModel(QSqlQueryModel):
                     rec.value("cfp_doc.inventory"),
                     rec.value("cfp_doc.unit"))
 
-                print(rec.value("cfp_doc.unit"))
-
                 return storage_unit
 
-            elif item.column() == 9:
+            elif item.column() == 10:
                 rec = self.record(item.row())
                 year_rel = self.yearRelation(rec.value("cfp_doc.id"))
 
@@ -77,7 +77,7 @@ class DocModel(QSqlQueryModel):
 
                     return years_list[:-1]
 
-            elif item.column() == 10:
+            elif item.column() == 11:
                 rec = self.record(item.row())
                 flag_rel = self.flagRelation(rec.value("cfp_doc.id"))
 
@@ -119,11 +119,12 @@ class DocModel(QSqlQueryModel):
 
         if sql_query.exec_():
             self.setQuery(sql_query)
-            # insert columns for counter and storage_unit fields
-            self.insertColumns(0, 1, QModelIndex())
-            self.insertColumns(4, 1, QModelIndex())
+            # insert columns for counter and type abbr fields
+            self.insertColumns(0, 2, QModelIndex())
+            # insert column for storage_unit field
+            self.insertColumns(5, 1, QModelIndex())
             # insert column for years and flags fields
-            self.insertColumns(9, 2, QModelIndex())
+            self.insertColumns(10, 2, QModelIndex())
         else:
             self.printError(sql_query)
 

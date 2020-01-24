@@ -76,9 +76,7 @@ class MainWindow(QMainWindow):
         sql_model = index.internalPointer()
 
         if isinstance(sql_model.model(), ChurchModel):
-            church_id = index.internalPointer().uid()
-
-            self.doc_view.loadData(church_id)
+            self.doc_view.loadData(index)
 
     def aboutCFP(self):
         text = "<b>Межфондовый указатель к документам духовного ведомства периода \

@@ -30,6 +30,8 @@ class GEOView(View):
             (gubernia, uezd, locality, church),
             ("Территория",))
 
+        geo_model.select()
+
         proxy_model = QSortFilterProxyModel()
         proxy_model.setSourceModel(geo_model)
         # disable auto filtering
@@ -43,12 +45,12 @@ class GEOView(View):
     def initUi(self):
         filter_panel = QFrame()
         f_layout = QHBoxLayout(filter_panel)
-        f_layout.setContentsMargins(2, 5, 2, 5)
+        f_layout.setContentsMargins(0, 5, 0, 5)
         f_layout.setSpacing(5)
 
-        geo_filter = QLineEdit(filter_panel)
-        geo_filter.setPlaceholderText("Фильтр по справочнику...")
-        geo_filter.textChanged.connect(self.filter)
+        geofilter_lineedit = QLineEdit(filter_panel)
+        geofilter_lineedit.setPlaceholderText("Фильтр по справочнику...")
+        geofilter_lineedit.textChanged.connect(self.filter)
 
         clearfilter_btn = QPushButton(filter_panel)
         clearfilter_btn.setIcon(QIcon(":/icons/clear-filter-16.png"))
@@ -56,7 +58,7 @@ class GEOView(View):
         clearfilter_btn.setDisabled(True)
         clearfilter_btn.clicked.connect(self.clearFilter)
 
-        f_layout.addWidget(geo_filter)
+        f_layout.addWidget(geofilter_lineedit)
         f_layout.addWidget(clearfilter_btn)
 
         sort_group = QButtonGroup(filter_panel)
@@ -102,7 +104,7 @@ class GEOView(View):
         main.setSizePolicy(sizePolicy)
         main.setMinimumSize(QSize(250, 0))
 
-        self.geo_filter = geo_filter
+        self.geofilter_lineedit = geofilter_lineedit
         self.clearfilter_btn = clearfilter_btn
         self.tree_view = tree_view
 
@@ -155,20 +157,26 @@ class GEOView(View):
             self.c_menu.exec(QCursor.pos())
 
     def filter(self, text):
-        self.clearfilter_btn.setDisabled(False)
+        self.clearfilter_btn.setDisabled((len(text) == 0))
+
         self.tree_view.expandAll()
+
         self.model.setRecursiveFilteringEnabled(True)
         self.model.setFilterRegExp(
             QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
+
         self.model.setFilterKeyColumn(0)
+
         self.filtered = True
 
     def clearFilter(self):
-        if len(self.geo_filter.text()) > 0:
-            self.geo_filter.setText("")
-            self.model.invalidateFilter()
-            self.sort(self.currentSortType)
+        if len(self.geofilter_lineedit.text()) > 0:
+            self.geofilter_lineedit.setText("")
             self.clearfilter_btn.setDisabled(True)
+
+            self.model.invalidateFilter()
+
+            self.sort(self.currentSortType)
 
     def sort(self, sort_type):
         if sort_type == 0:
