@@ -114,13 +114,13 @@ class GEOView(View):
         self.setMainWidget(main)
 
     def showContextMenu(self, point):
-        proxy_index = self.tree_view.indexAt(point)
-        index = self.model.mapToSource(proxy_index)
+        index = self.tree_view.indexAt(point)
 
         self.c_menu.clear()
 
         if index.isValid():
-            sql_model = index.internalPointer()
+            source_index = self.model.mapToSource(index)
+            sql_model = source_index.internalPointer()
 
             default_actions = (
                 (":/icons/folder-new-16.png", "Создать новый",
@@ -131,7 +131,7 @@ class GEOView(View):
 
             church_actions = (
                 (":/icons/docs-folder-16.png", "Открыть документы",
-                 lambda: self.parent.showDocs(proxy_index)),
+                 lambda: self.parent.showDocs(index)),
                 (":/icons/rename-16.png", "Переименовать", self.editItem),
                 (":/icons/delete-16.png", "Удалить", self.removeItem),
             )

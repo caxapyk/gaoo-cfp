@@ -1,6 +1,6 @@
 from PyQt5.QtSql import QSqlTableModel
 from .listviewdialog import ListViewDialog
-from models import (DoctypeModel, SqlListProxyModel)
+from models import (DoctypeModel, DefaultItemProxyModel)
 
 
 class DoctypeDialog(ListViewDialog):
@@ -12,7 +12,7 @@ class DoctypeDialog(ListViewDialog):
         model.setEditStrategy(QSqlTableModel.OnFieldChange)
         model.select()
 
-        list_model = SqlListProxyModel(2)
+        list_model = DefaultItemProxyModel(2)
         list_model.setSourceModel(model)
 
         self.setModel(list_model)

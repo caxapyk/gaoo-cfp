@@ -5,7 +5,7 @@ from .localitymodel import LocalityModel
 from .churchmodel import ChurchModel
 from .sqltreemodel import SqlTreeModel
 from .sqltreeitem import SqlTreeItem
-from .sqllistproxymodel import SqlListProxyModel
+from .defaultitemproxymodel import DefaultItemProxyModel
 from .doctypemodel import DoctypeModel
 from .docflagmodel import DocflagModel
 from .yearmodel import YearModel

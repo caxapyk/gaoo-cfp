@@ -2,9 +2,9 @@ from PyQt5.Qt import Qt
 from PyQt5.QtCore import QIdentityProxyModel
 
 
-class SqlListProxyModel(QIdentityProxyModel):
+class DefaultItemProxyModel(QIdentityProxyModel):
     def __init__(self, default_column):
-        super(SqlListProxyModel, self).__init__()
+        super(DefaultItemProxyModel, self).__init__()
         self.default_column = default_column
 
     def flags(self, index):

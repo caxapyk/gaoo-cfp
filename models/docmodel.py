@@ -66,35 +66,35 @@ class DocModel(QSqlQueryModel):
 
                 return storage_unit
 
-            elif item.column() == 10:
-                rec = self.record(item.row())
-                year_rel = self.yearRelation(rec.value("cfp_doc.id"))
+            #elif item.column() == 10:
+            #    rec = self.record(item.row())
+            #    year_rel = self.yearRelation(rec.value("cfp_doc.id"))
 
-                years_list = ""
-                if year_rel:
-                    while year_rel.next():
-                        years_list += "%s/" % str(year_rel.value("year"))
+            #    years_list = ""
+            #    if year_rel:
+            #        while year_rel.next():
+            #            years_list += "%s, " % str(year_rel.value("year"))
 
-                    return years_list[:-1]
+            #        return years_list[:-2]
 
-            elif item.column() == 11:
-                rec = self.record(item.row())
-                flag_rel = self.flagRelation(rec.value("cfp_doc.id"))
+            #elif item.column() == 11:
+            #    rec = self.record(item.row())
+            #    flag_rel = self.flagRelation(rec.value("cfp_doc.id"))
 
-                flags_list = ""
-                if flag_rel:
-                    while flag_rel.next():
-                        flags_list += "%s/" % AbbrString().make(
-                            flag_rel.value("name"))
+            #    flags_list = ""
+            #    if flag_rel:
+            #        while flag_rel.next():
+            #            flags_list += "%s/" % AbbrString().make(
+            #                flag_rel.value("name"))
 
-                    return flags_list[:-1]
+            #        return flags_list[:-1]
 
         return super().data(item, role)
 
     def setChurchId(self, church_id):
         self.church_id = church_id
 
-    def refresh(self):
+    def select(self):
         query = "SELECT \
         cfp_doctype.id, \
         cfp_doctype.name, \
@@ -129,6 +129,7 @@ class DocModel(QSqlQueryModel):
             self.printError(sql_query)
 
     def yearRelation(self, doc_id):
+        y_model = QSqlQueryModel()
         query = "SELECT cfp_docYears.year \
         FROM cfp_doc \
         RIGHT JOIN cfp_docYears \
@@ -141,11 +142,13 @@ class DocModel(QSqlQueryModel):
         sql_query.addBindValue(doc_id)
 
         if sql_query.exec_():
-            return sql_query
+            y_model.setQuery(sql_query)
+            return y_model
         else:
             self.printError(sql_query)
 
     def flagRelation(self, doc_id):
+        f_model = QSqlQueryModel()
         query = "SELECT cfp_docflag.name \
         FROM cfp_doc \
         RIGHT JOIN cfp_docFlags \
@@ -160,7 +163,8 @@ class DocModel(QSqlQueryModel):
         sql_query.addBindValue(doc_id)
 
         if sql_query.exec_():
-            return sql_query
+            f_model.setQuery(sql_query)
+            return f_model
         else:
             self.printError(sql_query)
 
