@@ -1,8 +1,9 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import QModelIndex
-from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QDataWidgetMapper)
-from models import DocModel, DoctypeModel, DocflagModel, YearModel
+from PyQt5.QtSql import QSqlRelationalTableModel
+from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QDataWidgetMapper, QMessageBox)
+from models import DocModel, DocflagModel, YearsModel
 
 
 class DocFormDialog(QDialog):
@@ -12,64 +13,73 @@ class DocFormDialog(QDialog):
         ui = loadUi("ui/docform_dialog.ui", self)
         ui.setWindowIcon(QIcon(":/icons/church-16.png"))
 
+        ui.buttonBox.accepted.connect(self.saveAction)
+        ui.buttonBox.rejected.connect(self.closeAction)
+
+
         self.setWindowTitle("Новый документ")
 
         if index.isValid():
             doc_model = index.model()
-        else:
-            doc_model = DocModel()
-
-        doctype_model = DoctypeModel()
-        doctype_model.select()
-
-        year_model = YearModel()
-        year_model.select()
-
-        docflag_model = DocflagModel()
-        docflag_model.select()
-
-        ui.doctype_comboBox.setModel(doctype_model)
-        ui.doctype_comboBox.setModelColumn(1)
-
-
-        if index.isValid():
+            doc_model.setEditStrategy(QSqlRelationalTableModel.OnRowChange)
             row = index.row()
 
-            ui.year_listView.setModel(doc_model.yearRelation(doc_model.record(row).value("cfp_doc.id")))
+            doctype_model = doc_model.relationModel(2)
+            ui.doctype_comboBox.setModel(doctype_model)
+            ui.doctype_comboBox.setModelColumn(1)
+
+            years_model = doc_model.yearsModel(row)
+            ui.year_listView.setModel(years_model)
             ui.year_listView.setModelColumn(1)
 
-            ui.docflag_listView.setModel(doc_model.flagRelation(doc_model.record(row).value("cfp_doc.id")))
-            ui.docflag_listView.setModelColumn(1)
+            #ui.docflag_listView.setModel(doc_model.flagRelation(doc_model.record(row).value("cfp_doc.id")))
+            #ui.docflag_listView.setModelColumn(1)
 
             mapper = QDataWidgetMapper()
-            # mapper.setSubmitPolicy(QDataWidgetMapper.AutoSubmit)
             mapper.setModel(doc_model)
+            mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
+
+
             mapper.addMapping(ui.doctype_comboBox, doc_model.record(
-                row).indexOf("cfp_doctype.name"))
+                row).indexOf("name"))
             mapper.addMapping(ui.fund_lineEdit, doc_model.record(
-                row).indexOf("cfp_doc.fund"))
+                row).indexOf("fund"))
             mapper.addMapping(ui.inventory_lineEdit, doc_model.record(
-                row).indexOf("cfp_doc.inventory"))
+                row).indexOf("inventory"))
             mapper.addMapping(ui.unit_lineEdit, doc_model.record(
-                row).indexOf("cfp_doc.unit"))
+                row).indexOf("unit"))
             mapper.addMapping(ui.sheet_spinBox, doc_model.record(
-                row).indexOf("cfp_doc.sheets"))
+                row).indexOf("sheets"))
 
-            mapper.addMapping(ui.docflag_listView, doc_model.record(
-                row).indexOf("cfp_doctype.name"))
-
+            #mapper.addMapping(ui.docflag_listView, doc_model.record(
+            #    row).indexOf("name"))
 
             mapper.addMapping(ui.comment_textEdit, doc_model.record(
-                row).indexOf("cfp_doc.comment"))
+                row).indexOf("comment"))
 
             mapper.setCurrentIndex(row)
 
-        ui.buttonBox.button(
-            QDialogButtonBox.Save).clicked.connect(self.submitAction)
-        # self.ui.buttonBox.rejected.connect(self.closeAction)
+        else:
+            doc_model = DocModel()
 
         self.ui = ui
         self.doc_model = doc_model
+        self.mapper = mapper
 
-    def submitAction(self):
-        print("s")
+    def saveAction(self):
+        self.mapper.submit()
+        self.doc_model.submitAll()
+        print (self.doc_model.lastError().text())
+        self.accept()
+
+    def closeAction(self):
+        #if self.ui.buttonBox.button(QDialogButtonBox.Save).isEnabled():
+        #    result = QMessageBox().critical(self, "Сохранить данные",
+        #                                    "Сохранить изменения?",
+        #                                    QMessageBox.No | QMessageBox.Yes)
+        #    if result == QMessageBox.Yes:
+        #        self.saveAction()
+        #    else:
+        #        self.mapper.revert()
+        #self.destroy()
+        pass

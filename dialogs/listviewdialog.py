@@ -14,6 +14,7 @@ class ListViewDialog(QDialog):
         ui.pushButton_remove.clicked.connect(self.removeAction)
         ui.pushButton_edit.clicked.connect(self.editAction)
         ui.listView_doctype.pressed.connect(self.setButtonState)
+        ui.buttonBox.rejected.connect(self.closeAction)
 
         self.model = None
         self.ui = ui
@@ -82,3 +83,6 @@ class ListViewDialog(QDialog):
 
         self.ui.pushButton_remove.setDisabled(not isSelected)
         self.ui.pushButton_edit.setDisabled(not isSelected)
+
+    def closeAction(self):
+        self.destroy()

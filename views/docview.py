@@ -45,7 +45,8 @@ class DocView(View):
         church_id = index.internalPointer().uid()
 
         doc_model = DocModel()
-        doc_model.setChurchId(church_id)
+        #doc_model.setChurchId(church_id)
+        doc_model.setFilter("church_id=%s" % church_id)
         doc_model.select()
 
         proxy_model = QSortFilterProxyModel()

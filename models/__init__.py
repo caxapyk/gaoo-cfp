@@ -8,5 +8,5 @@ from .sqltreeitem import SqlTreeItem
 from .defaultitemproxymodel import DefaultItemProxyModel
 from .doctypemodel import DoctypeModel
 from .docflagmodel import DocflagModel
-from .yearmodel import YearModel
+from .yearsmodel import YearsModel
 from .docmodel import DocModel

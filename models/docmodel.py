@@ -1,48 +1,19 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QModelIndex
-from PyQt5.QtSql import QSqlQueryModel, QSqlQuery
+from PyQt5.QtSql import QSqlRelationalTableModel, QSqlRelation
+from models import DoctypeModel, DocflagModel, YearsModel
 from utils import AbbrString
 
 
-class DocModel(QSqlQueryModel):
+class DocModel(QSqlRelationalTableModel):
     def __init__(self):
         super(DocModel, self).__init__()
 
+        self.setTable("cfp_doc")
+        self.setRelation(1, QSqlRelation("cfp_church", "id", "name"))
+        self.setRelation(2, QSqlRelation("cfp_doctype", "id", "name"))
+
         self.church_id = None
-
-    def flags(self, index):
-        return Qt.ItemIsSelectable | Qt.ItemIsEnabled
-
-    def headerData(self, section, orientation, role):
-        if role == Qt.DisplayRole:
-            data = "#"
-            if section == 1:
-                data = "Тип документа"
-            elif section == 2:
-                data = "ID"
-            elif section == 3:
-                data = "Тип документа"
-            elif section == 4:
-                data = "ID (тип документа)"
-            elif section == 5:
-                data = "Ед. хранения"
-            elif section == 6:
-                data = "Фонд"
-            elif section == 7:
-                data = "Опись"
-            elif section == 8:
-                data = "Дело"
-            elif section == 9:
-                data = "Листов"
-            elif section == 10:
-                data = "Годы документов"
-            elif section == 11:
-                data = "Другие сведения"
-            elif section == 12:
-                data = "Комментарий"
-
-            return data
-        return super().headerData(section, orientation, role)
 
     def data(self, item, role):
         if role == Qt.DisplayRole:
@@ -52,7 +23,7 @@ class DocModel(QSqlQueryModel):
             elif item.column() == 1:
                 rec = self.record(item.row())
                 doctype_abbr = AbbrString().make(
-                    rec.value("cfp_doctype.name"))
+                    rec.value("name"))
 
                 return doctype_abbr
 
@@ -66,18 +37,18 @@ class DocModel(QSqlQueryModel):
 
                 return storage_unit
 
-            #elif item.column() == 10:
-            #    rec = self.record(item.row())
-            #    year_rel = self.yearRelation(rec.value("cfp_doc.id"))
+            elif item.column() == 10:
+                year_rel = self.yearsModel(item.row())
 
-            #    years_list = ""
-            #    if year_rel:
-            #        while year_rel.next():
-            #            years_list += "%s, " % str(year_rel.value("year"))
+                years_list = ""
+                if year_rel:
+                    while year_rel.query().next():
+                        years_list += "%s, " % str(
+                            year_rel.query().value("year"))
 
-            #        return years_list[:-2]
+                    return years_list[:-2]
 
-            #elif item.column() == 11:
+            # elif item.column() == 11:
             #    rec = self.record(item.row())
             #    flag_rel = self.flagRelation(rec.value("cfp_doc.id"))
 
@@ -91,83 +62,34 @@ class DocModel(QSqlQueryModel):
 
         return super().data(item, role)
 
-    def setChurchId(self, church_id):
-        self.church_id = church_id
+    def yearsModel(self, row):
+        rec = self.record(row)
+        years_model = YearsModel()
+
+        years_model.setFilter("doc_id=%s" % rec.value("id"))
+        years_model.select()
+
+        return years_model
 
     def select(self):
-        query = "SELECT \
-        cfp_doctype.id, \
-        cfp_doctype.name, \
-        cfp_doc.id, \
-        cfp_doc.fund, \
-        cfp_doc.inventory, \
-        cfp_doc.unit, \
-        cfp_doc.sheets, \
-        cfp_doc.comment \
-        FROM cfp_doc \
-        LEFT JOIN cfp_doctype \
-        ON cfp_doc.doctype_id=cfp_doctype.id"
+        super().select()
+        # insert columns for counter and type abbr fields
+        self.insertColumns(0, 2, QModelIndex())
+        # insert column for storage_unit field
+        self.insertColumns(5, 1, QModelIndex())
+        # insert column for years and flags fields
+        self.insertColumns(10, 2, QModelIndex())
 
-        if self.church_id:
-            query += " WHERE cfp_doc.church_id = ?"
-
-        sql_query = QSqlQuery()
-        sql_query.prepare(query)
-
-        if self.church_id:
-            sql_query.addBindValue(self.church_id)
-
-        if sql_query.exec_():
-            self.setQuery(sql_query)
-            # insert columns for counter and type abbr fields
-            self.insertColumns(0, 2, QModelIndex())
-            # insert column for storage_unit field
-            self.insertColumns(5, 1, QModelIndex())
-            # insert column for years and flags fields
-            self.insertColumns(10, 2, QModelIndex())
-        else:
-            self.printError(sql_query)
-
-    def yearRelation(self, doc_id):
-        y_model = QSqlQueryModel()
-        query = "SELECT cfp_docYears.year \
-        FROM cfp_doc \
-        RIGHT JOIN cfp_docYears \
-        ON cfp_docYears.doc_id=cfp_doc.id \
-        WHERE cfp_doc.id=?"
-
-        sql_query = QSqlQuery()
-        sql_query.prepare(query)
-
-        sql_query.addBindValue(doc_id)
-
-        if sql_query.exec_():
-            y_model.setQuery(sql_query)
-            return y_model
-        else:
-            self.printError(sql_query)
-
-    def flagRelation(self, doc_id):
-        f_model = QSqlQueryModel()
-        query = "SELECT cfp_docflag.name \
-        FROM cfp_doc \
-        RIGHT JOIN cfp_docFlags \
-        ON cfp_docFlags.doc_id=cfp_doc.id \
-        LEFT JOIN cfp_docflag \
-        ON cfp_docFlags.docflag_id=cfp_docflag.id \
-        WHERE cfp_doc.id=?"
-
-        sql_query = QSqlQuery()
-        sql_query.prepare(query)
-
-        sql_query.addBindValue(doc_id)
-
-        if sql_query.exec_():
-            f_model.setQuery(sql_query)
-            return f_model
-        else:
-            self.printError(sql_query)
-
-    def printError(self, sql_query):
-        print("%s: %s" %
-              (self.__class__.__name__, sql_query.lastError().text()))
+        self.setHeaderData(0, Qt.Horizontal, "#")
+        self.setHeaderData(1, Qt.Horizontal, "Тип документа")
+        self.setHeaderData(2, Qt.Horizontal, "ID")
+        self.setHeaderData(3, Qt.Horizontal, "Название церкви")
+        self.setHeaderData(4, Qt.Horizontal, "Тип документа (полностью)")
+        self.setHeaderData(5, Qt.Horizontal, "Ед. хранения")
+        self.setHeaderData(6, Qt.Horizontal, "Фонд")
+        self.setHeaderData(7, Qt.Horizontal, "Опись")
+        self.setHeaderData(8, Qt.Horizontal, "Дело")
+        self.setHeaderData(9, Qt.Horizontal, "Листов")
+        self.setHeaderData(10, Qt.Horizontal, "Годы документов")
+        self.setHeaderData(11, Qt.Horizontal, "Другие сведения")
+        self.setHeaderData(12, Qt.Horizontal, "Комментарий")

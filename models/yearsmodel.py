@@ -3,8 +3,8 @@ from PyQt5.QtCore import QModelIndex
 from PyQt5.QtSql import QSqlQueryModel, QSqlQuery, QSqlTableModel, QSqlRelation
 
 
-class YearModel(QSqlTableModel):
+class YearsModel(QSqlTableModel):
     def __init__(self):
-        super(YearModel, self).__init__()
+        super(YearsModel, self).__init__()
 
-        self.setTable("cfp_year")
+        self.setTable("cfp_docyears")
