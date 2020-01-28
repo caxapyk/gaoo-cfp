@@ -14,12 +14,12 @@ class DocModel(QAbstractItemModel):
 
     def select(self):
         # query = "SELECT cfp_doctype.id, cfp_doctype.name, cfp_doc.id, cfp_doc.fund, cfp_doc.inventory, cfp_doc.unit, cfp_doc.sheets, cfp_doc.comment, \
-        #CONCAT('Ф.', cfp_doc.fund,  ', Оп.', cfp_doc.inventory, ', Д.', cfp_doc.unit) AS storageUnit, \
+        # CONCAT('Ф.', cfp_doc.fund,  ', Оп.', cfp_doc.inventory, ', Д.', cfp_doc.unit) AS storageUnit, \
         #(SELECT GROUP_CONCAT(year) FROM cfp_docyears WHERE cfp_docyears.doc_id = cfp_doc.id) AS years, \
         #(SELECT GROUP_CONCAT(cfp_docflag.name) FROM cfp_docflags LEFT JOIN cfp_docflag ON cfp_docflags.docflag_id=cfp_docflag.id WHERE cfp_docflags.doc_id = cfp_doc.id) AS flags, \
         #(SELECT GROUP_CONCAT(cfp_docflag.id) FROM cfp_docflags LEFT JOIN cfp_docflag ON cfp_docflags.docflag_id=cfp_docflag.id WHERE cfp_docflags.doc_id = cfp_doc.id) AS flag_ids \
-        #FROM cfp_doc \
-        #LEFT JOIN cfp_doctype ON cfp_doc.doctype_id=cfp_doctype.id"
+        # FROM cfp_doc \
+        # LEFT JOIN cfp_doctype ON cfp_doc.doctype_id=cfp_doctype.id"
         # self.setupModelData()
 
         query = "SELECT cfp_doc.id, cfp_doctype.name, cfp_doc.fund, cfp_doc.inventory, cfp_doc.unit, cfp_doc.sheets, cfp_doc.comment, \
@@ -83,7 +83,7 @@ class DocModel(QAbstractItemModel):
 
     def index(self, row, column, parent):
         if not self.hasIndex(row, column, parent):
-           return QModelIndex()
+            return QModelIndex()
 
         item = self.__items[row]
         index = self.createIndex(row, column, item)
