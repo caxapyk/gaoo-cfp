@@ -7,7 +7,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtSql import QSqlRelationalTableModel
 from PyQt5.QtCore import QModelIndex
 from views import (View, StorageUnitDelegate)
-from models import DocModel
+from models import DocModelPlain
 
 
 class DocView(View):
@@ -44,9 +44,9 @@ class DocView(View):
 
         church_id = index.internalPointer().uid()
 
-        doc_model = DocModel()
+        doc_model = DocModelPlain(church_id)
         #doc_model.setChurchId(church_id)
-        doc_model.setFilter("church_id=%s" % church_id)
+        #doc_model.setFilter("church_id=%s" % church_id)
         doc_model.select()
 
         proxy_model = QSortFilterProxyModel()
@@ -56,19 +56,19 @@ class DocView(View):
 
         self.tree_view.setModel(proxy_model)
 
-        self.tree_view.setColumnWidth(0, 50)
-        self.tree_view.setColumnWidth(1, 110)
-        self.tree_view.hideColumn(2)
-        self.tree_view.hideColumn(3)
-        self.tree_view.hideColumn(4)
-        self.tree_view.setColumnWidth(5, 200)
-        self.tree_view.hideColumn(6)
-        self.tree_view.hideColumn(7)
-        self.tree_view.hideColumn(8)
-        self.tree_view.setColumnWidth(9, 55)
-        self.tree_view.setColumnWidth(10, 150)
-        self.tree_view.setColumnWidth(11, 200)
-        self.tree_view.hideColumn(12)
+        #self.tree_view.setColumnWidth(0, 50)
+        #self.tree_view.setColumnWidth(1, 110)
+        #self.tree_view.hideColumn(2)
+        #self.tree_view.hideColumn(3)
+        #self.tree_view.hideColumn(4)
+        #self.tree_view.setColumnWidth(5, 200)
+        #self.tree_view.hideColumn(6)
+        #self.tree_view.hideColumn(7)
+        #self.tree_view.hideColumn(8)
+        #self.tree_view.setColumnWidth(9, 55)
+        #self.tree_view.setColumnWidth(10, 150)
+        #self.tree_view.setColumnWidth(11, 200)
+        #self.tree_view.hideColumn(12)
 
     def currentIndex(self):
         if self.tree_view.selectedIndexes():

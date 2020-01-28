@@ -205,11 +205,15 @@ class MainWindow(QMainWindow):
         docflag_dialog.show()
 
     def openDocFormDialogEdit(self):
-        if self.doc_view.tree_view.selectedIndexes():
-            proxy_index = self.doc_view.tree_view.currentIndex()
-            index = self.doc_view.model.mapToSource(proxy_index)
-        else:
-            index = QModelIndex()
+        #if self.doc_view.tree_view.selectedIndexes():
+        #    proxy_index = self.doc_view.tree_view.currentIndex()
+         #   index = self.doc_view.model.mapToSource(proxy_index)
+        #else:
+        #index = QModelIndex()
+
+        proxy_index = self.doc_view.tree_view.currentIndex()
+        index = self.doc_view.model.mapToSource(proxy_index)
+        
         docform_dialog = DocFormDialog(index)
         docform_dialog.show()
 
