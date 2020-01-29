@@ -1,3 +1,4 @@
+from PyQt5.Qt import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
@@ -22,6 +23,7 @@ class DocFormDialog(QDialog):
 
         self.setWindowTitle("Новый документ")
         self.setWindowIcon(QIcon(":/icons/church-16.png"))
+        self.setModal(True)
 
         if index.isValid():
             doc_model = index.model()

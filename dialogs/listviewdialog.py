@@ -10,6 +10,8 @@ class ListViewDialog(QDialog):
         super(ListViewDialog, self).__init__()
         ui = loadUi("ui/listview_dialog.ui", self)
 
+        self.setModal(True)
+
         ui.pushButton_create.clicked.connect(self.insertAction)
         ui.pushButton_remove.clicked.connect(self.removeAction)
         ui.pushButton_edit.clicked.connect(self.editAction)
