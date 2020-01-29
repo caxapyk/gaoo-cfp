@@ -1,2 +1,2 @@
 from .defaultname import ItemDefaultName
-from .abbrstring import AbbrString
+from .abbrmaker import AbbrMaker

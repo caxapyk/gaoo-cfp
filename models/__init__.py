@@ -8,7 +8,8 @@ from .sqltreeitem import SqlTreeItem
 from .defaultitemproxymodel import DefaultItemProxyModel
 from .doctypemodel import DoctypeModel
 from .docflagmodel import DocflagModel
-from .yearsmodel import YearsModel
+from .docyearsmodel import DocYearsModel
+from .docflagsmodel import DocFlagsModel
 from .docmodel import DocModel
 from .docmodelplain import DocModelPlain
 from .docitem import DocItem

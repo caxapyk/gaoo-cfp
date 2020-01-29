@@ -1,7 +1,7 @@
 from PyQt5.Qt import Qt, QCursor, QRegExp
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import (QModelIndex, QItemSelection,
-                          QItemSelectionModel, QSortFilterProxyModel, QSize)
+from PyQt5.QtCore import (QModelIndex, QSortFilterProxyModel, QSize)
+#from PyQt5.QtCore import (QItemSelection, QItemSelectionModel)
 from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout, QLineEdit,
                              QButtonGroup, QPushButton, QTreeView, QMenu, QAction, QMessageBox)
 from models import (GuberniaModel, UezdModel,
@@ -244,10 +244,12 @@ class GEOView(View):
         # map back to proxy model
         index = self.model.mapFromSource(geo_index)
 
-        selection = QItemSelection()
-        selection.select(index, index)
-        self.tree_view.selectionModel().select(
-            selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear)
+        #selection = QItemSelection()
+        #selection.select(index, index)
+        #self.tree_view.selectionModel().select(
+        #    selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear)
+
+        self.tree_view.setCurrentIndex(index)
 
         # edit new item
         self.tree_view.edit(index)

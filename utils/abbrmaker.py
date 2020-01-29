@@ -1,6 +1,6 @@
 
 
-class AbbrString():
+class AbbrMaker():
     def make(self, string):
         abbr = ""
         for i, w in enumerate(string.upper().split()):

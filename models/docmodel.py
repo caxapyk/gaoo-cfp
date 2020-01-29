@@ -5,62 +5,67 @@ from .docitem import DocItem
 
 
 class DocModel(QAbstractItemModel):
-    def __init__(self, fk=None):
+    def __init__(self, church_id=None):
         super(DocModel, self).__init__()
 
-        self.__fk = fk
+        self.__church_id = church_id
         self.__items = []
-        self.__m_model = QSqlQueryModel()
+
+        self.__columns = 0
 
     def select(self):
-        # query = "SELECT cfp_doctype.id, cfp_doctype.name, cfp_doc.id, cfp_doc.fund, cfp_doc.inventory, cfp_doc.unit, cfp_doc.sheets, cfp_doc.comment, \
-        # CONCAT('Ф.', cfp_doc.fund,  ', Оп.', cfp_doc.inventory, ', Д.', cfp_doc.unit) AS storageUnit, \
-        #(SELECT GROUP_CONCAT(year) FROM cfp_docyears WHERE cfp_docyears.doc_id = cfp_doc.id) AS years, \
-        #(SELECT GROUP_CONCAT(cfp_docflag.name) FROM cfp_docflags LEFT JOIN cfp_docflag ON cfp_docflags.docflag_id=cfp_docflag.id WHERE cfp_docflags.doc_id = cfp_doc.id) AS flags, \
-        #(SELECT GROUP_CONCAT(cfp_docflag.id) FROM cfp_docflags LEFT JOIN cfp_docflag ON cfp_docflags.docflag_id=cfp_docflag.id WHERE cfp_docflags.doc_id = cfp_doc.id) AS flag_ids \
-        # FROM cfp_doc \
-        # LEFT JOIN cfp_doctype ON cfp_doc.doctype_id=cfp_doctype.id"
-        # self.setupModelData()
-
-        query = "SELECT cfp_doc.id, cfp_doctype.name, cfp_doc.fund, cfp_doc.inventory, cfp_doc.unit, cfp_doc.sheets, cfp_doc.comment, \
+        query = "SELECT \
+        cfp_doc.id, \
+        cfp_doctype.name, \
+        cfp_doc.fund, \
+        cfp_doc.inventory, \
+        cfp_doc.unit, \
+        cfp_doc.sheets, \
+        cfp_doc.comment, \
         (SELECT GROUP_CONCAT(year) FROM cfp_docyears WHERE cfp_docyears.doc_id = cfp_doc.id) AS years, \
         (SELECT GROUP_CONCAT(cfp_docflag.name) FROM cfp_docflags LEFT JOIN cfp_docflag ON cfp_docflags.docflag_id=cfp_docflag.id WHERE cfp_docflags.doc_id = cfp_doc.id) AS flags \
         FROM cfp_doc \
         LEFT JOIN cfp_doctype ON cfp_doc.doctype_id=cfp_doctype.id"
 
-        if self.__fk:
+        if self.__church_id:
             query += " WHERE cfp_doc.church_id = ?"
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)
 
-        if self.__fk:
-            sql_query.addBindValue(self.__fk)
+        if self.__church_id:
+            sql_query.addBindValue(self.__church_id)
 
-        if sql_query.exec_():
-            self.__m_model.setQuery(sql_query)
-        print(sql_query.lastError().text())
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return None
 
         while sql_query.next():
+            rec = sql_query.record()
+
             data = []
             years = []
             flags = []
 
             # fill data
             i = 0
-            while i < sql_query.record().count():
+            while i < rec.count() - 2:
                 data.append(sql_query.record().value(i))
                 i += 1
+
             # fill years
-            for year in sql_query.record().value("years").split(","):
+            for year in rec.value("years").split(","):
                 years.append(year)
             # fill flags
-            for flag in sql_query.record().value("flags").split(","):
+            for flag in rec.value("flags").split(","):
                 flags.append(flag)
 
             item = DocItem(data, years, flags)
 
             self.__items.append(item)
+            self.__columns = i
+
+        return True
 
     def flags(self, index):
         if not index.isValid():
@@ -69,11 +74,7 @@ class DocModel(QAbstractItemModel):
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
     def columnCount(self, parent):
-        rec = self.__m_model.record()
-        if rec.isEmpty():
-            return 0
-
-        return rec.count()
+        return self.__columns
 
     def rowCount(self, parent):
         if not parent.isValid():
@@ -97,12 +98,12 @@ class DocModel(QAbstractItemModel):
         if not index.isValid():
             return None
 
-        if role != Qt.DisplayRole and role != Qt.EditRole:
-            return None
+        if role == Qt.DisplayRole or role == Qt.EditRole:
+            item = index.internalPointer()
 
-        item = index.internalPointer()
+            return item.data(index.column())
 
-        return item.data(index.column())
+        return None
 
     def setData(self, index, value, role):
         if role != Qt.EditRole:
@@ -119,11 +120,11 @@ class DocModel(QAbstractItemModel):
 
         return False
 
-    def insertColumn(self, column, parent):
-        self.__m_model.insertColumn(column, parent)
-
+    def insertColumns(self, column, count, parent):
         for item in self.__items:
-            item.insertColumn(column)
+            i = 0
+            while i < count:
+                item.insertColumn(column)
+                i += 1
 
-    def record(self, row):
-        return self.__m_model.record(row)
+        self.__columns += count

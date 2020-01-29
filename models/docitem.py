@@ -9,19 +9,16 @@ class DocItem(QAbstractItemView):
         self.__years = years
         self.__flags = flags
 
-    def columnCount(self):
-        return len(self.__data)
-
     def setData(self, data, column):
         self.__data[column] = data
 
     def data(self, section):
         return self.__data[section]
 
-    def years(self):
+    def docyears(self):
         return self.__years
 
-    def flags(self):
+    def docflags(self):
         return self.__flags
 
     def insertColumn(self, column):

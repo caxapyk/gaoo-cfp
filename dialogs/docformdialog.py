@@ -1,10 +1,11 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.uic import loadUi
-from PyQt5.QtCore import QModelIndex
+from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
 from PyQt5.QtSql import QSqlRelationalTableModel
 from PyQt5.QtWidgets import (
     QDialog, QDialogButtonBox, QDataWidgetMapper, QMessageBox)
-from models import DocModel, DoctypeModel, YearsModel
+from models import DocModel, DoctypeModel, DocFlagsModel, DocYearsModel
+from views import YearItemDelegate
 
 
 class DocFormDialog(QDialog):
@@ -24,69 +25,71 @@ class DocFormDialog(QDialog):
 
         if index.isValid():
             doc_model = index.model()
-            # doc_model.setEditStrategy(QSqlRelationalTableModel.OnRowChange)
-            row = index.row()
 
+            mapper = QDataWidgetMapper()
+            mapper.setModel(doc_model)
+            mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
+
+            mapper.addMapping(ui.doctype_comboBox, 1)
+            mapper.addMapping(ui.fund_lineEdit, 3)
+            mapper.addMapping(ui.inventory_lineEdit, 4)
+            mapper.addMapping(ui.unit_lineEdit, 5)
+            mapper.addMapping(ui.sheet_spinBox, 6)
+            mapper.addMapping(ui.comment_textEdit, 7)
+
+            mapper.setCurrentIndex(index.row())
+
+            # doctype
             doctype_model = DoctypeModel()
             doctype_model.select()
 
             ui.doctype_comboBox.setModel(doctype_model)
             ui.doctype_comboBox.setModelColumn(1)
 
-            print(index.internalPointer().years())
-            print(index.internalPointer().flags())
+            # years
+            years_model = DocYearsModel(index)
+            ui.year_listView.setModel(years_model)
 
-        #    years_model = doc_model.yearsModel(row)
-        #   ui.year_listView.setModel(years_model)
-        #    ui.year_listView.setModelColumn(1)
+            year_delegate = YearItemDelegate()
+            year_delegate.closeEditor.connect(self.checkYear)
+            ui.year_listView.setItemDelegateForColumn(0, year_delegate)
 
-            # ui.docflag_listView.setModel(doc_model.flagRelation(doc_model.record(row).value("cfp_doc.id")))
-            # ui.docflag_listView.setModelColumn(1)
+            ui.yearInsert_pushButton.clicked.connect(self.insertYear)
+            ui.yearRemove_pushButton.clicked.connect(self.removeYear)
 
-            mapper = QDataWidgetMapper()
-            mapper.setModel(doc_model)
-            mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
-
-            mapper.addMapping(ui.doctype_comboBox, doc_model.record(row).indexOf("name"))
-
-            mapper.addMapping(ui.fund_lineEdit,
-                              doc_model.record(row).indexOf("cfp_doc.fund"))
-            mapper.addMapping(ui.inventory_lineEdit,
-                              doc_model.record(row).indexOf("cfp_doc.inventory"))
-            mapper.addMapping(ui.unit_lineEdit,
-                              doc_model.record(row).indexOf("cfp_doc.unit"))
-            mapper.addMapping(ui.sheet_spinBox,
-                              doc_model.record(row).indexOf("cfp_doc.sheets"))
-
-            # mapper.addMapping(ui.docflag_listView, doc_model.record(
-            #    row).indexOf("name"))
-
-            mapper.addMapping(ui.comment_textEdit, doc_model.record(row).indexOf("cfp_doc.comment"))
-
-            mapper.setCurrentIndex(row)
+            # docflags
+            docflag_model = DocFlagsModel(index)
+            ui.docflag_listView.setModel(docflag_model)
+            ui.docflag_listView.setModelColumn(1)
 
         # else:
         #    doc_model = DocModel()
 
         self.ui = ui
         self.doc_model = doc_model
+        self.years_model = years_model
         self.mapper = mapper
+
+    def insertYear(self):
+        t_rows = self.years_model.rowCount(QModelIndex())
+
+        if self.years_model.insertRows(t_rows, 1, QModelIndex()):
+            index = self.years_model.index(t_rows)
+
+            self.ui.year_listView.setCurrentIndex(index)
+            self.ui.year_listView.edit(index)
+
+    def removeYear(self):
+        idx = self.ui.year_listView.selectedIndexes()
+        if len(idx) > 0:
+            self.years_model.removeRows(idx[0].row(), 1, QModelIndex())
+
+    def checkYear(self, editor):
+        if not editor.hasAcceptableInput():
+            self.removeYear()
 
     def saveAction(self):
         self.mapper.submit()
-        # self.doc_model.submitAll()
-        #print (self.doc_model.query().lastQuery())
-        #print (self.doc_model.lastError().text())
-        # self.accept()
 
     def closeAction(self):
-        # if self.ui.buttonBox.button(QDialogButtonBox.Save).isEnabled():
-        #    result = QMessageBox().critical(self, "Сохранить данные",
-        #                                    "Сохранить изменения?",
-        #                                    QMessageBox.No | QMessageBox.Yes)
-        #    if result == QMessageBox.Yes:
-        #        self.saveAction()
-        #    else:
-        #        self.mapper.revert()
-        # self.destroy()
-        pass
+        self.destroy()
