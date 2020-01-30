@@ -15,6 +15,12 @@ class DocModel(QAbstractItemModel):
 
         self.__model = QSqlQueryModel()
 
+        self.__cache = {}
+        self.__doc_id = None
+
+        # тупо передавай сюда кортеж с данными из модели
+        self.__data = []
+
     def select(self):
         query = "SELECT \
         cfp_doc.id AS `cfp_doc.id`, \
@@ -78,10 +84,10 @@ class DocModel(QAbstractItemModel):
 
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
-    def columnCount(self, parent):
+    def columnCount(self, parent=QModelIndex()):
         return self.__columns
 
-    def rowCount(self, parent):
+    def rowCount(self, parent=QModelIndex()):
         if not parent.isValid():
             return len(self.__items)
         else:
@@ -115,33 +121,55 @@ class DocModel(QAbstractItemModel):
             return None
 
         item = index.internalPointer()
+
+        rec = self.__model.record(index.row())
+        field = rec.fieldName(index.column())
+
+        self.__cache[field] = value
+
+        if index.row() < self.__model.rowCount():
+            self.__doc_id = rec.value("cfp_doc.id")
+
         item.setData(value, index.column())
-
-        field = self.__model.record(index.row()).fieldName(index.column())
-
-        print (field, "=", value)
-
-        if index.column() == 3:
-            pass
-        #    self.update_query = "UPDATE cfp_doc SET fund=? WHERE cfp_doc.id=?"
-        #    sql_query = QSqlQuery()
-        #    sql_query.prepare(self.update_query)
-        #    sql_query.bindValue(0, value)
-        #    sql_query.bindValue(1, item.data(0))
-
-        #    sql_query.exec_()
-
-         #   print(sql_query.lastQuery(), value)
-        # if item.model().update(item.uid(), value):
-        #    item.setData((value,))
 
         return True
 
-        return False
+    def submitAll(self):
+        q_str = ""
+        query = ""
 
-    #def submit(self):
-    #    pass
+        for key, value in self.__cache.items():
+            print(key, "=", value)
 
+        for key in self.__cache.keys():
+            if self.__doc_id is not None:
+                q_str += "%s=?," % key
+            else:
+                q_str += "?,"
+
+        if self.__doc_id is None:
+            query = "INSERT INTO cfp_doc \
+            (church_id, doctype_id, fund, inventory, unit, sheets, comment) \
+            VALUES(%s,%s)" % (self.__church_id, q_str[:-1])
+        else:
+            query = "UPDATE cfp_doc SET %s WHERE id=?" % q_str[:-1]
+
+        sql_query = QSqlQuery()
+        sql_query.prepare(query)
+
+        for value in self.__cache.values():
+            sql_query.addBindValue(value)
+
+        if self.__doc_id is not None:
+            sql_query.addBindValue(self.__doc_id)
+
+        print(sql_query.lastQuery())
+
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return False
+
+        return True
 
     def insertColumns(self, column, count, parent):
         self.__model.insertColumns(column, count)
@@ -152,6 +180,22 @@ class DocModel(QAbstractItemModel):
                 i += 1
 
         self.__columns += count
+
+    def insertRows(self, row, count, parent):
+        self.beginInsertRows(parent, row, row)
+
+        i = 0
+        data = []
+        while i < self.record(row - 1).count() - 2:
+            data.append("")
+            i += 1
+
+        item = DocItem(data)
+        self.__items.append(item)
+
+        self.endInsertRows()
+
+        return True
 
     def record(self, row):
         return self.__model.record(row)

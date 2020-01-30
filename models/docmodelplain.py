@@ -20,7 +20,7 @@ class DocModelPlain(DocModel):
         if role == Qt.DisplayRole:
             item = index.internalPointer()
 
-            if index.column() == 2:
+            if index.column() == 20:
                 rec = index.model().record(index.row())
                 storage_unit = "Ф. %s Оп. %s Д. %s" % (
                     item.data(rec.indexOf("cfp_doc.fund")),
@@ -29,10 +29,10 @@ class DocModelPlain(DocModel):
 
                 return storage_unit
 
-            if index.column() == 8:
+            if index.column() == 80:
                 return ','.join(index.internalPointer().docyears())
 
-            if index.column() == 9:
+            if index.column() == 90:
                 flag_list = [AbbrMaker().make(flag)
                              for flag in index.internalPointer().docflags()]
 

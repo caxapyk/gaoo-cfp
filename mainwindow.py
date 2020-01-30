@@ -218,12 +218,13 @@ class MainWindow(QMainWindow):
         docform_dialog.show()
 
     def openDocFormDialogCreate(self):
-        docform_dialog = DocFormDialog()
+        index = self.doc_view.currentIndex()
+        docform_dialog = DocFormDialog(self.doc_view.model.sourceModel())
         docform_dialog.show()
 
     def openDocFormDialogEdit(self):
         index = self.doc_view.currentIndex()
-        docform_dialog = DocFormDialog(index)
+        docform_dialog = DocFormDialog(self.doc_view.model.sourceModel(), index.row())
         docform_dialog.show()
 
     def openDbSettingsDialog(self):
