@@ -26,18 +26,19 @@ class DocFormDialog(QDialog):
         self.setModal(True)
 
         if index.isValid():
+            row = index.row()
             doc_model = index.model()
 
             mapper = QDataWidgetMapper()
             mapper.setModel(doc_model)
             mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
 
-            mapper.addMapping(ui.doctype_comboBox, 1)
-            mapper.addMapping(ui.fund_lineEdit, 3)
-            mapper.addMapping(ui.inventory_lineEdit, 4)
-            mapper.addMapping(ui.unit_lineEdit, 5)
-            mapper.addMapping(ui.sheet_spinBox, 6)
-            mapper.addMapping(ui.comment_textEdit, 7)
+            mapper.addMapping(ui.doctype_comboBox, doc_model.record(row).indexOf("doctype_name"))
+            mapper.addMapping(ui.fund_lineEdit, doc_model.record(row).indexOf("cfp_doc.fund"))
+            mapper.addMapping(ui.inventory_lineEdit, doc_model.record(row).indexOf("cfp_doc.inventory"))
+            mapper.addMapping(ui.unit_lineEdit, doc_model.record(row).indexOf("cfp_doc.unit"))
+            mapper.addMapping(ui.sheet_spinBox, doc_model.record(row).indexOf("cfp_doc.sheets"))
+            mapper.addMapping(ui.comment_textEdit, doc_model.record(row).indexOf("cfp_doc.comment"))
 
             mapper.setCurrentIndex(index.row())
 

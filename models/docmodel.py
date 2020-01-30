@@ -13,15 +13,18 @@ class DocModel(QAbstractItemModel):
 
         self.__columns = 0
 
+        self.__model = QSqlQueryModel()
+
     def select(self):
         query = "SELECT \
-        cfp_doc.id, \
-        cfp_doctype.name, \
-        cfp_doc.fund, \
-        cfp_doc.inventory, \
-        cfp_doc.unit, \
-        cfp_doc.sheets, \
-        cfp_doc.comment, \
+        cfp_doc.id AS `cfp_doc.id`, \
+        cfp_doc.doctype_id AS `cfp_doc.doctype_id`, \
+        cfp_doctype.name AS doctype_name, \
+        cfp_doc.fund AS `cfp_doc.fund`, \
+        cfp_doc.inventory AS `cfp_doc.inventory`, \
+        cfp_doc.unit AS `cfp_doc.unit`, \
+        cfp_doc.sheets AS `cfp_doc.sheets`, \
+        cfp_doc.comment AS `cfp_doc.comment`, \
         (SELECT GROUP_CONCAT(year) FROM cfp_docyears WHERE cfp_docyears.doc_id = cfp_doc.id) AS years, \
         (SELECT GROUP_CONCAT(cfp_docflag.name) FROM cfp_docflags LEFT JOIN cfp_docflag ON cfp_docflags.docflag_id=cfp_docflag.id WHERE cfp_docflags.doc_id = cfp_doc.id) AS flags \
         FROM cfp_doc \
@@ -39,6 +42,8 @@ class DocModel(QAbstractItemModel):
         if not sql_query.exec_():
             print(sql_query.lastError().text())
             return None
+
+        self.__model.setQuery(sql_query)
 
         while sql_query.next():
             rec = sql_query.record()
@@ -109,10 +114,24 @@ class DocModel(QAbstractItemModel):
         if role != Qt.EditRole:
             return None
 
-        print(value)
-
         item = index.internalPointer()
         item.setData(value, index.column())
+
+        field = self.__model.record(index.row()).fieldName(index.column())
+
+        print (field, "=", value)
+
+        if index.column() == 3:
+            pass
+        #    self.update_query = "UPDATE cfp_doc SET fund=? WHERE cfp_doc.id=?"
+        #    sql_query = QSqlQuery()
+        #    sql_query.prepare(self.update_query)
+        #    sql_query.bindValue(0, value)
+        #    sql_query.bindValue(1, item.data(0))
+
+        #    sql_query.exec_()
+
+         #   print(sql_query.lastQuery(), value)
         # if item.model().update(item.uid(), value):
         #    item.setData((value,))
 
@@ -120,7 +139,12 @@ class DocModel(QAbstractItemModel):
 
         return False
 
+    #def submit(self):
+    #    pass
+
+
     def insertColumns(self, column, count, parent):
+        self.__model.insertColumns(column, count)
         for item in self.__items:
             i = 0
             while i < count:
@@ -128,3 +152,6 @@ class DocModel(QAbstractItemModel):
                 i += 1
 
         self.__columns += count
+
+    def record(self, row):
+        return self.__model.record(row)

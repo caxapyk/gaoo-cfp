@@ -6,7 +6,7 @@ from utils import AbbrMaker
 
 class DocModelPlain(DocModel):
     def __init__(self, church_id=None):
-        super(DocModelPlain, self).__init__()
+        super(DocModelPlain, self).__init__(church_id)
 
     def select(self):
         super().select()
@@ -21,10 +21,11 @@ class DocModelPlain(DocModel):
             item = index.internalPointer()
 
             if index.column() == 2:
+                rec = index.model().record(index.row())
                 storage_unit = "Ф. %s Оп. %s Д. %s" % (
-                    item.data(3),
-                    item.data(4),
-                    item.data(5))
+                    item.data(rec.indexOf("cfp_doc.fund")),
+                    item.data(rec.indexOf("cfp_doc.inventory")),
+                    item.data(rec.indexOf("cfp_doc.unit")))
 
                 return storage_unit
 
