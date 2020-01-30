@@ -1,5 +1,5 @@
 from PyQt5.Qt import Qt
-from PyQt5.QtCore import (QCoreApplication, QSettings)
+from PyQt5.QtCore import (QCoreApplication, QSettings, QModelIndex)
 from PyQt5.QtWidgets import (QMainWindow, QMessageBox)
 from PyQt5.uic import loadUi
 from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
@@ -219,12 +219,12 @@ class MainWindow(QMainWindow):
 
     def openDocFormDialogCreate(self):
         index = self.doc_view.currentIndex()
-        docform_dialog = DocFormDialog(self.doc_view.model.sourceModel())
+        docform_dialog = DocFormDialog(QModelIndex(), self.doc_view.model.sourceModel())
         docform_dialog.show()
 
     def openDocFormDialogEdit(self):
         index = self.doc_view.currentIndex()
-        docform_dialog = DocFormDialog(self.doc_view.model.sourceModel(), index.row())
+        docform_dialog = DocFormDialog(index, self.doc_view.model.sourceModel(), index.row())
         docform_dialog.show()
 
     def openDbSettingsDialog(self):

@@ -10,7 +10,7 @@ from views import YearItemDelegate
 
 
 class DocFormDialog(QDialog):
-    def __init__(self, model, row=None):
+    def __init__(self, index, model, row=None):
         super(DocFormDialog, self).__init__()
 
         ui = loadUi("ui/docform_dialog.ui", self)
@@ -26,6 +26,7 @@ class DocFormDialog(QDialog):
         self.setModal(True)
 
         doc_model = model
+        doc_model.setCurrentIndex(index)
 
         if row is None:
             print(row)
@@ -43,12 +44,14 @@ class DocFormDialog(QDialog):
             mapper.setModel(doc_model)
             mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
 
-            mapper.addMapping(ui.doctype_comboBox, doc_model.record(row).indexOf("cfp_doc.doctype_id"))
-            mapper.addMapping(ui.fund_lineEdit, doc_model.record(row).indexOf("cfp_doc.fund"))
-            mapper.addMapping(ui.inventory_lineEdit, doc_model.record(row).indexOf("cfp_doc.inventory"))
-            mapper.addMapping(ui.unit_lineEdit, doc_model.record(row).indexOf("cfp_doc.unit"))
-            mapper.addMapping(ui.sheet_spinBox, doc_model.record(row).indexOf("cfp_doc.sheets"))
-            mapper.addMapping(ui.comment_textEdit, doc_model.record(row).indexOf("cfp_doc.comment"))
+            print(doc_model.indexOf("cfp_doc.doctype_id"))
+
+            mapper.addMapping(ui.doctype_comboBox, doc_model.indexOf("cfp_doc.doctype_id"))
+            mapper.addMapping(ui.fund_lineEdit, doc_model.indexOf("cfp_doc.fund"))
+            mapper.addMapping(ui.inventory_lineEdit, doc_model.indexOf("cfp_doc.inventory"))
+            mapper.addMapping(ui.unit_lineEdit, doc_model.indexOf("cfp_doc.unit"))
+            mapper.addMapping(ui.sheet_spinBox, doc_model.indexOf("cfp_doc.sheets"))
+            mapper.addMapping(ui.comment_textEdit, doc_model.indexOf("cfp_doc.comment"))
 
             mapper.setCurrentIndex(row)
 

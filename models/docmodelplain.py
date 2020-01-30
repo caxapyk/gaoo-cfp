@@ -10,8 +10,8 @@ class DocModelPlain(DocModel):
 
     def select(self):
         super().select()
-        self.insertColumns(2, 1, QModelIndex())
-        self.insertColumns(8, 2, QModelIndex())
+        #self.insertColumns(2, 1, QModelIndex())
+        #self.insertColumns(8, 2, QModelIndex())
 
     def data(self, index, role):
         if not index.isValid():

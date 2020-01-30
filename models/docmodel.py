@@ -1,6 +1,6 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex
-from PyQt5.QtSql import QSqlQueryModel, QSqlQuery, QSqlField
+from PyQt5.QtSql import QSqlQueryModel, QSqlQuery, QSqlField, QSqlRecord
 from .docitem import DocItem
 
 
@@ -10,22 +10,23 @@ class DocModel(QAbstractItemModel):
 
         self.__church_id = church_id
         self.__items = []
-
+        
+        self.__db_col_list = []
         self.__columns = 0
-
-        self.__model = QSqlQueryModel()
 
         self.__cache = {}
         self.__doc_id = None
 
-        # тупо передавай сюда кортеж с данными из модели
-        self.__data = []
+        self.__current_index = QModelIndex()
+
+    def setCurrentIndex(self, index):
+        self.__current_index = index
+
 
     def select(self):
         query = "SELECT \
         cfp_doc.id AS `cfp_doc.id`, \
         cfp_doc.doctype_id AS `cfp_doc.doctype_id`, \
-        cfp_doctype.name AS doctype_name, \
         cfp_doc.fund AS `cfp_doc.fund`, \
         cfp_doc.inventory AS `cfp_doc.inventory`, \
         cfp_doc.unit AS `cfp_doc.unit`, \
@@ -49,32 +50,39 @@ class DocModel(QAbstractItemModel):
             print(sql_query.lastError().text())
             return None
 
-        self.__model.setQuery(sql_query)
+        #self.__model.setQuery(sql_query)
 
         while sql_query.next():
             rec = sql_query.record()
 
             data = []
-            years = []
-            flags = []
+            cols = []
+            #years = []
+            #flags = []
 
             # fill data
             i = 0
-            while i < rec.count() - 2:
-                data.append(sql_query.record().value(i))
+            while i < rec.count():
+                #data = {rec.field(i).name() : sql_query.record().value(i)}
+                cols.append(rec.field(i).name())
+                data.append(rec.value(i))
+                #self.__db_col_list.append(rec.field(i).name())
                 i += 1
 
             # fill years
-            for year in rec.value("years").split(","):
-                years.append(year)
+            #for year in rec.value("years").split(","):
+            #    years.append(year)
             # fill flags
-            for flag in rec.value("flags").split(","):
-                flags.append(flag)
+            #for flag in rec.value("flags").split(","):
+            #    flags.append(flag)
 
-            item = DocItem(data, years, flags)
+            #item = DocItem(data, years, flags)
+            item = DocItem(cols, data)
 
             self.__items.append(item)
             self.__columns = i
+
+        print(self.__db_col_list)
 
         return True
 
@@ -122,12 +130,13 @@ class DocModel(QAbstractItemModel):
 
         item = index.internalPointer()
 
-        rec = self.__model.record(index.row())
+        #rec = self.__model.record(index.row())
+        rec = self.record(index.row())
         field = rec.fieldName(index.column())
 
-        self.__cache[field] = value
+        #self.__cache[field] = value
 
-        if index.row() < self.__model.rowCount():
+        if index.row() < self.rowCount():
             self.__doc_id = rec.value("cfp_doc.id")
 
         item.setData(value, index.column())
@@ -138,14 +147,31 @@ class DocModel(QAbstractItemModel):
         q_str = ""
         query = ""
 
-        for key, value in self.__cache.items():
-            print(key, "=", value)
+        rec = self.record(self.__current_index.row())
 
-        for key in self.__cache.keys():
+        i = 0
+        while i < rec.count():
+            print(rec.field(i).name(), "=", rec.value(i))
+            i += 1
+
+        #for key, value in self.__cache.items():
+        #    print(key, "=", value)
+
+        #return None
+
+        i = 0
+        while i < rec.count() -2:
             if self.__doc_id is not None:
-                q_str += "%s=?," % key
+                q_str += "%s=?," % rec.field(i).name()
             else:
                 q_str += "?,"
+            i += 1
+
+        #for key in self.__cache.keys():
+        #    if self.__doc_id is not None:
+        #        q_str += "%s=?," % key
+        #    else:
+        #        q_str += "?,"
 
         if self.__doc_id is None:
             query = "INSERT INTO cfp_doc \
@@ -157,8 +183,11 @@ class DocModel(QAbstractItemModel):
         sql_query = QSqlQuery()
         sql_query.prepare(query)
 
-        for value in self.__cache.values():
-            sql_query.addBindValue(value)
+        #for value in self.__cache.values():
+        i= 0
+        while i < rec.count() - 2:
+            sql_query.addBindValue(rec.value(i))
+            i += 1
 
         if self.__doc_id is not None:
             sql_query.addBindValue(self.__doc_id)
@@ -187,15 +216,18 @@ class DocModel(QAbstractItemModel):
         i = 0
         data = []
         while i < self.record(row - 1).count() - 2:
-            data.append("")
+            data.append(QSqlRecord())
             i += 1
 
-        item = DocItem(data)
+        item = DocItem(0,data)
         self.__items.append(item)
 
         self.endInsertRows()
 
         return True
 
-    def record(self, row):
-        return self.__model.record(row)
+    def indexOf(self, field):
+        #index = self.index(self.__current_index.row, 0, QModelIndex())
+
+        return self.__current_index.internalPointer().indexOf(field)
+
