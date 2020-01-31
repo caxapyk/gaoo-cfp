@@ -7,6 +7,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtSql import QSqlRelationalTableModel
 from PyQt5.QtCore import QModelIndex
 from views import (View, StorageUnitDelegate)
+from dialogs import DocFormDialog
 from models import DocModel
 
 
@@ -120,3 +121,22 @@ class DocView(View):
 
     def deleteRow(self):
         pass
+
+    def editDocDialog(self):
+        #if self.doc_view.tree_view.selectedIndexes():
+        #    proxy_index = self.doc_view.tree_view.currentIndex()
+         #   index = self.doc_view.model.mapToSource(proxy_index)
+        #else:
+        #index = QModelIndex()
+
+        proxy_index = self.tree_view.currentIndex()
+        index = self.model.mapToSource(proxy_index)
+
+        docform_dialog = DocFormDialog(index)
+        docform_dialog.show()
+
+    def createDocDialog(self):
+        pass
+        #index = self.doc_view.currentIndex()
+        #docform_dialog = DocFormDialog(QModelIndex(), self.doc_view.model.sourceModel())
+        #docform_dialog.show()

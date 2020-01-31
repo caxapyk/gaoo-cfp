@@ -6,7 +6,7 @@ from PyQt5.QtSql import QSqlRelationalTableModel, QSqlRelationalDelegate
 from PyQt5.QtWidgets import (
     QDialog, QDialogButtonBox, QDataWidgetMapper, QMessageBox)
 from models import DocModel, DoctypeModel, DocFlagsModel, DocYearsModel
-from views import YearItemDelegate
+from .yearitemdelegate import YearItemDelegate
 
 
 class DocFormDialog(QDialog):

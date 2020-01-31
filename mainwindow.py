@@ -1,10 +1,11 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import (QCoreApplication, QSettings, QModelIndex)
-from PyQt5.QtWidgets import (QMainWindow, QMessageBox)
-from PyQt5.uic import loadUi
+from PyQt5.QtWidgets import (QMainWindow, QMessageBox, QWidget, QToolBar, QStatusBar, QAction,
+                             QSizePolicy, QMenuBar, QSplitter, QTreeView, QHBoxLayout,QPushButton, QLineEdit)
 from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
-from PyQt5.QtWidgets import (QWidget, QToolBar, QStatusBar, QAction, QSizePolicy, QMenuBar, QSplitter, QTreeView, QHBoxLayout, QPushButton, QLineEdit)
-from dialogs import (DoctypeDialog, DocflagDialog, DocFormDialog, DbSettingsDialog)
+from PyQt5.uic import loadUi
+
+from dialogs import (DoctypeDialog, DocflagDialog, DbSettingsDialog)
 from views import (GEOView, DocView)
 from models import ChurchModel
 
@@ -43,12 +44,12 @@ class MainWindow(QMainWindow):
         action_create.setIcon(QIcon(":/icons/doc-new-20.png"))
         action_create.setDisabled(True)
         action_create.setShortcut(QKeySequence.New)
-        action_create.triggered.connect(self.openDocFormDialogCreate)
+        action_create.triggered.connect(doc_view.createDocDialog)
 
         action_edit = QAction("Редактировать")
         action_edit.setIcon(QIcon(":/icons/doc-edit-20.png"))
         action_edit.setDisabled(True)
-        action_edit.triggered.connect(self.openDocFormDialogEdit)
+        action_edit.triggered.connect(doc_view.editDocDialog)
 
         action_delete = QAction("Удалить")
         action_delete.setIcon(QIcon(":/icons/delete-20.png"))
@@ -203,25 +204,6 @@ class MainWindow(QMainWindow):
     def openDocflagDialog(self):
         docflag_dialog = DocflagDialog()
         docflag_dialog.show()
-
-    def openDocFormDialogEdit(self):
-        #if self.doc_view.tree_view.selectedIndexes():
-        #    proxy_index = self.doc_view.tree_view.currentIndex()
-         #   index = self.doc_view.model.mapToSource(proxy_index)
-        #else:
-        #index = QModelIndex()
-
-        proxy_index = self.doc_view.tree_view.currentIndex()
-        index = self.doc_view.model.mapToSource(proxy_index)
-
-        docform_dialog = DocFormDialog(index)
-        docform_dialog.show()
-
-    def openDocFormDialogCreate(self):
-        pass
-        #index = self.doc_view.currentIndex()
-        #docform_dialog = DocFormDialog(QModelIndex(), self.doc_view.model.sourceModel())
-        #docform_dialog.show()
 
     def openDbSettingsDialog(self):
         dbsettings_dialog = DbSettingsDialog()

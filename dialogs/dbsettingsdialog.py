@@ -1,8 +1,8 @@
+from PyQt5.QtCore import QSettings
+from PyQt5.QtSql import QSqlDatabase
+from PyQt5.QtWidgets import (QDialog, QDialogButtonBox)
 from PyQt5.QtGui import QIcon
 from PyQt5.uic import loadUi
-from PyQt5.QtWidgets import (QDialog, QDialogButtonBox)
-from PyQt5.QtCore import (QSettings)
-from PyQt5.QtSql import QSqlDatabase
 
 
 class DbSettingsDialog(QDialog):

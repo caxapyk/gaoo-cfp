@@ -19,7 +19,7 @@ class DocFlagsModel(QSqlTableModel):
 
         row = 0
         while self.__model.query().next():
-        	# id:row dict
+                # id:row dict
             self.__flags[self.__model.query().value("docflag_id")] = row
             row += 1
 
@@ -54,7 +54,8 @@ class DocFlagsModel(QSqlTableModel):
                 record.setValue("docflag_id", self.data(id_index))
 
                 if self.__model.insertRecord(-1, record):
-                    self.__flags[self.data(id_index)] = self.__model.rowCount() - 1
+                    self.__flags[self.data(
+                        id_index)] = self.__model.rowCount() - 1
             else:
                 if self.__model.removeRows(self.__flags[self.data(id_index)], 1):
                     del self.__flags[self.data(id_index)]
