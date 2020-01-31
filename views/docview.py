@@ -7,7 +7,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtSql import QSqlRelationalTableModel
 from PyQt5.QtCore import QModelIndex
 from views import (View, StorageUnitDelegate)
-from models import DocModelPlain
+from models import DocModel
 
 
 class DocView(View):
@@ -44,9 +44,9 @@ class DocView(View):
 
         church_id = index.internalPointer().uid()
 
-        doc_model = DocModelPlain(church_id)
+        doc_model = DocModel()
         #doc_model.setChurchId(church_id)
-        #doc_model.setFilter("church_id=%s" % church_id)
+        doc_model.setFilter("church_id=%s" % church_id)
         doc_model.select()
 
         proxy_model = QSortFilterProxyModel()

@@ -1,49 +1,64 @@
 from PyQt5.Qt import Qt
-from PyQt5.QtCore import QModelIndex, QAbstractListModel
-from PyQt5.QtSql import QSqlQueryModel, QSqlQuery, QSqlTableModel, QSqlRelation
-from models import DocflagModel
+from PyQt5.QtSql import QSqlTableModel
+from PyQt5.QtCore import QModelIndex
 
 
-class DocFlagsModel(QAbstractListModel):
-    def __init__(self, index):
+class DocFlagsModel(QSqlTableModel):
+    def __init__(self, doc_id):
         super(DocFlagsModel, self).__init__()
 
-        flags = index.internalPointer().docflags()
+        self.setTable("cfp_docflag")
 
-        model = DocflagModel()
-        model.select()
+        self.__model = QSqlTableModel()
+        self.__model.setTable("cfp_docflags")
+        self.__model.setFilter("doc_id=%s" % doc_id)
+        self.__model.select()
 
-        self.__data = flags
-        self.__model = model
+        self.__flags = {}
+        self.doc_id = doc_id
 
-    def rowCount(self, parent):
-        return self.__model.rowCount()
+        row = 0
+        while self.__model.query().next():
+        	# id:row dict
+            self.__flags[self.__model.query().value("docflag_id")] = row
+            row += 1
+
+        print(self.__flags)
 
     def flags(self, index):
         return super().flags(index) | Qt.ItemIsUserCheckable
 
-    def data(self, index, role):
+    def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return None
 
-        m_index = self.createIndex(index.row(), 1, QModelIndex())
-
         if role == Qt.CheckStateRole:
-            if self.__model.data(m_index) in self.__data:
+            # index for DocflagModel column `id`
+            id_index = self.createIndex(index.row(), 0, QModelIndex())
+            if super().data(id_index) in self.__flags.keys():
                 return Qt.Checked
+
             return Qt.Unchecked
 
-        if role == Qt.DisplayRole:
-            return self.__model.data(m_index)
-
-        return None
+        return super().data(index, role)
 
     def setData(self, index, value, role):
         if role == Qt.CheckStateRole:
-            m_index = self.createIndex(index.row(), 1, QModelIndex())
+            # index for DocflagModel column `id`
+            id_index = self.__model.createIndex(index.row(), 0, QModelIndex())
 
             if(value == Qt.Checked):
-                self.__data.append(self.__model.data(m_index))
+                record = self.__model.record()
+                record.remove(record.indexOf("id"))
+                record.setValue("doc_id", self.doc_id)
+                record.setValue("docflag_id", self.data(id_index))
+
+                if self.__model.insertRecord(-1, record):
+                    self.__flags[self.data(id_index)] = self.__model.rowCount() - 1
             else:
-                self.__data.remove(self.__model.data(m_index))
+                if self.__model.removeRows(self.__flags[self.data(id_index)], 1):
+                    del self.__flags[self.data(id_index)]
         return True
+
+    def submitAll(self):
+        self.__model.submitAll()

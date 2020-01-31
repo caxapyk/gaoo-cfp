@@ -213,19 +213,15 @@ class MainWindow(QMainWindow):
 
         proxy_index = self.doc_view.tree_view.currentIndex()
         index = self.doc_view.model.mapToSource(proxy_index)
-        
+
         docform_dialog = DocFormDialog(index)
         docform_dialog.show()
 
     def openDocFormDialogCreate(self):
-        index = self.doc_view.currentIndex()
-        docform_dialog = DocFormDialog(QModelIndex(), self.doc_view.model.sourceModel())
-        docform_dialog.show()
-
-    def openDocFormDialogEdit(self):
-        index = self.doc_view.currentIndex()
-        docform_dialog = DocFormDialog(index, self.doc_view.model.sourceModel(), index.row())
-        docform_dialog.show()
+        pass
+        #index = self.doc_view.currentIndex()
+        #docform_dialog = DocFormDialog(QModelIndex(), self.doc_view.model.sourceModel())
+        #docform_dialog.show()
 
     def openDbSettingsDialog(self):
         dbsettings_dialog = DbSettingsDialog()
