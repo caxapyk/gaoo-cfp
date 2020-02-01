@@ -181,11 +181,11 @@ class DocView(View):
 
         doc_id = index.model().record(index.row()).value("cfp_doc.id")
 
-        docform_dialog = DocFormDialog(self.church_id, doc_id)
+        docform_dialog = DocFormDialog(self.church_id, doc_id, index)
         res = docform_dialog.exec()
 
-        if res == DocFormDialog.Accepted:
-            self.model.sourceModel().refresh()
+        #if res == DocFormDialog.Accepted:
+        #    self.model.sourceModel().refresh()
 
     def createDocDialog(self):
         docform_dialog = DocFormDialog(self.church_id)
