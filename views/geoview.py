@@ -1,48 +1,27 @@
 from PyQt5.Qt import Qt, QCursor, QRegExp
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import (QModelIndex, QSortFilterProxyModel, QSize)
-#from PyQt5.QtCore import (QItemSelection, QItemSelectionModel)
-from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout, QLineEdit,
-                             QButtonGroup, QPushButton, QTreeView, QMenu, QAction, QMessageBox)
+from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy,
+                             QHBoxLayout, QVBoxLayout, QLineEdit, QButtonGroup,
+                             QPushButton, QTreeView, QMenu, QAction,
+                             QMessageBox)
 from models import (GuberniaModel, UezdModel,
                     LocalityModel, ChurchModel, SqlTreeModel)
 from views import (View, GeoItemDelegate)
 
 
 class GEOView(View):
-    def __init__(self, parent):
+    def __init__(self, parent, docview):
         super(GEOView, self).__init__()
 
         self.parent = parent
+        self.docview = docview
 
         # 0 - sort by ID asc, 1 - sort by name asc, 2 - sort by name desc
         self.currentSortType = 0
         self.filtered = False
 
-        self.initUi()
-
-        gubernia = GuberniaModel()
-        uezd = UezdModel()
-        locality = LocalityModel()
-        church = ChurchModel()
-
-        geo_model = SqlTreeModel(
-            (gubernia, uezd, locality, church),
-            ("Территория",))
-
-        geo_model.select()
-
-        proxy_model = QSortFilterProxyModel()
-        proxy_model.setSourceModel(geo_model)
-        # disable auto filtering
-        proxy_model.setDynamicSortFilter(False)
-
-        self.tree_view.setModel(proxy_model)
-
-        self.model = proxy_model
-        self.geo_model = geo_model
-
-    def initUi(self):
+        # Build UI
         filter_panel = QFrame()
         f_layout = QHBoxLayout(filter_panel)
         f_layout.setContentsMargins(0, 5, 0, 5)
@@ -64,7 +43,8 @@ class GEOView(View):
         sort_group = QButtonGroup(filter_panel)
         sort_buttons = (
             (":/icons/sort19-16.png", "Cортировка по списку заполнения"),
-            (":/icons/sort-az-16.png", "Cортировка по алфавиту (по возрастанию)"),
+            (":/icons/sort-az-16.png", "Cортировка по алфавиту \
+                (по возрастанию)"),
             (":/icons/sort-za-16.png", "Cортировка по алфавиту (по убыванию)"),
         )
         for i, button in enumerate(sort_buttons):
@@ -90,6 +70,7 @@ class GEOView(View):
         tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         tree_view.customContextMenuRequested.connect(
             self.showContextMenu)
+        tree_view.doubleClicked.connect(self.showDocs)
 
         tree_view_delegate = GeoItemDelegate()
         tree_view_delegate.closeEditor.connect(self.onEditorClosed)
@@ -104,14 +85,44 @@ class GEOView(View):
         main.setSizePolicy(sizePolicy)
         main.setMinimumSize(QSize(250, 0))
 
+        c_menu = QMenu(tree_view)
+
+        # set models
+        gubernia = GuberniaModel()
+        uezd = UezdModel()
+        locality = LocalityModel()
+        church = ChurchModel()
+
+        geo_model = SqlTreeModel(
+            (gubernia, uezd, locality, church),
+            ("Территория",))
+
+        geo_model.select()
+
+        proxy_model = QSortFilterProxyModel()
+        proxy_model.setSourceModel(geo_model)
+        # disable auto filtering
+        proxy_model.setDynamicSortFilter(False)
+        # set model to tree_view
+        tree_view.setModel(proxy_model)
+
         self.geofilter_lineedit = geofilter_lineedit
         self.clearfilter_btn = clearfilter_btn
         self.tree_view = tree_view
+        self.c_menu = c_menu
 
-        self.c_menu = QMenu(tree_view)
+        self.model = proxy_model
+        self.geo_model = geo_model
 
         # set main ad default widget
         self.setMainWidget(main)
+
+    def showDocs(self, index):
+        index = self.model.mapToSource(index)
+        sql_model = index.internalPointer()
+
+        if isinstance(sql_model.model(), ChurchModel):
+            self.docview.loadData(index)
 
     def showContextMenu(self, point):
         index = self.tree_view.indexAt(point)
@@ -123,7 +134,7 @@ class GEOView(View):
             sql_model = source_index.internalPointer()
 
             default_actions = (
-                (":/icons/folder-new-16.png", "Создать новый",
+                (":/icons/folder-new-16.png", "Добавить",
                     self.insertItem),
                 (":/icons/rename-16.png", "Переименовать", self.editItem),
                 (":/icons/delete-16.png", "Удалить", self.removeItem),
@@ -131,7 +142,7 @@ class GEOView(View):
 
             church_actions = (
                 (":/icons/docs-folder-16.png", "Открыть документы",
-                 lambda: self.parent.showDocs(index)),
+                 lambda: self.showDocs(index)),
                 (":/icons/rename-16.png", "Переименовать", self.editItem),
                 (":/icons/delete-16.png", "Удалить", self.removeItem),
             )
@@ -228,8 +239,8 @@ class GEOView(View):
 
             if result == QMessageBox.Yes:
                 if not self.model.removeRows(index.row(), 1, index.parent()):
-                    QMessageBox().critical(self.parent, "Удаление объекта",
-                                           "Не удалось удалить объект!\nПроверьте нет ли связей с другими объектами",
+                    QMessageBox().critical(self.tree_view, "Удаление объекта",
+                                           "Не удалось удалить объект!\nПроверьте нет ли связей с другими объектами.",
                                            QMessageBox.Ok)
 
     def onEditorClosed(self):
@@ -243,11 +254,6 @@ class GEOView(View):
 
         # map back to proxy model
         index = self.model.mapFromSource(geo_index)
-
-        #selection = QItemSelection()
-        #selection.select(index, index)
-        #self.tree_view.selectionModel().select(
-        #    selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear)
 
         self.tree_view.setCurrentIndex(index)
 

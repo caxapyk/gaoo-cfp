@@ -2,15 +2,15 @@ from PyQt5.Qt import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
-from PyQt5.QtSql import QSqlRelationalTableModel, QSqlRelationalDelegate
+from PyQt5.QtSql import QSqlTableModel, QSqlRelationalTableModel, QSqlRelationalDelegate, QSqlRelation
 from PyQt5.QtWidgets import (
-    QDialog, QDialogButtonBox, QDataWidgetMapper, QMessageBox)
+    QDialog, QDialogButtonBox, QDataWidgetMapper, QMessageBox, QLineEdit)
 from models import DocModel, DoctypeModel, DocFlagsModel, DocYearsModel
 from .yearitemdelegate import YearItemDelegate
 
 
 class DocFormDialog(QDialog):
-    def __init__(self, index):
+    def __init__(self, church_id, doc_id=None):
         super(DocFormDialog, self).__init__()
 
         ui = loadUi("ui/docform_dialog.ui", self)
@@ -25,83 +25,98 @@ class DocFormDialog(QDialog):
         self.setWindowIcon(QIcon(":/icons/church-16.png"))
         self.setModal(True)
 
-        doc_model = index.model()
+        self.doc_id = doc_id
 
-        # if row is None:
-        #    print(row)
-        #    #print(row, doc_model.rowCount())
-        #    doc_model.insertRows(doc_model.rowCount(), 1, QModelIndex())
-        #    row  = doc_model.rowCount() - 1
+        # doc model
+        doc_model = QSqlRelationalTableModel()
+        doc_model.setTable("cfp_doc")
+        doc_model.setRelation(2, QSqlRelation(
+            "cfp_doctype", "id", "name AS `cfp_doctype.name`"))
+        doc_model.setEditStrategy(QSqlRelationalTableModel.OnManualSubmit)
 
-        #print(row, doc_model.rowCount())
-        #    index = index.model().index(index.model().rowCount(), 0)
+        if doc_id is not None:
+            doc_model.setFilter("cfp_doc.id=%s" % self.doc_id)
+        doc_model.select()
 
-        # if index.isValid():
-        if True:
-            doc_id = doc_model.record(index.row()).value("cfp_doc.id")
+        # create empty record
+        if self.doc_id is None:
+            rec = doc_model.record()
+            rec.remove(0)  # remove `id`
+            rec.setValue("cfp_doc.church_id", church_id)
+            rec.setValue("cfp_doc.doctype_id", 1)
+            rec.setNull("cfp_doc.fund")
+            rec.setNull("cfp_doc.inventory")
+            rec.setNull("cfp_doc.sheets")
+            rec.setNull("cfp_doc.comment")
 
-            # doctype
-            doctype_model = doc_model.relationModel(2)
-            ui.doctype_comboBox.setModel(doctype_model)
-            ui.doctype_comboBox.setModelColumn(
-                doctype_model.fieldIndex("name"))
+            if (doc_model.insertRecord(-1, rec)):
+                print("ins")
 
-            # years
-            years_model = DocYearsModel()
-            years_model.setFilter("doc_id=%s" % doc_id)
-            years_model.select()
-            ui.year_listView.setModel(years_model)
-            ui.year_listView.setModelColumn(2)
+        # doctype
+        doctype_model = doc_model.relationModel(2)
+        ui.doctype_comboBox.setModel(doctype_model)
+        ui.doctype_comboBox.setModelColumn(
+            doctype_model.fieldIndex("cfp_doctype.name"))
 
-            year_delegate = YearItemDelegate()
-            year_delegate.closeEditor.connect(self.checkYear)
-            ui.year_listView.setItemDelegateForColumn(2, year_delegate)
+        # years
+        years_model = DocYearsModel()
+        if self.doc_id is not None:
+            years_model.setDocId(self.doc_id)
+        years_model.setEditStrategy(QSqlTableModel.OnManualSubmit)
 
-            ui.yearInsert_pushButton.clicked.connect(self.insertYear)
-            ui.yearRemove_pushButton.clicked.connect(self.removeYear)
+        years_model.select()
 
-            # docflags
-            docflags_model = DocFlagsModel(doc_id)
-            docflags_model.select()
-            ui.docflag_listView.setModel(docflags_model)
-            ui.docflag_listView.setModelColumn(1)
+        ui.year_listView.setModel(years_model)
+        ui.year_listView.setModelColumn(2)
 
-            mapper = QDataWidgetMapper()
-            mapper.setModel(doc_model)
-            mapper.setItemDelegate(QSqlRelationalDelegate())
+        year_delegate = YearItemDelegate()
+        year_delegate.closeEditor.connect(self.checkYear)
+        ui.year_listView.setItemDelegateForColumn(2, year_delegate)
 
-            mapper.addMapping(ui.doctype_comboBox,
-                              doc_model.fieldIndex("cfp_doctype.name"))
-            mapper.addMapping(ui.fund_lineEdit,
-                              doc_model.fieldIndex("cfp_doc.fund"))
-            mapper.addMapping(ui.inventory_lineEdit,
-                              doc_model.fieldIndex("cfp_doc.inventory"))
-            mapper.addMapping(ui.unit_lineEdit,
-                              doc_model.fieldIndex("cfp_doc.unit"))
-            mapper.addMapping(ui.sheet_spinBox,
-                              doc_model.fieldIndex("cfp_doc.sheets"))
-            mapper.addMapping(ui.comment_textEdit,
-                              doc_model.fieldIndex("cfp_doc.comment"))
+        ui.yearInsert_pushButton.clicked.connect(self.insertYear)
+        ui.yearRemove_pushButton.clicked.connect(self.removeYear)
 
-            mapper.setCurrentIndex(index.row())
+        # docflags
+        docflags_model = DocFlagsModel(self.doc_id)
 
-        # else:
-        #    doc_model = DocModel()
+        # if doc_id is not None:
+        docflags_model.select()
+
+        ui.docflag_listView.setModel(docflags_model)
+        ui.docflag_listView.setModelColumn(1)
+
+        # data mapper
+        mapper = QDataWidgetMapper()
+        mapper.setModel(doc_model)
+        mapper.setItemDelegate(QSqlRelationalDelegate())
+
+        mapper.addMapping(ui.doctype_comboBox,
+                          doc_model.fieldIndex("cfp_doctype.name"))
+        mapper.addMapping(ui.fund_lineEdit,
+                          doc_model.fieldIndex("cfp_doc.fund"))
+        mapper.addMapping(ui.inventory_lineEdit,
+                          doc_model.fieldIndex("cfp_doc.inventory"))
+        mapper.addMapping(ui.unit_lineEdit,
+                          doc_model.fieldIndex("cfp_doc.unit"))
+        mapper.addMapping(ui.sheet_spinBox,
+                          doc_model.fieldIndex("cfp_doc.sheets"))
+        mapper.addMapping(ui.comment_textEdit,
+                          doc_model.fieldIndex("cfp_doc.comment"))
+
+        if self.doc_id is not None:
+            mapper.toFirst()
+        else:
+            mapper.toLast()
 
         self.ui = ui
         self.doc_model = doc_model
         self.years_model = years_model
         self.docflags_model = docflags_model
         self.mapper = mapper
-        self.doc_id = doc_id
+        self.church_id = church_id
 
     def insertYear(self):
-        record = self.years_model.record()
-        record.remove(record.indexOf("id"))
-        record.setValue("doc_id", self.doc_id)
-        record.setValue("year", "")
-
-        if self.years_model.insertRecord(-1, record):
+        if self.years_model.insertRecord(-1):
             index = self.years_model.index(self.years_model.rowCount() - 1, 2)
 
             self.ui.year_listView.setCurrentIndex(index)
@@ -119,12 +134,14 @@ class DocFormDialog(QDialog):
             self.years_model.removeRows(self.years_model.rowCount() - 1, 1)
 
     def saveAction(self):
-        self.doc_model.submitAll()
+        self.doc_model.submit()
+        print(self.doc_model.query().lastQuery())
+        print(self.doc_model.lastError().text())
         self.years_model.submitAll()
-        self.docflags_model.submitAll()
+        # self.docflags_model.submitAll()
 
     def closeAction(self):
         self.doc_model.revertAll()
         self.years_model.revertAll()
-        self.docflags_model.revertAll()
+        # self.docflags_model.revertAll()
         self.destroy()

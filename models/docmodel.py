@@ -10,36 +10,39 @@ class DocModel(QSqlRelationalTableModel):
         super(DocModel, self).__init__()
 
         self.setTable("cfp_doc")
-        #self.setRelation(1, QSqlRelation("cfp_church", "id", "name"))
-        self.setRelation(2, QSqlRelation("cfp_doctype", "id", "name AS `cfp_doctype.name`"))
-
-        self.setEditStrategy(QSqlRelationalTableModel.OnManualSubmit)
+        self.setRelation(2, QSqlRelation(
+            "cfp_doctype", "id", "name AS `cfp_doctype.name`"))
 
         self.church_id = None
 
-    def data(self, item, role):
-        #if role == Qt.DisplayRole:
-            #if item.column() == 0:
-            #    return item.row() + 1
+    def setChurchId(self, church_id):
+        self.church_id = church_id
+        self.setFilter("church_id=%s" % church_id)
 
-            #elif item.column() == 1:
-            #    rec = self.record(item.row())
-            #    doctype_abbr = AbbrMaker().make(
-            #        rec.value("name"))
+    #def data(self, item, role):
+    #    if role == Qt.DisplayRole:
+    #        if item.column() == 0:
+    #            return item.row() + 1
 
-            #    return doctype_abbr
+    #        elif item.column() == 1:
+    #            rec = self.record(item.row())
+    #            doctype_abbr = AbbrMaker().make(
+    #                rec.value("cfp_doctype.name"))
+    #
+    #            return doctype_abbr
 
-            #elif item.column() == 5:
-            #    rec = self.record(item.row())
+    #        elif item.column() == 5:
+    #            rec = self.record(item.row())
 
-            #    storage_unit = "Ф. %s Оп. %s Д. %s" % (
-            #        rec.value("cfp_doc.fund"),
-            #        rec.value("cfp_doc.inventory"),
-            #        rec.value("cfp_doc.unit"))
+    #            storage_unit = "Ф. %s Оп. %s Д. %s" % (
+    #                rec.value("cfp_doc.fund"),
+    #                rec.value("cfp_doc.inventory"),
+    #                rec.value("cfp_doc.unit"))
 
-            #    return storage_unit
+    #            return storage_unit
 
-            #elif item.column() == 10:
+    #        elif item.column() == 10:
+    #            return "Годы"
             #   year_rel = self.yearsModel(item.row())
 
             #    years_list = ""
@@ -50,7 +53,8 @@ class DocModel(QSqlRelationalTableModel):
 
             #        return years_list[:-2]
 
-            # elif item.column() == 11:
+    #        elif item.column() == 11:
+    #            return "Флаги"
             #    rec = self.record(item.row())
             #    flag_rel = self.flagRelation(rec.value("cfp_doc.id"))
 
@@ -62,38 +66,41 @@ class DocModel(QSqlRelationalTableModel):
 
             #        return flags_list[:-1]
 
-        return super().data(item, role)
+    #    return super().data(item, role)
 
-    def yearsModel(self, row):
-        pass
+    #def yearsModel(self, row):
+     #   pass
         #rec = self.record(row)
         #years_model = YearsModel()
 
         #years_model.setFilter("doc_id=%s" % rec.value("id"))
-        #years_model.select()
+        # years_model.select()
 
-        #return years_model
+        # return years_model
 
-    def select(self):
-        return super().select()
-        # insert columns for counter and type abbr fields
-        #self.insertColumns(0, 2, QModelIndex())
-        # insert column for storage_unit field
-        #self.insertColumns(5, 1, QModelIndex())
-        # insert column for years and flags fields
-        #self.insertColumns(10, 2, QModelIndex())
+    #def select(self):
+    #    print ("select")
+    #    if super().select():
+    #        # insert columns for counter and type abbr fields
+    #        self.insertColumns(0, 2, QModelIndex())
+    #        # insert column for storage_unit field
+    #       self.insertColumns(5, 1, QModelIndex())
+    #        # insert column for years and flags fields
+    #        self.insertColumns(10, 2, QModelIndex())
 
-        #self.setHeaderData(0, Qt.Horizontal, "#")
-        #self.setHeaderData(1, Qt.Horizontal, "Тип документа")
-        #self.setHeaderData(2, Qt.Horizontal, "ID")
-        #self.setHeaderData(3, Qt.Horizontal, "Название церкви")
-        #self.setHeaderData(4, Qt.Horizontal, "Тип документа (полностью)")
-        ##self.setHeaderData(5, Qt.Horizontal, "Ед. хранения")
-        #self.setHeaderData(6, Qt.Horizontal, "Фонд")
-        #self.setHeaderData(7, Qt.Horizontal, "Опись")
-        #self.setHeaderData(8, Qt.Horizontal, "Дело")
-        #self.setHeaderData(9, Qt.Horizontal, "Листов")
-        #self.setHeaderData(10, Qt.Horizontal, "Годы документов")
-        #self.setHeaderData(11, Qt.Horizontal, "Другие сведения")
-        #self.setHeaderData(12, Qt.Horizontal, "Комментарий")
-
+    #        self.setHeaderData(0, Qt.Horizontal, "#")
+    #        self.setHeaderData(1, Qt.Horizontal, "Тип документа")
+    #        self.setHeaderData(2, Qt.Horizontal, "ID")
+    #        self.setHeaderData(3, Qt.Horizontal, "Название церкви")
+    #        self.setHeaderData(4, Qt.Horizontal, "Тип документа (полностью)")
+    #        self.setHeaderData(5, Qt.Horizontal, "Ед. хранения")
+    #        self.setHeaderData(6, Qt.Horizontal, "Фонд")
+    #        self.setHeaderData(7, Qt.Horizontal, "Опись")
+    #        self.setHeaderData(8, Qt.Horizontal, "Дело")
+    #        self.setHeaderData(9, Qt.Horizontal, "Листов")
+    #        self.setHeaderData(10, Qt.Horizontal, "Годы документов")
+    #        self.setHeaderData(11, Qt.Horizontal, "Другие сведения")
+    #        self.setHeaderData(12, Qt.Horizontal, "Комментарий")
+    #        return True
+    #    else:
+    #        return False

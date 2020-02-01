@@ -32,37 +32,15 @@ class MainWindow(QMainWindow):
 
     def initUi(self):
         # load views
-        geo_view = GEOView(self)
-        geo_view.tree_view.doubleClicked.connect(self.showDocs)
-
         doc_view = DocView(self)
-        doc_view.tree_view.pressed.connect(self.docSelected)
-
-        # global actions
-
-        action_create = QAction("Новый документ")
-        action_create.setIcon(QIcon(":/icons/doc-new-20.png"))
-        action_create.setDisabled(True)
-        action_create.setShortcut(QKeySequence.New)
-        action_create.triggered.connect(doc_view.createDocDialog)
-
-        action_edit = QAction("Редактировать")
-        action_edit.setIcon(QIcon(":/icons/doc-edit-20.png"))
-        action_edit.setDisabled(True)
-        action_edit.triggered.connect(doc_view.editDocDialog)
-
-        action_delete = QAction("Удалить")
-        action_delete.setIcon(QIcon(":/icons/delete-20.png"))
-        action_delete.setDisabled(True)
-        action_delete.setShortcut(QKeySequence.Delete)
-        action_delete.triggered.connect(doc_view.deleteRow)
+        geo_view = GEOView(self, doc_view)
 
         # menubar
         menubar = QMenuBar(self)
 
         file_menu = menubar.addMenu("Файл")
         create_menu = file_menu.addMenu("Создать")
-        create_menu.addAction(action_create)
+        create_menu.addAction(doc_view.vAction("doc_create"))
         file_menu.addSeparator()
         exit_action = file_menu.addAction(
             QIcon(":/icons/exit-16.png"), "Выход")
@@ -70,8 +48,8 @@ class MainWindow(QMainWindow):
         exit_action.triggered.connect(self.close)
 
         edit_menu = menubar.addMenu("Правка")
-        edit_menu.addAction(action_edit)
-        edit_menu.addAction(action_delete)
+        edit_menu.addAction(doc_view.vAction("doc_update"))
+        edit_menu.addAction(doc_view.vAction("doc_remove"))
 
         cat_menu = menubar.addMenu("Cправочники")
         doctype_action = cat_menu.addAction(
@@ -101,33 +79,12 @@ class MainWindow(QMainWindow):
         # toolbar
         toolbar = QToolBar(self)
 
-        toolbar.addAction(action_create)
-        toolbar.addAction(action_edit)
-        toolbar.addAction(action_delete)
+        toolbar.addAction(doc_view.vAction("doc_create"))
+        toolbar.addAction(doc_view.vAction("doc_update"))
+        toolbar.addAction(doc_view.vAction("doc_remove"))
 
         # filter panel
-        filter_panel = QWidget(toolbar)
-        f_layout = QHBoxLayout(filter_panel)
-        f_layout.setContentsMargins(0, 0, 0, 0)
-        f_layout.setAlignment(Qt.AlignRight)
-
-        filter_line = QLineEdit(filter_panel)
-        filter_line.setPlaceholderText("Фильтр по единице хранения...")
-        filter_line.setMaximumWidth(300)
-        filter_line.setDisabled(True)
-        filter_line.textChanged.connect(doc_view.filter)
-
-        clearfilter_btn = QPushButton(filter_panel)
-        clearfilter_btn.setIcon(QIcon(":/icons/clear-filter-16.png"))
-        clearfilter_btn.setToolTip("Сбросить фильтр")
-        clearfilter_btn.setMaximumWidth(30)
-        clearfilter_btn.setDisabled(True)
-        clearfilter_btn.clicked.connect(doc_view.clearFilter)
-
-        f_layout.addWidget(filter_line)
-        f_layout.addWidget(clearfilter_btn)
-
-        toolbar.addWidget(filter_panel)
+        toolbar.addWidget(doc_view.vToolBarWidget("doc_filter"))
 
         self.addToolBar(toolbar)
 
@@ -136,14 +93,6 @@ class MainWindow(QMainWindow):
         statusbar.showMessage("Готово")
 
         self.setStatusBar(statusbar)
-
-        self.toolbar = toolbar
-        self.action_create = action_create
-        self.action_edit = action_edit
-        self.action_delete = action_delete
-        self.filter_line = filter_line
-        self.clearfilter_btn = clearfilter_btn
-        self.statusbar = statusbar
 
         # main widget
         splitter = QSplitter(self)
@@ -154,22 +103,6 @@ class MainWindow(QMainWindow):
         self.doc_view = doc_view
 
         self.setCentralWidget(splitter)
-
-    def showDocs(self, index):
-        index = self.geo_view.model.mapToSource(index)
-        sql_model = index.internalPointer()
-
-        if isinstance(sql_model.model(), ChurchModel):
-            self.doc_view.loadData(index)
-
-            self.action_create.setDisabled(False)
-            self.action_edit.setDisabled(True)
-            self.action_delete.setDisabled(True)
-            self.filter_line.setDisabled(False)
-
-    def docSelected(self):
-        self.action_edit.setDisabled(False)
-        self.action_delete.setDisabled(False)
 
     def aboutCFP(self):
         text = "<b>Межфондовый указатель к документам духовного ведомства периода \
