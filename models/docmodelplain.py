@@ -4,10 +4,16 @@ from utils import AbbrMaker
 
 
 class DocModelPlain(QSqlQueryModel):
-    def __init__(self, church_id=None):
+    def __init__(self):
         super(DocModelPlain, self).__init__()
 
-        self.__church_id = church_id
+        self.__church_id__ = None
+
+    def setChurch(self, id):
+        self.__church_id__ = id
+
+    def getChurchId(self):
+        return self.__church_id__
 
     def data(self, item, role):
         if role == Qt.DisplayRole:
@@ -48,14 +54,14 @@ class DocModelPlain(QSqlQueryModel):
         FROM cfp_doc \
         LEFT JOIN cfp_doctype ON cfp_doc.doctype_id=cfp_doctype.id"
 
-        if self.__church_id:
+        if self.__church_id__:
             query += " WHERE cfp_doc.church_id = ?"
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)
 
-        if self.__church_id:
-            sql_query.addBindValue(self.__church_id)
+        if self.__church_id__:
+            sql_query.addBindValue(self.__church_id__)
 
         if not sql_query.exec_():
             print(sql_query.lastError().text())
@@ -69,3 +75,67 @@ class DocModelPlain(QSqlQueryModel):
         self.insertColumns(5, 1)
         # insert column for years and flags fields
         self.insertColumns(10, 2)
+
+    def insert(self, data):
+        query = "INSERT INTO cfp_doc \
+            (church_id, doctype_id, fund, inventory, unit, sheets, comment) \
+            VALUES(?,?,?,?,?,?,?)"
+        
+        sql_query = QSqlQuery()
+        sql_query.prepare(query)
+
+        sql_query.addBindValue(data["cfp_doc.church_id"])
+        sql_query.addBindValue(data["cfp_doc.doctype_id"])
+        sql_query.addBindValue(data["cfp_doc.fund"])
+        sql_query.addBindValue(data["cfp_doc.inventory"])
+        sql_query.addBindValue(data["cfp_doc.unit"])
+        sql_query.addBindValue(data["cfp_doc.sheets"])
+        sql_query.addBindValue(data["cfp_doc.comment"])
+
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return False
+
+        return True
+
+    def update(self, data):
+        query = "UPDATE cfp_doc SET church_id=?, doctype_id=?, fund=?, inventory=?, unit=?, sheets=?, comment=? WHERE id=?"
+
+        sql_query = QSqlQuery()
+        sql_query.prepare(query)
+
+        sql_query.addBindValue(data["cfp_doc.church_id"])
+        sql_query.addBindValue(data["cfp_doc.doctype_id"])
+        sql_query.addBindValue(data["cfp_doc.fund"])
+        sql_query.addBindValue(data["cfp_doc.inventory"])
+        sql_query.addBindValue(data["cfp_doc.unit"])
+        sql_query.addBindValue(data["cfp_doc.sheets"])
+        sql_query.addBindValue(data["cfp_doc.comment"])
+        sql_query.addBindValue(data["cfp_doc.id"])
+
+        print(sql_query.lastQuery())
+
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return False
+
+        return True
+
+    def remove(self, doc_id):
+        query = "DELETE FROM cfp_doc, cfp_docflags, cfp_docyears  \
+        USING cfp_doc, cfp_docflags, cfp_docyears \
+        WHERE cfp_docflags.doc_id=cfp_doc.id \
+        AND cfp_docyears.doc_id=cfp_doc.id \
+        AND cfp_doc.id=%s" % doc_id
+
+        sql_query = QSqlQuery()
+        sql_query.prepare(query)
+
+        print(sql_query.lastQuery())
+
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return False
+
+        return True
+

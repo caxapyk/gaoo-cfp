@@ -36,7 +36,7 @@ class DocView(View):
         action_remove.setIcon(QIcon(":/icons/delete-20.png"))
         action_remove.setDisabled(True)
         action_remove.setShortcut(QKeySequence.Delete)
-        action_remove.triggered.connect(self.deleteRow)
+        action_remove.triggered.connect(self.removeDoc)
         self.addViewAction("doc_remove", action_remove)
 
         # toolbar widget
@@ -97,8 +97,8 @@ class DocView(View):
         church_id = index.internalPointer().uid()
         self.church_id = church_id
 
-        doc_model = DocModelPlain(church_id)
-        #doc_model.setChurchId(church_id)
+        doc_model = DocModelPlain()
+        doc_model.setChurch(church_id)
         doc_model.refresh()
 
         proxy_model = QSortFilterProxyModel()
@@ -172,23 +172,39 @@ class DocView(View):
     def editRow(self):
         pass
 
-    def deleteRow(self):
-        pass
+    def removeDoc(self):
+        proxy_index = self.tree_view.currentIndex()
+        if proxy_index:
+            result = QMessageBox().critical(
+                self.parent, "Удаление документа",
+                "Вы уверены что хотите удалить этот документ?",
+                QMessageBox.No | QMessageBox.Yes)
 
+            if result == QMessageBox.Yes:
+                index = self.model.mapToSource(proxy_index)
+                doc_id = index.model().record(index.row()).value("cfp_doc.id")
+                print(doc_id)
+                if self.model.sourceModel().remove(doc_id):
+                    self.tree_view.setRowHidden(proxy_index.row(), QModelIndex(), True)
+                else:    
+                    QMessageBox().critical(self.tree_view, "Удаление документа",
+                                           "Не удалось удалить документ!",
+                                           QMessageBox.Ok)
+        
     def editDocDialog(self):
         proxy_index = self.tree_view.currentIndex()
         index = self.model.mapToSource(proxy_index)
 
-        doc_id = index.model().record(index.row()).value("cfp_doc.id")
+        
 
-        docform_dialog = DocFormDialog(self.church_id, doc_id, index)
+        docform_dialog = DocFormDialog(self.model.sourceModel(), index)
         res = docform_dialog.exec()
 
         #if res == DocFormDialog.Accepted:
         #    self.model.sourceModel().refresh()
 
     def createDocDialog(self):
-        docform_dialog = DocFormDialog(self.church_id)
+        docform_dialog = DocFormDialog(self.model.sourceModel())
         res = docform_dialog.exec()
 
         if res == DocFormDialog.Accepted:

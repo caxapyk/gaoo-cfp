@@ -233,7 +233,7 @@ class GEOView(View):
         index = self.tree_view.currentIndex()
         if index:
             result = QMessageBox().critical(
-                self.parent, "Удаление объекта",
+                self.parent, "Удаление объекта справочника",
                 "Вы уверены что хотите удалить \"%s\"?" % index.data(),
                 QMessageBox.No | QMessageBox.Yes)
 
