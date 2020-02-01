@@ -8,12 +8,16 @@ class DocModelPlain(QSqlQueryModel):
         super(DocModelPlain, self).__init__()
 
         self.__church_id__ = None
+        self.__last_insert_id__ = None
 
     def setChurch(self, id):
         self.__church_id__ = id
 
     def getChurchId(self):
         return self.__church_id__
+
+    def lastInsertId(self):
+        return self.__last_insert_id__
 
     def data(self, item, role):
         if role == Qt.DisplayRole:
@@ -96,9 +100,22 @@ class DocModelPlain(QSqlQueryModel):
             print(sql_query.lastError().text())
             return False
 
+        if sql_query.lastInsertId():
+            self.__last_insert_id__ = sql_query.lastInsertId()
+            data["cfp_doc.id"] = self.__last_insert_id__
+
+            if not self.update_years(data):
+                return False
+        else:
+            return False
+
         return True
 
+
     def update(self, data):
+        if not self.update_years(data):
+            return False
+
         query = "UPDATE cfp_doc SET church_id=?, doctype_id=?, fund=?, inventory=?, unit=?, sheets=?, comment=? WHERE id=?"
 
         sql_query = QSqlQuery()
@@ -120,6 +137,39 @@ class DocModelPlain(QSqlQueryModel):
             return False
 
         return True
+
+    def update_years(self, data):
+        sql_query = QSqlQuery()
+        
+        query = "DELETE FROM cfp_docyears \
+        WHERE doc_id=%s" % data["cfp_doc.id"]
+
+        sql_query.prepare(query)
+
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return False
+        
+        
+        years = []
+        for y in data["years"]:
+            row = "(%s, %s)" % (data["cfp_doc.id"], y)
+            years.append(row)
+
+        query = "INSERT INTO cfp_docyears \
+            (doc_id, year) VALUES %s" % ",".join(years)
+
+        sql_query.prepare(query)
+
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return False
+
+        return True
+
+
+
+
 
     def remove(self, doc_id):
         query = "DELETE FROM cfp_doc, cfp_docflags, cfp_docyears  \

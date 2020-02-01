@@ -32,6 +32,8 @@ class DocFormDialog(QDialog):
         doctype_model.select()
         ui.doctype_comboBox.setModel(doctype_model)
         ui.doctype_comboBox.setModelColumn(1)
+
+        
         
         if index is not None:
             rec = doc_model.record(index.row())
@@ -57,6 +59,24 @@ class DocFormDialog(QDialog):
                               rec.indexOf("cfp_doc.comment"))
 
             mapper.setCurrentModelIndex(index)
+
+        # years
+        if index is not None:
+            rec = doc_model.record(index.row())
+            years_model = DocYearsModel(rec.value("years"))
+        else:
+            years_model = DocYearsModel()
+
+        ui.year_listView.setModel(years_model)
+        #ui.year_listView.setModelColumn(2)
+
+        year_delegate = YearItemDelegate()
+        year_delegate.closeEditor.connect(self.checkYear)
+        ui.year_listView.setItemDelegateForColumn(0, year_delegate)
+
+        ui.yearInsert_pushButton.clicked.connect(self.insertYear)
+        ui.yearRemove_pushButton.clicked.connect(self.removeYear)
+
             #doc_model = QSqlRelationalTableModel()
             #doc_model.setTable("cfp_doc")
             #doc_model.setRelation(2, QSqlRelation(
@@ -114,6 +134,7 @@ class DocFormDialog(QDialog):
         self.ui = ui
         self.doc_model = doc_model
         self.doctype_model = doctype_model
+        self.years_model = years_model
         self.index = index
         #self.years_model = years_model
         #self.docflags_model = docflags_model
@@ -121,18 +142,17 @@ class DocFormDialog(QDialog):
         #self.church_id = church_id
 
     def insertYear(self):
-        if self.years_model.insertRecord(-1):
-            index = self.years_model.index(self.years_model.rowCount() - 1, 2)
+        total_rows = self.years_model.rowCount()
+        if self.years_model.insertRows(total_rows, 1):
+            index = self.years_model.index(total_rows)
 
             self.ui.year_listView.setCurrentIndex(index)
             self.ui.year_listView.edit(index)
 
     def removeYear(self):
-        print(1)
         idx = self.ui.year_listView.selectedIndexes()
         if len(idx) > 0:
             self.years_model.removeRows(idx[0].row(), 1)
-            self.ui.year_listView.setRowHidden(idx[0].row(), True)
 
     def checkYear(self, editor):
         if not editor.hasAcceptableInput():
@@ -147,11 +167,19 @@ class DocFormDialog(QDialog):
         "cfp_doc.inventory": self.ui.inventory_lineEdit.text(),
         "cfp_doc.unit": self.ui.unit_lineEdit.text(),
         "cfp_doc.sheets": self.ui.sheet_spinBox.value(),
-        "cfp_doc.comment": self.ui.comment_textEdit.toPlainText()
+        "cfp_doc.comment": self.ui.comment_textEdit.toPlainText(),
+        "years": self.years_model.data_()
         }
 
         if self.index is None:
-            self.doc_model.insert(data)
+            if self.doc_model.lastInsertId():
+                print('update')
+                data["cfp_doc.id"] = self.doc_model.lastInsertId()
+                self.doc_model.update(data)
+            else:
+                print("indert")
+                self.doc_model.insert(data)
+
         else:
             # pass id of record to data on exising index
             rec = self.doc_model.record(self.index.row())

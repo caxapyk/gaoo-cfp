@@ -1,65 +1,34 @@
-from PyQt5.Qt import Qt
-from PyQt5.QtCore import QModelIndex, QAbstractListModel
-from PyQt5.QtSql import QSqlQueryModel, QSqlQuery, QSqlTableModel, QSqlRelation
+from PyQt5.QtSql import QSqlTableModel, QSqlRecord
 
 
-class DocYearsModel(QAbstractListModel):
-    def __init__(self, index):
+class DocYearsModel(QSqlTableModel):
+    def __init__(self):
         super(DocYearsModel, self).__init__()
 
-        years = index.internalPointer().docyears()
-        self.__data = years
+        self.setTable("cfp_docyears")
 
-    def flags(self, index):
-        return super().flags(index) | Qt.ItemIsEditable
+        self.doc_id = None
 
-    def rowCount(self, parent):
-        if not parent.isValid():
-            return len(self.__data)
+    def setDocId(self, doc_id):
+        self.setFilter("doc_id=%s" % doc_id)
+        self.doc_id = doc_id
+
+    def insertRecord(self, row, record=QSqlRecord()):
+        if record.isEmpty():
+            print("empty")
+            rec = self.record()
+            rec.remove(rec.indexOf("id"))
+            # set Null if doc_id is None (for a new doc)
+            if self.doc_id is None:
+                rec.setNull("doc_id")
+            else:
+                rec.setValue("doc_id", self.doc_id)
+
+            rec.setValue("year", "")
+
+            return super().insertRecord(row, rec)
         else:
-            return 0
+            return super().insertRecord(row, record)
 
-    def data(self, index, role):
-        if not index.isValid():
-            return None
-
-        if role == Qt.DisplayRole or role == Qt.EditRole:
-            if index.row() > len(self.__data):
-                return None
-
-            item = self.__data[index.row()]
-
-            return item
-
-        return None
-
-    def setData(self, index, value, role):
-        if role != Qt.EditRole:
-            return None
-
-        self.__data[index.row()] = value
-        # if item.model().update(item.uid(), value):
-        #    item.setData((value,))
-
-        return True
-
-    def insertRows(self, row, count, parent):
-        self.beginInsertRows(parent, row, row)
-
-        self.__data.append("")
-
-        self.endInsertRows()
-
-        return True
-
-    def removeRows(self, row, count, parent):
-        self.beginRemoveRows(parent, row, row)
-
-        i = 0
-        while i < count:
-            del self.__data[row]
-            i += 1
-
-        self.endRemoveRows()
-
-        return True
+    # def sumbitAll():
+    #   return True
