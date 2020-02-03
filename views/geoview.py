@@ -11,11 +11,11 @@ from views import (View, GeoItemDelegate)
 
 
 class GEOView(View):
-    def __init__(self, parent, docview):
-        super(GEOView, self).__init__()
+    def __init__(self, parent):
+        super(GEOView, self).__init__(parent)
 
         self.parent = parent
-        self.docview = docview
+        self.docview = self.parent.doc_view
 
         # 0 - sort by ID asc, 1 - sort by name asc, 2 - sort by name desc
         self.currentSortType = 0
@@ -70,7 +70,7 @@ class GEOView(View):
         tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         tree_view.customContextMenuRequested.connect(
             self.showContextMenu)
-        tree_view.doubleClicked.connect(self.showDocs)
+        tree_view.doubleClicked.connect(self.loadDocs)
 
         tree_view_delegate = GeoItemDelegate()
         tree_view_delegate.closeEditor.connect(self.onEditorClosed)
@@ -117,12 +117,12 @@ class GEOView(View):
         # set main ad default widget
         self.setMainWidget(main)
 
-    def showDocs(self, index):
+    def loadDocs(self, index):
         index = self.model.mapToSource(index)
         sql_model = index.internalPointer()
 
         if isinstance(sql_model.model(), ChurchModel):
-            self.docview.loadData(index)
+            self.docview.loadData(sql_model.uid())
 
     def showContextMenu(self, point):
         index = self.tree_view.indexAt(point)
@@ -142,7 +142,7 @@ class GEOView(View):
 
             church_actions = (
                 (":/icons/docs-folder-16.png", "Открыть документы",
-                 lambda: self.showDocs(index)),
+                 lambda: self.loadDocs(index)),
                 (":/icons/rename-16.png", "Переименовать", self.editItem),
                 (":/icons/delete-16.png", "Удалить", self.removeItem),
             )

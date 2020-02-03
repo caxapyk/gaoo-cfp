@@ -1,6 +1,5 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QModelIndex, QAbstractListModel
-from PyQt5.QtSql import QSqlQueryModel, QSqlQuery, QSqlTableModel, QSqlRelation
 
 
 class DocYearsModel(QAbstractListModel):
@@ -11,7 +10,7 @@ class DocYearsModel(QAbstractListModel):
             years = year_list.split(",")
         else:
             years = []
-        
+
         self.__data = years
 
     def flags(self, index):

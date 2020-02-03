@@ -1,7 +1,7 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import (QCoreApplication, QSettings, QModelIndex)
 from PyQt5.QtWidgets import (QMainWindow, QMessageBox, QWidget, QToolBar, QStatusBar, QAction,
-                             QSizePolicy, QMenuBar, QSplitter, QTreeView, QHBoxLayout,QPushButton, QLineEdit)
+                             QSizePolicy, QMenuBar, QSplitter, QTreeView, QHBoxLayout, QPushButton, QLineEdit)
 from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
 from PyQt5.uic import loadUi
 
@@ -18,29 +18,69 @@ class MainWindow(QMainWindow):
                             'ведомства периода до октября 1917 года (ГАОО)')
 
         self.settings = QSettings()
-
-        # if (self.settings):
-
         self.restoreSession()
-        self.initUi()
 
-    def restoreSession(self):
-        if self.settings.contains("geometry"):
-            self.restoreGeometry(self.settings.value('geometry', None))
-        else:
-            self.resize(900, 600)
-
-    def initUi(self):
         # load views
-        doc_view = DocView(self)
-        geo_view = GEOView(self, doc_view)
+        self.doc_view = DocView(self)
+        self.geo_view = GEOView(self)
 
-        # menubar
+        # global actions
+        self.doc_create = QAction("Новый документ")
+        self.doc_create.setIcon(QIcon(":/icons/doc-new-20.png"))
+        self.doc_create.setDisabled(True)
+        self.doc_create.setShortcut(QKeySequence.New)
+        self.doc_create.triggered.connect(self.doc_view.createDocDialog)
+
+        self.doc_update = QAction("Редактировать")
+        self.doc_update.setIcon(QIcon(":/icons/doc-edit-20.png"))
+        self.doc_update.setDisabled(True)
+        self.doc_update.triggered.connect(self.doc_view.editDocDialog)
+
+        self.doc_remove = QAction("Удалить")
+        self.doc_remove.setIcon(QIcon(":/icons/delete-20.png"))
+        self.doc_remove.setDisabled(True)
+        self.doc_remove.setShortcut(QKeySequence.Delete)
+        self.doc_remove.triggered.connect(self.doc_view.removeDoc)
+
+        self.filter_panel = QWidget()
+        f_layout = QHBoxLayout(self.filter_panel)
+        f_layout.setContentsMargins(0, 0, 0, 0)
+        f_layout.setAlignment(Qt.AlignRight)
+
+        self.filter_lineedit = QLineEdit(self.filter_panel)
+        self.filter_lineedit.setPlaceholderText("Фильтр по единице хранения...")
+        self.filter_lineedit.setMaximumWidth(300)
+        self.filter_lineedit.setDisabled(True)
+        self.filter_lineedit.textChanged.connect(self.doc_view.filter)
+
+        self.clearfilter_btn = QPushButton(self.filter_panel)
+        self.clearfilter_btn.setIcon(QIcon(":/icons/clear-filter-16.png"))
+        self.clearfilter_btn.setToolTip("Сбросить фильтр")
+        self.clearfilter_btn.setMaximumWidth(30)
+        self.clearfilter_btn.setDisabled(True)
+        self.clearfilter_btn.clicked.connect(self.doc_view.clearFilter)
+
+        f_layout.addWidget(self.filter_lineedit)
+        f_layout.addWidget(self.clearfilter_btn)
+
+        # setup
+        self.setupMenu()
+        self.setupToolBar()
+        self.setupStatusBar()
+
+        # main widget
+        splitter = QSplitter(self)
+        splitter.addWidget(self.geo_view.mainWidget())
+        splitter.addWidget(self.doc_view.mainWidget())
+
+        self.setCentralWidget(splitter)
+
+    def setupMenu(self):
         menubar = QMenuBar(self)
 
         file_menu = menubar.addMenu("Файл")
         create_menu = file_menu.addMenu("Создать")
-        create_menu.addAction(doc_view.vAction("doc_create"))
+        create_menu.addAction(self.doc_create)
         file_menu.addSeparator()
         exit_action = file_menu.addAction(
             QIcon(":/icons/exit-16.png"), "Выход")
@@ -48,8 +88,8 @@ class MainWindow(QMainWindow):
         exit_action.triggered.connect(self.close)
 
         edit_menu = menubar.addMenu("Правка")
-        edit_menu.addAction(doc_view.vAction("doc_update"))
-        edit_menu.addAction(doc_view.vAction("doc_remove"))
+        edit_menu.addAction(self.doc_update)
+        edit_menu.addAction(self.doc_remove)
 
         cat_menu = menubar.addMenu("Cправочники")
         doctype_action = cat_menu.addAction(
@@ -76,33 +116,28 @@ class MainWindow(QMainWindow):
 
         self.setMenuBar(menubar)
 
-        # toolbar
+    def setupToolBar(self):
         toolbar = QToolBar(self)
 
-        toolbar.addAction(doc_view.vAction("doc_create"))
-        toolbar.addAction(doc_view.vAction("doc_update"))
-        toolbar.addAction(doc_view.vAction("doc_remove"))
+        toolbar.addAction(self.doc_create)
+        toolbar.addAction(self.doc_update)
+        toolbar.addAction(self.doc_remove)
 
-        # filter panel
-        toolbar.addWidget(doc_view.vToolBarWidget("doc_filter"))
+        toolbar.addWidget(self.filter_panel)
 
         self.addToolBar(toolbar)
 
-        # statusbar
+    def setupStatusBar(self):
         statusbar = QStatusBar(self)
         statusbar.showMessage("Готово")
 
         self.setStatusBar(statusbar)
 
-        # main widget
-        splitter = QSplitter(self)
-        splitter.addWidget(geo_view.mainWidget())
-        splitter.addWidget(doc_view.mainWidget())
-
-        self.geo_view = geo_view
-        self.doc_view = doc_view
-
-        self.setCentralWidget(splitter)
+    def restoreSession(self):
+        if self.settings.contains("geometry"):
+            self.restoreGeometry(self.settings.value('geometry', None))
+        else:
+            self.resize(900, 600)
 
     def aboutCFP(self):
         text = "<b>Межфондовый указатель к документам духовного ведомства периода \
