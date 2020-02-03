@@ -77,6 +77,17 @@ class DocFormDialog(QDialog):
         ui.yearInsert_pushButton.clicked.connect(self.insertYear)
         ui.yearRemove_pushButton.clicked.connect(self.removeYear)
 
+        # docflags
+        if index is not None:
+            rec = doc_model.record(index.row())
+            docflags_model = DocFlagsModel(rec.value("flags"))
+        else:
+            docflags_model = DocFlagsModel()
+
+        ui.docflag_listView.setModel(docflags_model)
+        ui.docflag_listView.setModelColumn(1)
+
+
             #doc_model = QSqlRelationalTableModel()
             #doc_model.setTable("cfp_doc")
             #doc_model.setRelation(2, QSqlRelation(
@@ -137,7 +148,7 @@ class DocFormDialog(QDialog):
         self.years_model = years_model
         self.index = index
         #self.years_model = years_model
-        #self.docflags_model = docflags_model
+        self.docflags_model = docflags_model
         #self.mapper = mapper
         #self.church_id = church_id
 
@@ -159,6 +170,7 @@ class DocFormDialog(QDialog):
             self.years_model.removeRows(self.years_model.rowCount() - 1, 1)
 
     def saveAction(self):
+        print(self.docflags_model.data_())
         data = {
         "cfp_doc.church_id": self.doc_model.getChurchId(),
         "cfp_doc.doctype_id": self.doctype_model.record(self.ui.doctype_comboBox.currentIndex()).value("id"),
@@ -168,7 +180,8 @@ class DocFormDialog(QDialog):
         "cfp_doc.unit": self.ui.unit_lineEdit.text(),
         "cfp_doc.sheets": self.ui.sheet_spinBox.value(),
         "cfp_doc.comment": self.ui.comment_textEdit.toPlainText(),
-        "years": self.years_model.data_()
+        "years": self.years_model.data_(),
+        "flags": self.docflags_model.data_()
         }
 
         if self.index is None:

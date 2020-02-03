@@ -104,7 +104,7 @@ class DocModelPlain(QSqlQueryModel):
             self.__last_insert_id__ = sql_query.lastInsertId()
             data["cfp_doc.id"] = self.__last_insert_id__
 
-            if not self.update_years(data):
+            if not self.update_years(data) or not self.update_flags(data):
                 return False
         else:
             return False
@@ -113,7 +113,7 @@ class DocModelPlain(QSqlQueryModel):
 
 
     def update(self, data):
-        if not self.update_years(data):
+        if not self.update_years(data) or not self.update_flags(data):
             return False
 
         query = "UPDATE cfp_doc SET church_id=?, doctype_id=?, fund=?, inventory=?, unit=?, sheets=?, comment=? WHERE id=?"
@@ -150,33 +150,55 @@ class DocModelPlain(QSqlQueryModel):
             print(sql_query.lastError().text())
             return False
         
-        
-        years = []
-        for y in data["years"]:
-            row = "(%s, %s)" % (data["cfp_doc.id"], y)
-            years.append(row)
+        if len(data["years"]) > 0:
+            years = []
+            for y in data["years"]:
+                row = "(%s, %s)" % (data["cfp_doc.id"], y)
+                years.append(row)
 
-        query = "INSERT INTO cfp_docyears \
-            (doc_id, year) VALUES %s" % ",".join(years)
+            query = "INSERT INTO cfp_docyears \
+                (doc_id, year) VALUES %s" % ",".join(years)
+
+            sql_query.prepare(query)
+
+            if not sql_query.exec_():
+                print(sql_query.lastError().text())
+                return False
+
+        return True
+
+    def update_flags(self, data):
+        sql_query = QSqlQuery()
+        
+        query = "DELETE FROM cfp_docflags \
+        WHERE doc_id=%s" % data["cfp_doc.id"]
 
         sql_query.prepare(query)
 
         if not sql_query.exec_():
             print(sql_query.lastError().text())
             return False
+        
+        if len(data["flags"]) > 0:
+            flags = []
+            for f in data["flags"]:
+                row = "(%s, %s)" % (data["cfp_doc.id"], f)
+                flags.append(row)
+
+            query = "INSERT INTO cfp_docflags \
+                (doc_id, docflag_id) VALUES %s" % ",".join(flags)
+
+            sql_query.prepare(query)
+
+            if not sql_query.exec_():
+                print(sql_query.lastError().text())
+                return False
 
         return True
 
-
-
-
-
     def remove(self, doc_id):
-        query = "DELETE FROM cfp_doc, cfp_docflags, cfp_docyears  \
-        USING cfp_doc, cfp_docflags, cfp_docyears \
-        WHERE cfp_docflags.doc_id=cfp_doc.id \
-        AND cfp_docyears.doc_id=cfp_doc.id \
-        AND cfp_doc.id=%s" % doc_id
+        # docyears and docflags removes by ON CASCADE MYSQL feature
+        query = "DELETE FROM cfp_doc WHERE id=%s" % doc_id
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)

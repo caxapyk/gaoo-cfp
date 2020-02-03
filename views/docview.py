@@ -200,8 +200,8 @@ class DocView(View):
         docform_dialog = DocFormDialog(self.model.sourceModel(), index)
         res = docform_dialog.exec()
 
-        #if res == DocFormDialog.Accepted:
-        #    self.model.sourceModel().refresh()
+        if res == DocFormDialog.Accepted:
+            self.model.sourceModel().refresh()
 
     def createDocDialog(self):
         docform_dialog = DocFormDialog(self.model.sourceModel())

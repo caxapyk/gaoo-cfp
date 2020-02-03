@@ -36,6 +36,7 @@ class DocYearsModel(QAbstractListModel):
             return item
 
         return None
+
     def data_(self):
         return self.__data
 
@@ -44,8 +45,6 @@ class DocYearsModel(QAbstractListModel):
             return None
 
         self.__data[index.row()] = value
-        # if item.model().update(item.uid(), value):
-        #    item.setData((value,))
 
         return True
 
