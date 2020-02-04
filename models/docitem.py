@@ -7,7 +7,7 @@ class DocItem(QAbstractItemView):
 
         self.__data = data
 
-    def setData(self, data, column):
+    def setData(self, column, data):
         self.__data[column] = data
 
     def indexOf(self, field):
@@ -16,5 +16,8 @@ class DocItem(QAbstractItemView):
     def data(self, section):
         return self.__data[section]
 
-    #def insertColumn(self, column):
-    #    self.__data.insert(column, "")
+    def insertColumns(self, column, count):
+        i = 0
+        while i < count:
+            self.__data.insert(column, "")
+            i += 1

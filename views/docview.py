@@ -38,7 +38,6 @@ class DocView(View):
         self.tree_view.customContextMenuRequested.connect(
             self.showContextMenu)
         self.tree_view.pressed.connect(self.docSelected)
-        self.tree_view.setModel(self.model)
 
         v_layout.addWidget(self.tree_view)
 
@@ -50,8 +49,11 @@ class DocView(View):
     def loadData(self, church_id):
         self.church_id = church_id
 
-        self.doc_model.setChurch(self.church_id)
+        self.doc_model.setFilter("cfp_doc.church_id=%s" % self.church_id)
+        self.doc_model.setChurch(church_id)
         self.doc_model.refresh()
+
+        self.tree_view.setModel(self.model)
 
         self.tree_view.hideColumn(0)
         self.tree_view.hideColumn(1)
@@ -63,14 +65,15 @@ class DocView(View):
         self.tree_view.hideColumn(7)
         self.tree_view.hideColumn(8)
         self.tree_view.hideColumn(9)
-        self.tree_view.resizeColumnToContents(10)
-        self.tree_view.setColumnWidth(11, 150)
-        self.tree_view.setColumnWidth(12, 200)
-        self.tree_view.setColumnWidth(13, 100)
-        self.tree_view.setColumnWidth(14, 150)
+        self.tree_view.hideColumn(10)
+        self.tree_view.resizeColumnToContents(11)
+        self.tree_view.setColumnWidth(12, 150)
+        self.tree_view.setColumnWidth(13, 200)
+        self.tree_view.setColumnWidth(14, 100)
         self.tree_view.setColumnWidth(15, 150)
-        self.tree_view.hideColumn(16)
-        self.tree_view.resizeColumnToContents(17)
+        self.tree_view.setColumnWidth(16, 150)
+        self.tree_view.hideColumn(17)
+        self.tree_view.resizeColumnToContents(18)
 
         self.parent.doc_create.setDisabled(False)
         self.parent.filter_lineedit.setDisabled(False)
@@ -137,16 +140,14 @@ class DocView(View):
         proxy_index = self.tree_view.currentIndex()
         index = self.model.mapToSource(proxy_index)
 
-        doc_id = self.doc_model.record(index.row()).value("cfp_doc.id")
-
-        docform_dialog = DocFormDialog(doc_id, self.church_id, self.doc_model, index)
+        docform_dialog = DocFormDialog(self.doc_model, index)
         res = docform_dialog.exec()
 
         #if res == DocFormDialog.Accepted:
         #    self.doc_model.refresh()
 
     def createDocDialog(self):
-        docform_dialog = DocFormDialog(None, self.church_id, self.doc_model)
+        docform_dialog = DocFormDialog(self.doc_model)
         res = docform_dialog.exec()
 
         if res == DocFormDialog.Accepted:

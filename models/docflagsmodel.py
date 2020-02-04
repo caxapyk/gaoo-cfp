@@ -22,7 +22,7 @@ class DocFlagsModel(DocflagModel):
         return super().flags(index) | Qt.ItemIsUserCheckable
 
     def data_(self):
-        return self.__flags
+        return ",".join(self.__data)
 
     def data(self, index, role):
         if not index.isValid():
@@ -47,7 +47,8 @@ class DocFlagsModel(DocflagModel):
     #        id_index = self.__model.createIndex(index.row(), 0, QModelIndex())
 
             if(value == Qt.Checked):
-                 self.__data.append(super().data(index))
+                print(super().data(index))
+                self.__data.append(super().data(index))
     #            record = self.__model.record()
     #            record.remove(record.indexOf("id"))
     #            record.setValue("doc_id", self.doc_id)

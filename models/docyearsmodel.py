@@ -37,7 +37,7 @@ class DocYearsModel(QAbstractListModel):
         return None
 
     def data_(self):
-        return self.__data
+        return ",".join(self.__data)
 
     def setData(self, index, value, role):
         if role != Qt.EditRole:

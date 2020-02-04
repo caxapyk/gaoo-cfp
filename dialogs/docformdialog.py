@@ -1,15 +1,15 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtSql import QSqlRelationalDelegate
-from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QDataWidgetMapper)
+from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QLineEdit, QDataWidgetMapper)
 from PyQt5.QtGui import QIcon
 from PyQt5.uic import loadUi
 
-from models import (DocModel, DoctypeModel, DocFlagsModel, DocYearsModel)
+from models import (DoctypeModel, DocFlagsModel, DocYearsModel)
 from .yearitemdelegate import YearItemDelegate
 
 
 class DocFormDialog(QDialog):
-    def __init__(self, doc_id=None, church_id=None, model=None, index=None):
+    def __init__(self, model, index=None):
         super(DocFormDialog, self).__init__()
 
         self.ui = loadUi("ui/docform_dialog.ui", self)
@@ -24,16 +24,11 @@ class DocFormDialog(QDialog):
         self.setWindowIcon(QIcon(":/icons/church-16.png"))
         self.setModal(True)
 
-        self.doc_id = doc_id
-        self.church_id = church_id
+        self.model_index = index
 
         # doc model
         self.doc_model = model
-
-        # doc model
-        #self.doc_model = DocModel()
-        #self.doc_model.setDoc(doc_id)
-        #self.doc_model.refresh()
+        self.doc_model.setCurrentIndex(index)
 
         # doctype model
         self.doctype_model = DoctypeModel()
@@ -44,18 +39,18 @@ class DocFormDialog(QDialog):
         self.year_list = ""
         self.flag_list = ""
 
-        if self.doc_id is not None:
-            self.record = self.doc_model.record(index.row())
-            #self.record = self.doc_model.record(0)
+        if self.model_index is not None:
+            self.record = self.doc_model.record(self.model_index.row())
             self.year_list = self.record.value("years")
             self.flag_list = self.record.value("flags")
-
-            print(self.record.value("cfp_doc.fund"))
 
             # data mapper
             mapper = QDataWidgetMapper()
             mapper.setModel(self.doc_model)
             mapper.setItemDelegate(QSqlRelationalDelegate())
+            mapper.setSubmitPolicy(QDataWidgetMapper.ManualSubmit)
+
+            print(self.record.indexOf("cfp_doctype.name"))
 
             mapper.addMapping(self.ui.doctype_comboBox,
                               self.record.indexOf("cfp_doctype.name"))
@@ -69,9 +64,16 @@ class DocFormDialog(QDialog):
                               self.record.indexOf("cfp_doc.sheets"))
             mapper.addMapping(self.ui.comment_textEdit,
                               self.record.indexOf("cfp_doc.comment"))
+            # virtal mappings
+            self.years_lineedit = QLineEdit()
+            mapper.addMapping(self.years_lineedit,
+                              self.record.indexOf("years"))
+            self.flags_lineedit = QLineEdit()
+            mapper.addMapping(self.flags_lineedit,
+                              self.record.indexOf("flags"))
 
-            #    mapper.toLast()
-            mapper.setCurrentModelIndex(index)
+            mapper.setCurrentIndex(self.model_index.row())
+            self.mapper = mapper
 
         # years
         self.years_model = DocYearsModel(self.year_list)
@@ -109,30 +111,51 @@ class DocFormDialog(QDialog):
             self.years_model.removeRows(self.years_model.rowCount() - 1, 1)
 
     def saveAction(self):
-        doctype_idx = self.ui.doctype_comboBox.currentIndex()
-        data = {
-            "cfp_doc.church_id": self.church_id,
-            "cfp_doc.doctype_id": self.doctype_model.record(doctype_idx).value("id"),
-            "cfp_doc.fund": self.ui.fund_lineEdit.text(),
-            "cfp_doc.inventory": self.ui.inventory_lineEdit.text(),
-            "cfp_doc.unit": self.ui.unit_lineEdit.text(),
-            "cfp_doc.sheets": self.ui.sheet_spinBox.value(),
-            "cfp_doc.comment": self.ui.comment_textEdit.toPlainText(),
-            "years": self.years_model.data_(),
-            "flags": self.docflags_model.data_()
-        }
+        print("saveAction")
+        self.years_lineedit.setText(self.years_model.data_())
+        self.flags_lineedit.setText(self.docflags_model.data_())
+        #self.record.setValue("years", self.years_model.data_())
+        self.mapper.submit()
 
-        if self.doc_id is None:
-            # pass id of record to data on last inserted id
-            if self.doc_model.lastInsertId():
-                data["cfp_doc.id"] = self.doc_model.lastInsertId()
-                self.doc_model.update(data)
-            else:
-                self.doc_model.insert(data)
-        else:
-            # pass id of record to data on exising index
-            data["cfp_doc.id"] = self.record.value("cfp_doc.id")
-            self.doc_model.update(data)
+        #doctype_idx = self.ui.doctype_comboBox.currentIndex()
+        #self.doctype_model.record(doctype_idx).value("id")
+
+        #record = self.doc_model.emptyRecord()
+        #record.setValue("cfp_doc.church_id", self.doc_model.churchId())
+        #record.setValue("cfp_doc.doctype_id", ?)
+        #record.setValue("cfp_doc.fund", self.ui.fund_lineEdit.text())
+        #record.setValue("cfp_doc.inventory", self.ui.inventory_lineEdit.text())
+        #record.setValue("cfp_doc.unit", self.ui.unit_lineEdit.text())
+        #record.setValue("cfp_doc.sheets", self.ui.sheet_spinBox.value())
+        #record.setValue("cfp_doc.comment", self.ui.comment_textEdit.toPlainText())
+
+        #self.mapper.submit()
+        #self.doc_model.setData(self.doc_model.index(self.model_index.row(), 14), ",".join(self.years_model.data_()))
+        #self.doc_model.setData(self.doc_model.index(self.model_index.row(), 15), ",".join(self.docflags_model.data_()))
+        #doctype_idx = self.ui.doctype_comboBox.currentIndex()
+        #data = {
+        #    "cfp_doc.church_id": self.record.value("cfp_doc.church_id"),
+        #    "cfp_doc.doctype_id": self.doctype_model.record(doctype_idx).value("id"),
+        #    "cfp_doc.fund": self.ui.fund_lineEdit.text(),
+        #    "cfp_doc.inventory": self.ui.inventory_lineEdit.text(),
+        #    "cfp_doc.unit": self.ui.unit_lineEdit.text(),
+        #    "cfp_doc.sheets": self.ui.sheet_spinBox.value(),
+        #    "cfp_doc.comment": self.ui.comment_textEdit.toPlainText(),
+        #    "years": self.years_model.data_(),
+        #    "flags": self.docflags_model.data_()
+        #}
+
+        #if self.model_index is None:
+        #    # pass id of record to data on last inserted id
+        #    if self.doc_model.lastInsertId():
+        #        data["cfp_doc.id"] = self.doc_model.lastInsertId()
+        #        self.doc_model.update(data, self.model_index)
+        #    else:
+       #         self.doc_model.insert(data)
+       # else:
+       #     # pass id of record to data on exising index
+       #     data["cfp_doc.id"] = self.record.value("cfp_doc.id")
+       #     self.doc_model.update(data, self.model_index)
 
     def closeAction(self):
         self.destroy()
