@@ -1,9 +1,10 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QModelIndex, QAbstractListModel
+from PyQt5.QtSql import QSqlQuery
 
 
 class DocYearsModel(QAbstractListModel):
-    def __init__(self, year_list=""):
+    def __init__(self, doc_id,year_list=""):
         super(DocYearsModel, self).__init__()
 
         if len(year_list) > 0:
@@ -12,6 +13,7 @@ class DocYearsModel(QAbstractListModel):
             years = []
 
         self.__data = years
+        self.doc_id = doc_id
 
     def flags(self, index):
         return super().flags(index) | Qt.ItemIsEditable
@@ -44,6 +46,7 @@ class DocYearsModel(QAbstractListModel):
             return None
 
         self.__data[index.row()] = value
+        self.__data.sort()
 
         return True
 
@@ -65,5 +68,34 @@ class DocYearsModel(QAbstractListModel):
             i += 1
 
         self.endRemoveRows()
+
+        return True
+
+    def submit(self):
+        sql_query = QSqlQuery()
+
+        query = "DELETE FROM cfp_docyears \
+        WHERE doc_id=%s" % self.doc_id
+
+        sql_query.prepare(query)
+
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return False
+
+        if len(self.__data) > 0:
+            years = []
+            for y in self.__data:
+                row = "(%s, %s)" % (self.doc_id, y)
+                years.append(row)
+
+            query = "INSERT INTO cfp_docyears \
+                (doc_id, year) VALUES %s" % ",".join(years)
+
+            sql_query.prepare(query)
+
+            if not sql_query.exec_():
+                print(sql_query.lastError().text())
+                return False
 
         return True

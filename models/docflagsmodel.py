@@ -1,11 +1,11 @@
 from PyQt5.Qt import Qt
-from PyQt5.QtSql import QSqlTableModel
+from PyQt5.QtSql import QSqlTableModel, QSqlQuery
 from PyQt5.QtCore import QModelIndex, QAbstractListModel
 from models import DocflagModel
 
 
 class DocFlagsModel(DocflagModel):
-    def __init__(self, flag_list=""):
+    def __init__(self, doc_id, flag_list=""):
         super(DocFlagsModel, self).__init__()
 
         if len(flag_list) > 0:
@@ -16,7 +16,13 @@ class DocFlagsModel(DocflagModel):
         super().select()
 
         self.__data = flags
-        self.__flags = []
+        self.__ids = []
+
+        while self.query().next():
+            if self.query().value("name") in self.__data:
+                self.__ids.append(self.query().value("id"))
+
+        self.doc_id = doc_id
 
     def flags(self, index):
         return super().flags(index) | Qt.ItemIsUserCheckable
@@ -29,11 +35,7 @@ class DocFlagsModel(DocflagModel):
             return None
 
         if role == Qt.CheckStateRole:
-            # index for DocflagModel column `id`
-            id_index = self.createIndex(index.row(), 0, QModelIndex())
             if super().data(index) in self.__data:
-                if super().data(id_index) not in self.__flags:
-                    self.__flags.append(super().data(id_index))
                 return Qt.Checked
 
             return Qt.Unchecked
@@ -43,30 +45,46 @@ class DocFlagsModel(DocflagModel):
 
     def setData(self, index, value, role):
         if role == Qt.CheckStateRole:
-    #        # index for DocflagModel column `id`
-    #        id_index = self.__model.createIndex(index.row(), 0, QModelIndex())
+            # index for DocflagModel column `id`
+            id_index = super().index(index.row(), 0)
 
             if(value == Qt.Checked):
-                print(super().data(index))
                 self.__data.append(super().data(index))
-    #            record = self.__model.record()
-    #            record.remove(record.indexOf("id"))
-    #            record.setValue("doc_id", self.doc_id)
-    #            record.setValue("docflag_id", self.data(id_index))
-
-    #            if self.__model.insertRecord(-1, record):
-    #                self.__flags[self.data(
-    #                    id_index)] = self.__model.rowCount() - 1
+                self.__ids.append(super().data(id_index))
             else:
-                # index for DocflagModel column `id`
-                id_index = self.createIndex(index.row(), 0, QModelIndex())
-
-                del self.__flags[self.__flags.index(super().data(id_index))]
+                del self.__ids[self.__ids.index(super().data(id_index))]
                 del self.__data[self.__data.index(super().data(index))]
-    #            if self.__model.removeRows(self.__flags[self.data(id_index)], 1):
-    #                del self.__flags[self.data(id_index)]
-    #    return True
+
         return True
 
-    #def submitAll(self):
-    #    self.__model.submitAll()
+    def submit(self):
+        sql_query = QSqlQuery()
+
+        query = "DELETE FROM cfp_docflags \
+        WHERE doc_id=%s" % self.doc_id
+
+        sql_query.prepare(query)
+
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return False
+
+        print(self.__ids)
+
+        if len(self.__ids) > 0:
+            flags = []
+            for f_id in self.__ids:
+                row = "(%s, %s)" % (self.doc_id, f_id)
+                flags.append(row)
+
+            query = "INSERT INTO cfp_docflags \
+                (doc_id, docflag_id) VALUES %s" % ",".join(flags)
+
+            sql_query.prepare(query)
+            print(sql_query.lastQuery())
+
+            if not sql_query.exec_():
+                print(sql_query.lastError().text())
+                return False
+
+        return True

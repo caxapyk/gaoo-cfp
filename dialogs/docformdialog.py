@@ -76,7 +76,7 @@ class DocFormDialog(QDialog):
             self.mapper = mapper
 
         # years
-        self.years_model = DocYearsModel(self.year_list)
+        self.years_model = DocYearsModel(self.record.value("cfp_doc.id"), self.year_list)
 
         self.ui.year_listView.setModel(self.years_model)
 
@@ -88,7 +88,7 @@ class DocFormDialog(QDialog):
         self.ui.yearRemove_pushButton.clicked.connect(self.removeYear)
 
         # docflags
-        self.docflags_model = DocFlagsModel(self.flag_list)
+        self.docflags_model = DocFlagsModel(self.record.value("cfp_doc.id"), self.flag_list)
 
         self.ui.docflag_listView.setModel(self.docflags_model)
         self.ui.docflag_listView.setModelColumn(1)
@@ -116,6 +116,8 @@ class DocFormDialog(QDialog):
         self.flags_lineedit.setText(self.docflags_model.data_())
         #self.record.setValue("years", self.years_model.data_())
         self.mapper.submit()
+        self.years_model.submit()
+        self.docflags_model.submit()
 
         #doctype_idx = self.ui.doctype_comboBox.currentIndex()
         #self.doctype_model.record(doctype_idx).value("id")

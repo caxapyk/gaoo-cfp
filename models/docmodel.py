@@ -1,6 +1,6 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QModelIndex, QAbstractItemModel
-from PyQt5.QtSql import QSqlQueryModel, QSqlQuery, QSqlRecord, QSqlField
+from PyQt5.QtSql import QSqlQuery, QSqlRecord, QSqlField
 from utils import AbbrMaker
 
 
@@ -210,16 +210,16 @@ class DocModel(QAbstractItemModel):
             (church_id, doctype_id, fund, inventory, unit, sheets, comment) \
             VALUES(?,?,?,?,?,?,?)"
 
-            sql_query = QSqlQuery()
-            sql_query.prepare(query)
+        sql_query = QSqlQuery()
+        sql_query.prepare(query)
 
-            sql_query.addBindValue(rec.value("cfp_doc.church_id"))
-            sql_query.addBindValue(rec.value("cfp_doc.doctype_id"))
-            sql_query.addBindValue(rec.value("cfp_doc.fund"))
-            sql_query.addBindValue(rec.value("cfp_doc.inventory"))
-            sql_query.addBindValue(rec.value("cfp_doc.unit"))
-            sql_query.addBindValue(rec.value("cfp_doc.sheets"))
-            sql_query.addBindValue(rec.value("cfp_doc.comment"))
+        sql_query.addBindValue(rec.value("cfp_doc.church_id"))
+        sql_query.addBindValue(rec.value("cfp_doc.doctype_id"))
+        sql_query.addBindValue(rec.value("cfp_doc.fund"))
+        sql_query.addBindValue(rec.value("cfp_doc.inventory"))
+        sql_query.addBindValue(rec.value("cfp_doc.unit"))
+        sql_query.addBindValue(rec.value("cfp_doc.sheets"))
+        sql_query.addBindValue(rec.value("cfp_doc.comment"))
 
         if self.currentIndex().isValid():
             sql_query.addBindValue(rec.value("cfp_doc.id"))
