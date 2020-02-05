@@ -4,16 +4,18 @@ from PyQt5.QtSql import QSqlQuery
 
 
 class DocYearsModel(QAbstractListModel):
-    def __init__(self, doc_id,year_list=""):
+    def __init__(self, year_list):
         super(DocYearsModel, self).__init__()
 
-        if len(year_list) > 0:
+        if year_list is not None and len(year_list) > 0:
             years = year_list.split(",")
         else:
             years = []
 
         self.__data = years
-        self.doc_id = doc_id
+
+        self.doc_id = None
+        self.current_changed = False
 
     def flags(self, index):
         return super().flags(index) | Qt.ItemIsEditable
@@ -48,6 +50,8 @@ class DocYearsModel(QAbstractListModel):
         self.__data[index.row()] = value
         self.__data.sort()
 
+        self.current_changed = True
+
         return True
 
     def insertRows(self, row, count, parent=QModelIndex()):
@@ -67,11 +71,16 @@ class DocYearsModel(QAbstractListModel):
             del self.__data[row]
             i += 1
 
+        self.current_changed = True
+
         self.endRemoveRows()
 
         return True
 
-    def submit(self):
+    def submitAll(self):
+        if not self.current_changed:
+            return True
+
         sql_query = QSqlQuery()
 
         query = "DELETE FROM cfp_docyears \
@@ -99,3 +108,6 @@ class DocYearsModel(QAbstractListModel):
                 return False
 
         return True
+
+    def setDoc(self, doc_id):
+        self.doc_id = doc_id

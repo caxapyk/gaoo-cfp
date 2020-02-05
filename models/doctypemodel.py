@@ -1,7 +1,14 @@
 from PyQt5.QtSql import QSqlTableModel
 
-class DoctypeModel(QSqlTableModel):
-	def __init__(self):
-	    super(DoctypeModel, self).__init__()
 
-	    self.setTable("cfp_doctype")
+class DoctypeModel(QSqlTableModel):
+    def __init__(self):
+        super(DoctypeModel, self).__init__()
+
+        self.setTable("cfp_doctype")
+
+    def getItemId(self, row):
+        if row <= self.rowCount():
+            return self.record(row).value("id")
+        else:
+            return None

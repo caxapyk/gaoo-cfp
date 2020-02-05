@@ -51,29 +51,30 @@ class DocView(View):
 
         self.doc_model.setFilter("cfp_doc.church_id=%s" % self.church_id)
         self.doc_model.setChurch(church_id)
-        self.doc_model.refresh()
+        #self.doc_model.refresh()
+        self.doc_model.select()
 
         self.tree_view.setModel(self.model)
 
-        self.tree_view.hideColumn(0)
-        self.tree_view.hideColumn(1)
-        self.tree_view.hideColumn(2)
-        self.tree_view.hideColumn(3)
-        self.tree_view.hideColumn(4)
-        self.tree_view.hideColumn(5)
-        self.tree_view.hideColumn(6)
-        self.tree_view.hideColumn(7)
-        self.tree_view.hideColumn(8)
-        self.tree_view.hideColumn(9)
-        self.tree_view.hideColumn(10)
-        self.tree_view.resizeColumnToContents(11)
-        self.tree_view.setColumnWidth(12, 150)
-        self.tree_view.setColumnWidth(13, 200)
-        self.tree_view.setColumnWidth(14, 100)
-        self.tree_view.setColumnWidth(15, 150)
-        self.tree_view.setColumnWidth(16, 150)
-        self.tree_view.hideColumn(17)
-        self.tree_view.resizeColumnToContents(18)
+        #self.tree_view.hideColumn(0)
+        #self.tree_view.hideColumn(1)
+        #self.tree_view.hideColumn(2)
+        #self.tree_view.hideColumn(3)
+        #self.tree_view.hideColumn(4)
+        #self.tree_view.hideColumn(5)
+        #self.tree_view.hideColumn(6)
+        #self.tree_view.hideColumn(7)
+        #self.tree_view.hideColumn(8)
+        #self.tree_view.hideColumn(9)
+        #self.tree_view.hideColumn(10)
+        #self.tree_view.resizeColumnToContents(11)
+        #self.tree_view.setColumnWidth(12, 150)
+        #self.tree_view.setColumnWidth(13, 200)
+        #self.tree_view.setColumnWidth(14, 100)
+        #self.tree_view.setColumnWidth(15, 150)
+        #self.tree_view.setColumnWidth(16, 150)
+        #self.tree_view.hideColumn(17)
+        #self.tree_view.resizeColumnToContents(18)
 
         self.parent.doc_create.setDisabled(False)
         self.parent.filter_lineedit.setDisabled(False)
@@ -127,10 +128,8 @@ class DocView(View):
 
             if result == QMessageBox.Yes:
                 index = self.model.mapToSource(proxy_index)
-                doc_id = index.model().record(index.row()).value("cfp_doc.id")
-                print(doc_id)
-                if self.doc_model.remove(doc_id):
-                    self.tree_view.setRowHidden(proxy_index.row(), QModelIndex(), True)
+                if self.doc_model.removeRow(index.row()):
+                    self.tree_view.setRowHidden(index.row(), QModelIndex(), True)
                 else:    
                     QMessageBox().critical(self.tree_view, "Удаление документа",
                                            "Не удалось удалить документ!",
@@ -140,20 +139,12 @@ class DocView(View):
         proxy_index = self.tree_view.currentIndex()
         index = self.model.mapToSource(proxy_index)
 
-        docform_dialog = DocFormDialog(self.doc_model, index)
+        docform_dialog = DocFormDialog(self.doc_model, index.row())
         res = docform_dialog.exec()
-
-        #if res == DocFormDialog.Accepted:
-        #    self.doc_model.refresh()
 
     def createDocDialog(self):
         docform_dialog = DocFormDialog(self.doc_model)
         res = docform_dialog.exec()
-
-        if res == DocFormDialog.Accepted:
-        #    while self.doc_model.canFetchMore():
-            self.doc_model.fetchMore()
-        #    self.doc_model.refresh()
 
     def docSelected(self, index):
         self.parent.doc_update.setDisabled(not index.isValid())
