@@ -1,7 +1,6 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QModelIndex
 from PyQt5.QtSql import QSqlRelationalTableModel, QSqlRelation, QSqlQuery
-from models import DoctypeModel
 from utils import AbbrMaker
 
 
@@ -14,57 +13,54 @@ class DocModel(QSqlRelationalTableModel):
             "cfp_doctype", "id", "name AS `cfp_doctype.name`"))
 
         self.__church_id__ = None
+        self.__years__ = {}
+        self.__flags__ = {}
 
-    def setChurch(self, id):
-        self.__church_id__ = id
+    def setChurch(self, church_id):
+        self.__church_id__ = church_id
 
     def churchId(self):
         return self.__church_id__
 
-    def data(self, item, role):
-        # if role == Qt.DisplayRole:
-            # if item.column() == 0:
-            #    return item.row() + 1
+    def data(self, item, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            if item.column() == 8:
+                return item.row() + 1
 
-            # elif item.column() == 1:
-            #    rec = self.record(item.row())
-            #    doctype_abbr = AbbrMaker().make(
-            #        rec.value("name"))
+            elif item.column() == 9:
+                rec = self.record(item.row())
+                val = rec.value("cfp_doctype.name")
+                if isinstance(val, str):
+                    doctype_abbr = AbbrMaker().make(val)
+                    return doctype_abbr
 
-            #    return doctype_abbr
+                return ""
 
-            # elif item.column() == 5:
-            #    rec = self.record(item.row())
+            elif item.column() == 10:
+                rec = self.record(item.row())
 
-            #    storage_unit = "Ф. %s Оп. %s Д. %s" % (
-            #        rec.value("cfp_doc.fund"),
-            #        rec.value("cfp_doc.inventory"),
-            #        rec.value("cfp_doc.unit"))
+                storage_unit = "Ф. %s Оп. %s Д. %s" % (
+                    rec.value("cfp_doc.fund"),
+                    rec.value("cfp_doc.inventory"),
+                    rec.value("cfp_doc.unit"))
 
-            #    return storage_unit
+                return storage_unit
 
-            # elif item.column() == 10:
-            #    year_rel = self.yearsModel(item.row())
+            if item.column() == 11:
+                rec = self.record(item.row())
+                return rec.value("cfp_doc.sheets")
 
-            #    years_list = ""
-            #    if year_rel:
-            #        while year_rel.query().next():
-            #            years_list += "%s, " % str(
-            #                year_rel.query().value("year"))
+            if item.column() == 12:
+                return self.yearsList(item.row())
 
-            #        return years_list[:-2]
+            elif item.column() == 13:
+                val = self.flagsList(item.row())
+                if isinstance(val, str):
+                    return AbbrMaker().make(val)
 
-            # elif item.column() == 11:
-            #    rec = self.record(item.row())
-            #    flag_rel = self.flagRelation(rec.value("cfp_doc.id"))
-
-            #    flags_list = ""
-            #    if flag_rel:
-            #        while flag_rel.next():
-            #            flags_list += "%s/" % AbbrString().make(
-            #                flag_rel.value("name"))
-
-            #        return flags_list[:-1]
+            if item.column() == 14:
+                rec = self.record(item.row())
+                return rec.value("cfp_doc.comment")
 
         return super().data(item, role)
 
@@ -72,14 +68,16 @@ class DocModel(QSqlRelationalTableModel):
         if row is None:
             return None
 
+        # get years from local varible
+        if self.__years__.get(row) is not None:
+            return self.__years__[row]
+
         doc_id = self.getItemId(row)
 
         query = "SELECT \
         (SELECT GROUP_CONCAT(cfp_docyears.year ORDER BY cfp_docyears.year) \
         FROM cfp_docyears WHERE cfp_docyears.doc_id=%s) AS years\
         FROM cfp_docyears WHERE cfp_docyears.doc_id=%s" % (doc_id, doc_id)
-
-        print(query)
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)
@@ -91,13 +89,18 @@ class DocModel(QSqlRelationalTableModel):
         sql_query.last()
         y_rec = sql_query.record().value("years")
 
-        print(y_rec)
+         # set flags to local varible
+        self.__years__[row] = y_rec
 
         return y_rec
 
     def flagsList(self, row):
         if row is None:
             return None
+
+        # get flags from local varible
+        if self.__flags__.get(row) is not None:
+            return self.__flags__[row]
 
         doc_id = self.getItemId(row)
 
@@ -115,39 +118,41 @@ class DocModel(QSqlRelationalTableModel):
         sql_query.last()
         y_rec = sql_query.record().value("flags")
 
-        print(y_rec)
+        # set flags to local varible
+        self.__flags__[row] = y_rec
 
         return y_rec
 
+    def clearCache(self, row):
+        # clear cached years
+        if self.__years__.get(row) is not None:
+            del self.__years__[row]
+
+        # clear cached flags
+        if self.__flags__.get(row) is not None:
+            del self.__flags__[row]
+
     def select(self):
         if super().select():
-            # insert columns for counter and type abbr fields
-            #self.insertColumns(0, 2, QModelIndex())
-            # insert column for storage_unit field
-            #self.insertColumns(5, 1, QModelIndex())
-            # insert column for years and flags fields
-            #self.insertColumns(10, 2, QModelIndex())
+            self.insertColumns(8, 7, QModelIndex())
 
-            # self.setHeaderData(0, Qt.Horizontal, "#")
-            #self.setHeaderData(1, Qt.Horizontal, "Тип документа")
-            #self.setHeaderData(2, Qt.Horizontal, "ID")
-            #self.setHeaderData(3, Qt.Horizontal, "Название церкви")
-            #self.setHeaderData(4, Qt.Horizontal, "Тип документа (полностью)")
-            #self.setHeaderData(5, Qt.Horizontal, "Ед. хранения")
-            #self.setHeaderData(6, Qt.Horizontal, "Фонд")
-            #self.setHeaderData(7, Qt.Horizontal, "Опись")
-            #self.setHeaderData(8, Qt.Horizontal, "Дело")
-            #self.setHeaderData(9, Qt.Horizontal, "Листов")
-            #self.setHeaderData(10, Qt.Horizontal, "Годы документов")
-            #self.setHeaderData(11, Qt.Horizontal, "Другие сведения")
-            #self.setHeaderData(12, Qt.Horizontal, "Комментарий")
+            self.setHeaderData(8, Qt.Horizontal, "#")
+            self.setHeaderData(9, Qt.Horizontal, "Тип документа")
+            self.setHeaderData(10, Qt.Horizontal, "Ед. хранения")
+            self.setHeaderData(11, Qt.Horizontal, "Листов")
+            self.setHeaderData(12, Qt.Horizontal, "Годы документов")
+            self.setHeaderData(13, Qt.Horizontal, "Флаги")
+            self.setHeaderData(14, Qt.Horizontal, "Комментарий")
+
+            self.__years__.clear()
+            self.__flags__.clear()
 
             return True
         else:
             return False
 
     def getItemId(self, row):
-        if row <= self.rowCount():
+        if row is not None and row <= self.rowCount():
             return self.record(row).value("id")
         else:
             return None

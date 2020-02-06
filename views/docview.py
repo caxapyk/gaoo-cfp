@@ -9,6 +9,7 @@ from PyQt5.QtCore import QModelIndex
 from models import DocModel
 from dialogs import DocFormDialog
 from views import View
+import time
 
 
 class DocView(View):
@@ -16,11 +17,6 @@ class DocView(View):
         super(DocView, self).__init__(parent)
 
         self.parent = parent
-
-        self.doc_model = DocModel()
-
-        self.model = QSortFilterProxyModel()
-        self.model.setSourceModel(self.doc_model)
 
         # main layout
         main = QFrame()
@@ -44,40 +40,45 @@ class DocView(View):
         # context menu
         self.c_menu = QMenu(self.tree_view)
 
+        self.doc_model = None
+        self.model = None
+
         self.setMainWidget(main)
 
     def loadData(self, church_id):
         self.church_id = church_id
 
+        self.parent.statusBar().showMessage("Загрука данных...", 1000)
+
+        self.doc_model = DocModel()
+        self.doc_model.setEditStrategy(QSqlRelationalTableModel.OnRowChange)
         self.doc_model.setFilter("cfp_doc.church_id=%s" % self.church_id)
         self.doc_model.setChurch(church_id)
-        #self.doc_model.refresh()
         self.doc_model.select()
+
+        self.model = QSortFilterProxyModel()
+        self.model.setSourceModel(self.doc_model)
+        self.model.sort(Qt.AscendingOrder)
 
         self.tree_view.setModel(self.model)
 
-        #self.tree_view.hideColumn(0)
-        #self.tree_view.hideColumn(1)
-        #self.tree_view.hideColumn(2)
-        #self.tree_view.hideColumn(3)
-        #self.tree_view.hideColumn(4)
-        #self.tree_view.hideColumn(5)
-        #self.tree_view.hideColumn(6)
-        #self.tree_view.hideColumn(7)
-        #self.tree_view.hideColumn(8)
-        #self.tree_view.hideColumn(9)
-        #self.tree_view.hideColumn(10)
-        #self.tree_view.resizeColumnToContents(11)
-        #self.tree_view.setColumnWidth(12, 150)
-        #self.tree_view.setColumnWidth(13, 200)
-        #self.tree_view.setColumnWidth(14, 100)
-        #self.tree_view.setColumnWidth(15, 150)
-        #self.tree_view.setColumnWidth(16, 150)
-        #self.tree_view.hideColumn(17)
-        #self.tree_view.resizeColumnToContents(18)
+        self.tree_view.hideColumn(0)
+        self.tree_view.hideColumn(1)
+        self.tree_view.hideColumn(2)
+        self.tree_view.hideColumn(3)
+        self.tree_view.hideColumn(4)
+        self.tree_view.hideColumn(5)
+        self.tree_view.hideColumn(6)
+        self.tree_view.hideColumn(7)
+        self.tree_view.resizeColumnToContents(8)
+        self.tree_view.setColumnWidth(9, 150)
+        self.tree_view.setColumnWidth(10, 200)
+        self.tree_view.setColumnWidth(11, 100)
+        self.tree_view.setColumnWidth(12, 150)
+        self.tree_view.setColumnWidth(13, 150)
+        self.tree_view.resizeColumnToContents(14)
 
-        self.parent.doc_create.setDisabled(False)
-        self.parent.filter_lineedit.setDisabled(False)
+        self.parent.toolBar().setDisabled(False)
 
     def currentIndex(self):
         if self.tree_view.selectedIndexes():
@@ -107,7 +108,7 @@ class DocView(View):
 
         self.tree_view.expandAll()
 
-        self.model.setFilterKeyColumn(7)
+        self.model.setFilterKeyColumn(10)
         self.model.setFilterRegExp(
             QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
 
@@ -119,21 +120,21 @@ class DocView(View):
             self.model.invalidateFilter()
 
     def removeDoc(self):
-        proxy_index = self.tree_view.currentIndex()
-        if proxy_index:
+        index = self.tree_view.currentIndex()
+        if index:
             result = QMessageBox().critical(
                 self.parent, "Удаление документа",
                 "Вы уверены что хотите удалить этот документ?",
                 QMessageBox.No | QMessageBox.Yes)
 
             if result == QMessageBox.Yes:
-                index = self.model.mapToSource(proxy_index)
-                if self.doc_model.removeRow(index.row()):
-                    self.tree_view.setRowHidden(index.row(), QModelIndex(), True)
-                else:    
-                    QMessageBox().critical(self.tree_view, "Удаление документа",
-                                           "Не удалось удалить документ!",
-                                           QMessageBox.Ok)
+                self.doc_model.clearCache(index.row())
+                self.tree_view.setRowHidden(
+                    index.row(), QModelIndex(), True)
+                if not self.model.removeRow(index.row()):
+                    QMessageBox().critical(
+                        self.tree_view, "Удаление документа",
+                        "Не удалось удалить документ!", QMessageBox.Ok)
 
     def editDocDialog(self):
         proxy_index = self.tree_view.currentIndex()
@@ -149,3 +150,6 @@ class DocView(View):
     def docSelected(self, index):
         self.parent.doc_update.setDisabled(not index.isValid())
         self.parent.doc_remove.setDisabled(not index.isValid())
+
+    def updateDocs(self):
+        self.loadData(self.church_id)

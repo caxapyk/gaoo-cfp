@@ -44,7 +44,6 @@ class SqlTreeModel(QAbstractItemModel):
             # set foreign key to current model
             model.setParentId(parent.uid())
             name_col_id = 2
-            print("start fetch more: map")
             parent.map()
 
         model.refresh()
@@ -60,10 +59,7 @@ class SqlTreeModel(QAbstractItemModel):
             parent.childAppend(item)
             i += 1
 
-        print ("end setup model data")
-
     def hasChildren(self, index):
-        print("start has children")
         if not index.isValid():
             return True
 
@@ -75,27 +71,21 @@ class SqlTreeModel(QAbstractItemModel):
             model.setParentId(item.uid())
 
             if model.count() > 0:
-                print("start has children: return True")
                 return True
-            print("start has children: return False")
+
         return False
 
     def canFetchMore(self, index):
-        print("start canFetchMore")
         if not index.isValid():
             return False
         item = index.internalPointer()
-        print("end canFetchMore")
         return not item.isMapped()
 
     def fetchMore(self, index):
-        print("start fetch more")
         item = index.internalPointer()
         child_level = item.level() + 1
-        print("start fetch more: setup model data")
-        self.setupModelData(item, child_level)
 
-        print("and fetch more")
+        self.setupModelData(item, child_level)
 
     """
     (Implement) Set flags (enabled, selectable, editable)
@@ -137,7 +127,6 @@ class SqlTreeModel(QAbstractItemModel):
     """
 
     def index(self, row, column, parent):
-        #print("start get index")
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
 
@@ -175,23 +164,17 @@ class SqlTreeModel(QAbstractItemModel):
     """
 
     def data(self, index, role):
-        #print("start show data")
         if not index.isValid():
             return None
 
         if role == Qt.DecorationRole:
-        #    print("start show data: decorate")
             item_model = index.internalPointer().model()
             return item_model.getIcon()
-        #print("start show data: end decorate")
 
         if role != Qt.DisplayRole and role != Qt.EditRole:
             return None
 
-        #print("start show data: internalPointer")
-
         item = index.internalPointer()
-        #print("end show data:")
 
         return item.data(index.column())
 

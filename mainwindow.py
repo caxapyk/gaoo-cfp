@@ -27,7 +27,6 @@ class MainWindow(QMainWindow):
         # global actions
         self.doc_create = QAction("Новый документ")
         self.doc_create.setIcon(QIcon(":/icons/doc-new-20.png"))
-        self.doc_create.setDisabled(True)
         self.doc_create.setShortcut(QKeySequence.New)
         self.doc_create.triggered.connect(self.doc_view.createDocDialog)
 
@@ -42,6 +41,10 @@ class MainWindow(QMainWindow):
         self.doc_remove.setShortcut(QKeySequence.Delete)
         self.doc_remove.triggered.connect(self.doc_view.removeDoc)
 
+        self.doc_refresh = QAction("Обновить")
+        self.doc_refresh.setIcon(QIcon(":/icons/update-20.png"))
+        self.doc_refresh.triggered.connect(self.doc_view.updateDocs)
+
         self.filter_panel = QWidget()
         f_layout = QHBoxLayout(self.filter_panel)
         f_layout.setContentsMargins(0, 0, 0, 0)
@@ -50,7 +53,6 @@ class MainWindow(QMainWindow):
         self.filter_lineedit = QLineEdit(self.filter_panel)
         self.filter_lineedit.setPlaceholderText("Фильтр по единице хранения...")
         self.filter_lineedit.setMaximumWidth(300)
-        self.filter_lineedit.setDisabled(True)
         self.filter_lineedit.textChanged.connect(self.doc_view.filter)
 
         self.clearfilter_btn = QPushButton(self.filter_panel)
@@ -65,8 +67,8 @@ class MainWindow(QMainWindow):
 
         # setup
         self.setupMenu()
-        self.setupToolBar()
-        self.setupStatusBar()
+        self.toolbar = self.setupToolBar()
+        self.statusbar = self.setupStatusBar()
 
         # main widget
         splitter = QSplitter(self)
@@ -74,6 +76,7 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.doc_view.mainWidget())
 
         self.setCentralWidget(splitter)
+        self.statusBar().showMessage("Готово", 2000)
 
     def setupMenu(self):
         menubar = QMenuBar(self)
@@ -118,20 +121,26 @@ class MainWindow(QMainWindow):
 
     def setupToolBar(self):
         toolbar = QToolBar(self)
+        toolbar.setDisabled(True)
 
         toolbar.addAction(self.doc_create)
         toolbar.addAction(self.doc_update)
         toolbar.addAction(self.doc_remove)
+        toolbar.addAction(self.doc_refresh)
 
         toolbar.addWidget(self.filter_panel)
 
         self.addToolBar(toolbar)
+
+        return toolbar
 
     def setupStatusBar(self):
         statusbar = QStatusBar(self)
         statusbar.showMessage("Готово")
 
         self.setStatusBar(statusbar)
+
+        return statusbar
 
     def restoreSession(self):
         if self.settings.contains("geometry"):
@@ -182,3 +191,9 @@ class MainWindow(QMainWindow):
         self.settings.setValue('geometry', geometry)
 
         super(MainWindow, self).closeEvent(event)
+
+    def statusBar(self):
+        return self.statusbar
+
+    def toolBar(self):
+        return self.toolbar

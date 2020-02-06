@@ -25,6 +25,7 @@
         <file>icons/sort-za-16.png</file>
         <file>icons/tree-16.png</file>
         <file>icons/types-16.png</file>
+        <file>icons/update-20.png</file>
         <file>qtbase_ru.qm</file>
     </qresource>
 </RCC>
