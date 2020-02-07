@@ -6,10 +6,10 @@
     	<file>icons/clear-filter-16.png</file>
         <file>icons/dbsettings-16.png</file>
     	<file>icons/delete-16.png</file>
-        <file>icons/delete-20.png</file>
-        <file>icons/doc-edit-20.png</file>
-        <file>icons/doc-new-20.png</file>
+        <file>icons/doc-edit-16.png</file>
+        <file>icons/doc-new-16.png</file>
         <file>icons/doc-folder-16.png</file>
+         <file>icons/doc-search-16.png</file>
         <file>icons/doctype-16.png</file>
         <file>icons/exit-16.png</file>
         <file>icons/flag-16.png</file>
@@ -18,6 +18,7 @@
         <file>icons/info-16.png</file>
         <file>icons/minus-16.png</file>
         <file>icons/plus-16.png</file>
+        <file>icons/refresh-16.png</file>
         <file>icons/rename-16.png</file>
         <file>icons/search-file-16.png</file>
         <file>icons/sort19-16.png</file>
@@ -25,7 +26,6 @@
         <file>icons/sort-za-16.png</file>
         <file>icons/tree-16.png</file>
         <file>icons/types-16.png</file>
-        <file>icons/update-20.png</file>
         <file>qtbase_ru.qm</file>
     </qresource>
 </RCC>

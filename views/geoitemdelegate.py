@@ -7,7 +7,7 @@ class GeoItemDelegate(QItemDelegate):
     def createEditor(self, parent, option, index):
         editor = QLineEdit(parent)
 
-        regex = QRegExp("^[(А-я-0-9.,)\\s]+$")
+        regex = QRegExp("^[(А-яA-z-0-9.,)\\s]+$")
         validator = QRegExpValidator(regex)
 
         editor.setMaxLength(100)

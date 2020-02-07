@@ -13,8 +13,8 @@ class DocModel(QSqlRelationalTableModel):
             "cfp_doctype", "id", "name AS `cfp_doctype.name`"))
 
         self.__church_id__ = None
-        self.__years__ = {}
-        self.__flags__ = {}
+        self.__cache_years__ = {}
+        self.__cache_flags__ = {}
 
     def setChurch(self, church_id):
         self.__church_id__ = church_id
@@ -51,10 +51,10 @@ class DocModel(QSqlRelationalTableModel):
                 return rec.value("cfp_doc.sheets")
 
             if item.column() == 12:
-                return self.yearsList(item.row())
+                return self.docYears(item.row())
 
             elif item.column() == 13:
-                val = self.flagsList(item.row())
+                val = self.docFlags(item.row())
                 if isinstance(val, str):
                     return AbbrMaker().make(val)
 
@@ -64,13 +64,13 @@ class DocModel(QSqlRelationalTableModel):
 
         return super().data(item, role)
 
-    def yearsList(self, row):
+    def docYears(self, row):
         if row is None:
             return None
 
         # get years from local varible
-        if self.__years__.get(row) is not None:
-            return self.__years__[row]
+        if self.__cache_years__.get(row) is not None:
+            return self.__cache_years__[row]
 
         doc_id = self.getItemId(row)
 
@@ -89,23 +89,26 @@ class DocModel(QSqlRelationalTableModel):
         sql_query.last()
         y_rec = sql_query.record().value("years")
 
-         # set flags to local varible
-        self.__years__[row] = y_rec
+        # set flags to local varible
+        self.__cache_years__[row] = y_rec
 
         return y_rec
 
-    def flagsList(self, row):
+    def docFlags(self, row):
         if row is None:
             return None
 
         # get flags from local varible
-        if self.__flags__.get(row) is not None:
-            return self.__flags__[row]
+        if self.__cache_flags__.get(row) is not None:
+            return self.__cache_flags__[row]
 
         doc_id = self.getItemId(row)
 
         query = "SELECT \
-        (SELECT GROUP_CONCAT(cfp_docflag.name ORDER BY cfp_docflag.name) FROM cfp_docflags LEFT JOIN cfp_docflag ON cfp_docflags.docflag_id=cfp_docflag.id WHERE cfp_docflags.doc_id=%s) AS flags \
+        (SELECT GROUP_CONCAT(cfp_docflag.name ORDER BY cfp_docflag.name) \
+        FROM cfp_docflags LEFT JOIN cfp_docflag \
+        ON cfp_docflags.docflag_id=cfp_docflag.id \
+        WHERE cfp_docflags.doc_id=%s) AS flags \
         FROM cfp_docflags WHERE cfp_docflags.doc_id=%s" % (doc_id, doc_id)
 
         sql_query = QSqlQuery()
@@ -119,18 +122,18 @@ class DocModel(QSqlRelationalTableModel):
         y_rec = sql_query.record().value("flags")
 
         # set flags to local varible
-        self.__flags__[row] = y_rec
+        self.__cache_flags__[row] = y_rec
 
         return y_rec
 
     def clearCache(self, row):
         # clear cached years
-        if self.__years__.get(row) is not None:
-            del self.__years__[row]
+        if self.__cache_years__.get(row) is not None:
+            del self.__cache_years__[row]
 
         # clear cached flags
-        if self.__flags__.get(row) is not None:
-            del self.__flags__[row]
+        if self.__cache_flags__.get(row) is not None:
+            del self.__cache_flags__[row]
 
     def select(self):
         if super().select():
@@ -144,12 +147,42 @@ class DocModel(QSqlRelationalTableModel):
             self.setHeaderData(13, Qt.Horizontal, "Флаги")
             self.setHeaderData(14, Qt.Horizontal, "Комментарий")
 
-            self.__years__.clear()
-            self.__flags__.clear()
+            self.__cache_years__.clear()
+            self.__cache_flags__.clear()
 
             return True
         else:
             return False
+
+    def locality(self):
+        query = "SELECT \
+        cfp_church.id AS `cfp_church.id`, \
+        cfp_church.name AS `cfp_church.name`, \
+        cfp_gubernia.name AS `cfp_gubernia.name`, \
+        cfp_uezd.name AS `cfp_uezd.name`, \
+        cfp_locality.name AS `cfp_locality.name` \
+        FROM cfp_church \
+        LEFT JOIN cfp_locality ON cfp_church.locality_id = cfp_locality.id \
+        LEFT JOIN cfp_uezd ON cfp_locality.uezd_id = cfp_uezd.id \
+        LEFT JOIN cfp_gubernia ON cfp_uezd.gub_id = cfp_gubernia.id \
+        WHERE cfp_church.id=%s" % self.churchId()
+
+        sql_query = QSqlQuery()
+        sql_query.prepare(query)
+
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return None
+
+        sql_query.last()
+
+        val = "%s, %s, %s, %s" % (
+            sql_query.value("cfp_gubernia.name"),
+            sql_query.value("cfp_uezd.name"),
+            sql_query.value("cfp_locality.name"),
+            sql_query.value("cfp_church.name"))
+
+        return val
 
     def getItemId(self, row):
         if row is not None and row <= self.rowCount():

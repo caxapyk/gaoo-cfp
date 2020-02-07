@@ -1,8 +1,11 @@
 from PyQt5.Qt import Qt, QCursor, QRegExp
 from PyQt5.QtCore import (QModelIndex, QItemSelection,
-                          QItemSelectionModel, QSortFilterProxyModel, QSize, QModelIndex)
-from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout, QLineEdit,
-                             QButtonGroup, QPushButton, QTreeView, QMenu, QAction, QMessageBox)
+                          QItemSelectionModel, QSortFilterProxyModel,
+                          QSize, QModelIndex, QItemSelectionModel)
+from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy,
+                             QHBoxLayout, QVBoxLayout, QLineEdit,
+                             QButtonGroup, QPushButton, QTreeView, QMenu,
+                             QAction, QMessageBox)
 from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
 from PyQt5.QtSql import QSqlRelationalTableModel
 from PyQt5.QtCore import QModelIndex
@@ -33,7 +36,6 @@ class DocView(View):
         self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tree_view.customContextMenuRequested.connect(
             self.showContextMenu)
-        self.tree_view.pressed.connect(self.docSelected)
 
         v_layout.addWidget(self.tree_view)
 
@@ -56,11 +58,22 @@ class DocView(View):
         self.doc_model.setChurch(church_id)
         self.doc_model.select()
 
+        self.parent.statusBar().showMessage("Загружено документов: %s" %
+                                            self.doc_model.query().size())
+
         self.model = QSortFilterProxyModel()
         self.model.setSourceModel(self.doc_model)
-        self.model.sort(Qt.AscendingOrder)
+        self.model.setDynamicSortFilter(False)
+
+        self.sel_model = QItemSelectionModel()
+        self.sel_model.setModel(self.model)
+        self.sel_model.currentChanged.connect(self.docSelected)
+        self.sel_model.currentChanged.emit(QModelIndex(), QModelIndex())
 
         self.tree_view.setModel(self.model)
+        self.tree_view.setSelectionModel(self.sel_model)
+        # disable default sorting
+        self.tree_view.sortByColumn(-1, Qt.AscendingOrder)
 
         self.tree_view.hideColumn(0)
         self.tree_view.hideColumn(1)
@@ -78,16 +91,9 @@ class DocView(View):
         self.tree_view.setColumnWidth(13, 150)
         self.tree_view.resizeColumnToContents(14)
 
-        self.parent.toolBar().setDisabled(False)
-
-    def currentIndex(self):
-        if self.tree_view.selectedIndexes():
-            proxy_index = self.tree_view.currentIndex()
-            index = self.model.mapToSource(proxy_index)
-
-            return index
-
-        return QModelIndex()
+        self.parent.doc_create.setDisabled(False)
+        self.parent.doc_refresh.setDisabled(False)
+        self.parent.filter_panel.setDisabled(False)
 
     def showContextMenu(self, point):
         index = self.tree_view.indexAt(point)
@@ -99,6 +105,8 @@ class DocView(View):
             self.c_menu.addAction(self.parent.doc_remove)
         else:
             self.c_menu.addAction(self.parent.doc_create)
+            self.c_menu.addSeparator()
+            self.c_menu.addAction(self.parent.doc_refresh)
 
         self.c_menu.exec(
             self.tree_view.viewport().mapToGlobal(point))
@@ -131,7 +139,9 @@ class DocView(View):
                 self.doc_model.clearCache(index.row())
                 self.tree_view.setRowHidden(
                     index.row(), QModelIndex(), True)
-                if not self.model.removeRow(index.row()):
+                if self.model.removeRow(index.row()):
+                    self.tree_view.setCurrentIndex(QModelIndex())
+                else:
                     QMessageBox().critical(
                         self.tree_view, "Удаление документа",
                         "Не удалось удалить документ!", QMessageBox.Ok)
@@ -144,12 +154,23 @@ class DocView(View):
         res = docform_dialog.exec()
 
     def createDocDialog(self):
+        self.tree_view.setCurrentIndex(QModelIndex())
+
         docform_dialog = DocFormDialog(self.doc_model)
         res = docform_dialog.exec()
+
+        if res == DocFormDialog.Accepted:
+            self.model.sort(8)
+            index = self.doc_model.index(self.doc_model.rowCount() - 1, 0)
+            proxy_index = self.model.mapFromSource(index)
+
+            self.tree_view.setCurrentIndex(proxy_index)
+
+            # self.model.setDynamicSortFilter(True)
 
     def docSelected(self, index):
         self.parent.doc_update.setDisabled(not index.isValid())
         self.parent.doc_remove.setDisabled(not index.isValid())
 
-    def updateDocs(self):
+    def refreshDocs(self):
         self.loadData(self.church_id)

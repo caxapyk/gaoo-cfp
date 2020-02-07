@@ -29,9 +29,6 @@ class DocFlagsModel(DocflagModel):
     def flags(self, index):
         return super().flags(index) | Qt.ItemIsUserCheckable
 
-    def data_(self):
-        return ",".join(self.__data.values())
-
     def data(self, index, role):
         if not index.isValid():
             return None
@@ -55,6 +52,7 @@ class DocFlagsModel(DocflagModel):
                 del self.__data[v_id]
 
             self.current_changed = True
+            self.dataChanged.emit(index, index)
 
         return True
 

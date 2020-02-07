@@ -40,9 +40,6 @@ class DocYearsModel(QAbstractListModel):
 
         return None
 
-    def data_(self):
-        return ",".join(self.__data)
-
     def setData(self, index, value, role):
         if role != Qt.EditRole:
             return None
@@ -51,6 +48,7 @@ class DocYearsModel(QAbstractListModel):
         self.__data.sort()
 
         self.current_changed = True
+        self.dataChanged.emit(index, index)
 
         return True
 

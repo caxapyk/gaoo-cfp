@@ -25,27 +25,36 @@ class MainWindow(QMainWindow):
         self.geo_view = GEOView(self)
 
         # global actions
+        self.doc_search = QAction("Поиск документов")
+        self.doc_search.setIcon(QIcon(":/icons/doc-search-16.png"))
+        self.doc_search.setShortcut(Qt.Key_F3)
+        #self.doc_search.triggered.connect(self.doc_view.createDocDialog)
+
         self.doc_create = QAction("Новый документ")
-        self.doc_create.setIcon(QIcon(":/icons/doc-new-20.png"))
+        self.doc_create.setIcon(QIcon(":/icons/doc-new-16.png"))
         self.doc_create.setShortcut(QKeySequence.New)
+        self.doc_create.setDisabled(True)
         self.doc_create.triggered.connect(self.doc_view.createDocDialog)
 
         self.doc_update = QAction("Редактировать")
-        self.doc_update.setIcon(QIcon(":/icons/doc-edit-20.png"))
+        self.doc_update.setIcon(QIcon(":/icons/doc-edit-16.png"))
         self.doc_update.setDisabled(True)
         self.doc_update.triggered.connect(self.doc_view.editDocDialog)
 
         self.doc_remove = QAction("Удалить")
-        self.doc_remove.setIcon(QIcon(":/icons/delete-20.png"))
+        self.doc_remove.setIcon(QIcon(":/icons/delete-16.png"))
         self.doc_remove.setDisabled(True)
         self.doc_remove.setShortcut(QKeySequence.Delete)
         self.doc_remove.triggered.connect(self.doc_view.removeDoc)
 
         self.doc_refresh = QAction("Обновить")
-        self.doc_refresh.setIcon(QIcon(":/icons/update-20.png"))
-        self.doc_refresh.triggered.connect(self.doc_view.updateDocs)
+        self.doc_refresh.setIcon(QIcon(":/icons/refresh-16.png"))
+        self.doc_refresh.setShortcut(QKeySequence.Refresh)
+        self.doc_refresh.setDisabled(True)
+        self.doc_refresh.triggered.connect(self.doc_view.refreshDocs)
 
         self.filter_panel = QWidget()
+        self.filter_panel.setDisabled(True)
         f_layout = QHBoxLayout(self.filter_panel)
         f_layout.setContentsMargins(0, 0, 0, 0)
         f_layout.setAlignment(Qt.AlignRight)
@@ -91,8 +100,12 @@ class MainWindow(QMainWindow):
         exit_action.triggered.connect(self.close)
 
         edit_menu = menubar.addMenu("Правка")
+        edit_menu.addAction(self.doc_search)
+        edit_menu.addSeparator()
         edit_menu.addAction(self.doc_update)
         edit_menu.addAction(self.doc_remove)
+        edit_menu.addSeparator()
+        edit_menu.addAction(self.doc_refresh)
 
         cat_menu = menubar.addMenu("Cправочники")
         doctype_action = cat_menu.addAction(
@@ -121,12 +134,13 @@ class MainWindow(QMainWindow):
 
     def setupToolBar(self):
         toolbar = QToolBar(self)
-        toolbar.setDisabled(True)
 
         toolbar.addAction(self.doc_create)
         toolbar.addAction(self.doc_update)
         toolbar.addAction(self.doc_remove)
         toolbar.addAction(self.doc_refresh)
+        toolbar.addSeparator()
+        toolbar.addAction(self.doc_search)
 
         toolbar.addWidget(self.filter_panel)
 
