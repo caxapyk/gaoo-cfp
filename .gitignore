@@ -1,6 +1,6 @@
-/bin/**
-/include/**
-/lib/**
+bin/*
+include/*
+lib/*
 __pycache__/
 dialogs/__pycache__/
 models/__pycache__/
