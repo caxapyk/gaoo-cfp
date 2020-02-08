@@ -2,6 +2,7 @@ import sys
 from application import Application
 from PyQt5.QtCore import (QTranslator, QLocale)
 from PyQt5.QtCore import QCoreApplication
+import PyQt5
 
 
 def main():

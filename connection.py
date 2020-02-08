@@ -21,11 +21,12 @@ class Connection():
         settings.endGroup()
 
         if db.isDriverAvailable("QMYSQL"):
-            print('QMYSQL driver loaded')
+            print('QMYSQL driver avaible')
         else:
+            print('QMYSQL driver not avaible')
             QMessageBox.critical(None, "Ошибка подключения к базе данных",
-                                 "QMYSQL driver not found.\n\n\
-                                 Нажмите Отмена для выхода.",
+                                 'QMYSQL driver not found.\n'
+                                 'Нажмите Отмена для выхода.',
                                  QMessageBox.Cancel)
             sys.exit()
 
@@ -42,7 +43,7 @@ class Connection():
                 print(sql_query.lastError().text())
                 return False
         else:
-            print('Connection error: ', self.db.lastError().text())
+            #print('Connection error: ', self.db.lastError().text())
             result = QMessageBox.critical(None, "Ошибка подключения к базе данных",
                                           "Настроить подключение к базе данных?",
                                           QMessageBox.Cancel | QMessageBox.Ok)
