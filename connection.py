@@ -1,11 +1,10 @@
 import sys
-from PyQt5.QtSql import QSqlDatabase
+from PyQt5.QtSql import QSqlDatabase, QSqlQuery
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import QSettings
 
 
 class Connection():
-
     def __init__(self):
         db = QSqlDatabase().addDatabase("QMYSQL")
         db.setConnectOptions(
@@ -33,7 +32,16 @@ class Connection():
         self.db = db
 
     def connect(self):
-        if not self.db.open():
+        if self.db.open():
+            query = "SET NAMES utf8"
+
+            sql_query = QSqlQuery()
+            sql_query.prepare(query)
+
+            if not sql_query.exec_():
+                print(sql_query.lastError().text())
+                return False
+        else:
             print('Connection error: ', self.db.lastError().text())
             result = QMessageBox.critical(None, "Ошибка подключения к базе данных",
                                           "Настроить подключение к базе данных?",
