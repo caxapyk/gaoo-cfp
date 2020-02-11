@@ -1,1 +1,13 @@
+Note! You have to buld qt5 mysql driver for each os and pyqt5 version.
+https://doc.qt.io/qt-5/sql-driver.html#qmysql
+
+After compilation done, copy driver to <path_to_pip3_packages_directory>/lib/python3.7/site-packages/PyQt5/Qt/plugins/sqldrivers/
+Drivers pre-builds for different os look at qt5/plugins/sqldrivers/<os>/libsqlmysql.so
+
+
+
+if "Driver is not loaded" error ocured try:
+ldd <path_to_pip3_packages_directory>/lib/python3.7/site-packages/PyQt5/Qt/plugins/sqldrivers/libsqlmysql.so
 sudo ln -s /usr/lib/x86_64-linux-gnu/libmysqlclient.so /usr/lib/x86_64-linux-gnu/libmysqlclient.so.18
+
+if "qt.qpa.plugin: Could not find the Qt platform plugin "xcb" in """ try to install qt5-default package
