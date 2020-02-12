@@ -4,8 +4,8 @@ from models import (DoctypeModel, DefaultItemProxyModel)
 
 
 class DoctypeDialog(ListViewDialog):
-    def __init__(self):
-        super(DoctypeDialog, self).__init__()
+    def __init__(self, parent):
+        super(DoctypeDialog, self).__init__(parent)
         self.setWindowTitle("Справочник - Типы документов")
 
         model = DoctypeModel()

@@ -150,13 +150,13 @@ class DocView(View):
         proxy_index = self.tree_view.currentIndex()
         index = self.model.mapToSource(proxy_index)
 
-        docform_dialog = DocFormDialog(self.doc_model, index.row())
+        docform_dialog = DocFormDialog(self.parent, self.doc_model, index.row())
         res = docform_dialog.exec()
 
     def createDocDialog(self):
         self.tree_view.setCurrentIndex(QModelIndex())
 
-        docform_dialog = DocFormDialog(self.doc_model)
+        docform_dialog = DocFormDialog(self.parent, self.doc_model)
         res = docform_dialog.exec()
 
         if res == DocFormDialog.Accepted:

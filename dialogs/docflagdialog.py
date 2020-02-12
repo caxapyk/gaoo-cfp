@@ -4,8 +4,8 @@ from models import (DocflagModel, DefaultItemProxyModel)
 
 
 class DocflagDialog(ListViewDialog):
-    def __init__(self):
-        super(DocflagDialog, self).__init__()
+    def __init__(self, parent):
+        super(DocflagDialog, self).__init__(parent)
         self.setWindowTitle(
             "Справочник - Флаги")
 

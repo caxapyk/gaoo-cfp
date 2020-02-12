@@ -1,3 +1,5 @@
+from .checklistproxymodel import CheckListProxyModel
+from .comboproxymodel import ComboProxyModel
 from .geobasemodel import GEOBaseModel
 from .guberniamodel import GuberniaModel
 from .uezdmodel import UezdModel
@@ -12,3 +14,4 @@ from .docyearsmodel import DocYearsModel
 from .docflagsmodel import DocFlagsModel
 from .docmodel import DocModel
 from .docitem import DocItem
+from .docsearchmodel import DocSearchModel

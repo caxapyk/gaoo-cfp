@@ -13,18 +13,18 @@ class DocFormDialog(QDialog):
 
     regex = QRegExp("^[(А-яA-z-0-9.,)\\s]+$")
 
-    def __init__(self, model, row=None):
-        super(DocFormDialog, self).__init__()
+    def __init__(self, parent, model, row=None):
+        super(DocFormDialog, self).__init__(parent)
 
         self.ui = loadUi("ui/docform_dialog.ui", self)
 
         self.ui.buttonBox.button(
             QDialogButtonBox.Ok).clicked.connect(self.okAction)
         self.ui.buttonBox.button(
-            QDialogButtonBox.Cancel).clicked.connect(self.closeAction)
-        self.ui.buttonBox.button(
             QDialogButtonBox.Save).clicked.connect(self.saveAction)
         self.ui.buttonBox.button(QDialogButtonBox.Save).setDisabled(True)
+
+        self.ui.buttonBox.rejected.connect(self.reject)
 
         # set validators
         self.ui.fund_lineEdit.setValidator(QRegExpValidator(self.regex))
@@ -35,7 +35,6 @@ class DocFormDialog(QDialog):
             self.setWindowTitle("Новый документ")
 
         self.setWindowIcon(QIcon(":/icons/church-16.png"))
-        self.setModal(True)
 
         self.currentChanged = False
 
@@ -215,19 +214,6 @@ class DocFormDialog(QDialog):
 
         return False
 
-    def closeAction(self):
-        if self.currentChanged:
-            result = QMessageBox().critical(
-                self, "Сохранение документа",
-                "Вы уверены, что хотите выйти без сохранения документа?",
-                QMessageBox.Cancel | QMessageBox.Yes)
-
-            if result == QMessageBox.Yes:
-                self.doc_model.revertAll()
-                self.reject()
-        else:
-            self.reject()
-
     def okAction(self):
         if self.currentChanged:
             result = QMessageBox().critical(
@@ -240,6 +226,19 @@ class DocFormDialog(QDialog):
                     self.accept()
             elif result == QMessageBox.No:
                 self.doc_model.revertAll()
-                self.reject()
+                super().reject()
         else:
             self.accept()
+
+    def reject(self):
+        if self.currentChanged:
+            result = QMessageBox().critical(
+                self, "Сохранение документа",
+                "Вы уверены, что хотите выйти без сохранения документа?",
+                QMessageBox.Cancel | QMessageBox.Yes)
+
+            if result == QMessageBox.Yes:
+                self.doc_model.revertAll()
+                super().reject()
+        else:
+            super().reject()

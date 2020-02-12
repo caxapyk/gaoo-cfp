@@ -6,11 +6,9 @@ from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
 
 class ListViewDialog(QDialog):
 
-    def __init__(self):
-        super(ListViewDialog, self).__init__()
+    def __init__(self, parent):
+        super(ListViewDialog, self).__init__(parent)
         ui = loadUi("ui/listview_dialog.ui", self)
-
-        self.setModal(True)
 
         ui.pushButton_create.clicked.connect(self.insertAction)
         ui.pushButton_remove.clicked.connect(self.removeAction)

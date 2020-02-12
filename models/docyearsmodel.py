@@ -44,13 +44,15 @@ class DocYearsModel(QAbstractListModel):
         if role != Qt.EditRole:
             return None
 
-        self.__data[index.row()] = value
-        self.__data.sort()
+        if len(value) == 4:
+            self.__data[index.row()] = value
+            self.__data.sort()
 
-        self.current_changed = True
-        self.dataChanged.emit(index, index)
+            self.current_changed = True
+            self.dataChanged.emit(index, index)
+            return True
 
-        return True
+        return False
 
     def insertRows(self, row, count, parent=QModelIndex()):
         self.beginInsertRows(parent, row, row)
@@ -92,7 +94,8 @@ class DocYearsModel(QAbstractListModel):
 
         if len(self.__data) > 0:
             years = []
-            for y in self.__data:
+            # use set() to make unique
+            for y in set(self.__data):
                 row = "(%s, %s)" % (self.doc_id, y)
                 years.append(row)
 
