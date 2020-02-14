@@ -8,7 +8,7 @@ class DocSearchModel(QSqlQueryModel):
     def __init__(self):
         super(DocSearchModel, self).__init__()
 
-        self.__filter_str__ = None
+        self.__filter_str__ = ""
 
     def data(self, index, role):
         if not index.isValid():
@@ -71,8 +71,12 @@ class DocSearchModel(QSqlQueryModel):
         LEFT JOIN cfp_gubernia ON cfp_uezd.gub_id = cfp_gubernia.id \
         LEFT JOIN cfp_doctype ON cfp_doc.doctype_id=cfp_doctype.id"
 
-        if self.filter():
+        if len(self.filter()) > 0:
             query += " WHERE " + self.filter()
+
+        query += " LIMIT 500"
+
+        print(query)
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)
@@ -108,8 +112,33 @@ class DocSearchModel(QSqlQueryModel):
         self.setHeaderData(17, Qt.Horizontal, "Флаги")
         self.setHeaderData(18, Qt.Horizontal, "Комментарий")
 
-    def setFilter(self, f_str):
-        self.__filter_str__ = f_str
+    def andFilterWhere(self, op, field, value, value2=""):
+        if len(value) > 0 or len(value2) > 0:
+            if len(self.filter()) > 0:
+                self.__filter_str__ += " AND "
+
+            if op == "=":
+                self.__filter_str__ += "%s=\"%s\"" % (field, value)
+            elif op == "LIKE":
+                self.__filter_str__ += "%s LIKE \"%%%s%%\"" % (field, value)
+            elif op == "BETWEEN":
+                if field == "cfp_docyears.year":
+                    if len(value) > 0 and len(value2) > 0:
+                        cond = "BETWEEN %s AND %s" % (value, value2)
+                    elif len(value) > 0 and len(value2) == 0:
+                        cond = ">= %s" % value
+                    elif len(value) == 0 and len(value2) > 0:
+                        cond = "<= %s" % value2
+                    self.__filter_str__ += "EXISTS (SELECT cfp_docyears.year FROM cfp_docyears WHERE cfp_doc.id = cfp_docyears.doc_id AND cfp_docyears.year %s)" % cond
+            elif op == "IN":
+                if field == "cfp_docflag.id":
+                    if len(value) > 0 and len(value2) > 0:
+                        if value2 == "=":
+                            cond = "flags = '%s'" % value
+                        if value2 == "IN":
+                            cond = "flags IN (%s)" % value
+
+                        self.__filter_str__ += "EXISTS (SELECT GROUP_CONCAT(cfp_docflag.id ORDER BY cfp_docflag.id) AS flags FROM cfp_docflag LEFT JOIN cfp_docflags ON cfp_docflag.id = cfp_docflags.docflag_id WHERE cfp_doc.id = cfp_docflags.doc_id GROUP BY cfp_doc.id HAVING %s)" % cond
 
     def filter(self):
         return self.__filter_str__

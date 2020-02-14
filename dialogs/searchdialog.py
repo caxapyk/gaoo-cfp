@@ -1,5 +1,6 @@
 from PyQt5.Qt import Qt
-from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QMessageBox, QLineEdit)
+from PyQt5.QtWidgets import (
+    QDialog, QWidget, QDialogButtonBox, QMessageBox, QLineEdit, QComboBox, QGroupBox)
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
 from PyQt5.QtGui import QIcon
@@ -48,7 +49,51 @@ class SearchDialog(QDialog):
 
     def search(self):
         print("search")
+        filter_ = ""
+
         self.doc_search_model = DocSearchModel()
+        # geo group
+        if self.ui.groupBox_geo.isEnabled():
+            if self.ui.comboBox_gubernia.currentIndex() > 0:
+                self.doc_search_model.andFilterWhere(
+                    "=", "cfp_gubernia.name", self.ui.comboBox_gubernia.currentText())
+            self.doc_search_model.andFilterWhere(
+                "LIKE", "cfp_uezd.name", self.ui.lineEdit_uezd.text())
+            self.doc_search_model.andFilterWhere(
+                "LIKE", "cfp_locality.name", self.ui.lineEdit_locality.text())
+            self.doc_search_model.andFilterWhere(
+                "LIKE", "cfp_church.name", self.ui.lineEdit_church.text())
+
+        if self.ui.groupBox_doc.isEnabled():
+            if self.ui.comboBox_doctype.currentIndex() > 0:
+                self.doc_search_model.andFilterWhere(
+                    "=", "cfp_doctype.name", self.ui.comboBox_doctype.currentText())
+            self.doc_search_model.andFilterWhere(
+                "=", "cfp_doc.fund", self.ui.lineEdit_fund.text())
+            self.doc_search_model.andFilterWhere(
+                "=", "cfp_doc.inventory", self.ui.lineEdit_inventory.text())
+            self.doc_search_model.andFilterWhere(
+                "=", "cfp_doc.unit", self.ui.lineEdit_unit.text())
+            self.doc_search_model.andFilterWhere(
+                "=", "cfp_doc.unit", self.ui.lineEdit_unit.text())
+            self.doc_search_model.andFilterWhere(
+                "BETWEEN", "cfp_docyears.year", self.ui.lineEdit_year_from.text(), self.ui.lineEdit_year_to.text())
+            if self.ui.checkBox_flaghard.checkState() == Qt.Checked:
+                self.doc_search_model.andFilterWhere(
+                    "IN", "cfp_docflag.id", self.doctype_clp_model.data_(), "=")
+            else:
+                self.doc_search_model.andFilterWhere(
+                    "IN", "cfp_docflag.id", self.doctype_clp_model.data_(), "IN")
+
+            #    filter_ += " cfp_gubernia.name=\"%s\"" % widget.currentText()
+            # elif widget.objectName() == "comboBox_doctype":
+            #    filter_ += " cfp_doctype.name.name=\"%s\"" % widget.currentText()
+        print(filter_)
+
+        #    if len(self.ui.lineEdit_uezd.text()) > 0:
+        #        filter_ += " cfp_uezd.name LIKE \"%%%s%%\"" % self.ui.lineEdit_uezd.text()
+
+        # self.doc_search_model.setFilter(filter_)
         self.doc_search_model.refresh()
 
         self.ui.treeView_docs.setModel(self.doc_search_model)

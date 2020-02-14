@@ -61,7 +61,7 @@
         <property name="documentMode">
          <bool>true</bool>
         </property>
-        <widget class="QWidget" name="tab">
+        <widget class="QWidget" name="tab_geo">
          <attribute name="title">
           <string>Территория</string>
          </attribute>
@@ -151,7 +151,7 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab_2">
+        <widget class="QWidget" name="tab_docs">
          <attribute name="title">
           <string>Документ</string>
          </attribute>
@@ -240,7 +240,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lineEdit_7">
+                <widget class="QLineEdit" name="lineEdit_year_from">
                  <property name="inputMethodHints">
                   <set>Qt::ImhNone</set>
                  </property>
@@ -263,7 +263,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lineEdit_8">
+                <widget class="QLineEdit" name="lineEdit_year_to">
                  <property name="inputMethodHints">
                   <set>Qt::ImhNone</set>
                  </property>
@@ -303,7 +303,7 @@
             <property name="checked">
              <bool>false</bool>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <layout class="QVBoxLayout" name="verticalLayout_3">
              <property name="spacing">
               <number>0</number>
              </property>
@@ -329,6 +329,13 @@
                </property>
                <property name="selectionMode">
                 <enum>QAbstractItemView::NoSelection</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkBox_flaghard">
+               <property name="text">
+                <string>Только полное соответствие</string>
                </property>
               </widget>
              </item>

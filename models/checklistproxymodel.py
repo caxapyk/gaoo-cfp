@@ -9,7 +9,7 @@ class CheckListProxyModel(QAbstractListModel):
         self.parent = parent
         self.column = 0
 
-        self.__data = []
+        self.__idx__ = []
 
         self.refresh()
 
@@ -30,7 +30,7 @@ class CheckListProxyModel(QAbstractListModel):
             return None
 
         if role == Qt.CheckStateRole:
-            if index in self.__data:
+            if index in self.__idx__:
                 return Qt.Checked
 
             return Qt.Unchecked
@@ -39,13 +39,24 @@ class CheckListProxyModel(QAbstractListModel):
 
         return self.parent.data(index, role)
 
+    def data_(self):
+        data = []
+        for index in self.__idx__:
+
+            id_idx = self.parent.index(index.row(), 0)
+            data.append(id_idx.data())
+
+        data.sort()
+
+        return ",".join(str(x) for x in data)
+
     def setData(self, index, value, role):
         if role == Qt.CheckStateRole:
             if value == Qt.Checked:
-                self.__data.append(index)
+                self.__idx__.append(index)
                 return True
             else:
-                del self.__data[self.__data.index(index)]
+                del self.__idx__[self.__idx__.index(index)]
                 return True
         return False
 
@@ -53,5 +64,5 @@ class CheckListProxyModel(QAbstractListModel):
         self.column = column
 
     def reset(self):
-        self.__data.clear()
+        self.__idx__.clear()
         self.modelReset.emit()
