@@ -16,17 +16,17 @@ class DocSearchModel(QSqlQueryModel):
 
         if role == Qt.DisplayRole:
 
-            if index.column() == 11:
+            if index.column() == 0:
                 return index.row() + 1
 
-            elif index.column() == 12:
+            elif index.column() == 10:
                 rec = self.record(index.row())
                 doctype_abbr = AbbrMaker().make(
                     rec.value("cfp_doctype.name"))
 
                 return doctype_abbr
 
-            elif index.column() == 13:
+            elif index.column() == 11:
                 rec = self.record(index.row())
 
                 storage_unit = "Ф. %s Оп. %s Д. %s" % (
@@ -36,7 +36,7 @@ class DocSearchModel(QSqlQueryModel):
 
                 return storage_unit
 
-            elif index.column() == 16:
+            elif index.column() == 14:
                 rec = self.record(index.row())
 
                 flags_list = ""
@@ -54,9 +54,7 @@ class DocSearchModel(QSqlQueryModel):
         cfp_uezd.name AS `cfp_uezd.name`, \
         cfp_locality.name AS `cfp_locality.name`, \
         cfp_church.name AS `cfp_church.name`, \
-        cfp_doc.church_id AS `cfp_doc.church_id`, \
         cfp_doctype.name AS `cfp_doctype.name`, \
-        cfp_doc.doctype_id AS `cfp_doc.doctype_id`, \
         cfp_doc.fund AS `cfp_doc.fund`, \
         cfp_doc.inventory AS `cfp_doc.inventory`, \
         cfp_doc.unit AS `cfp_doc.unit`, \
@@ -87,30 +85,30 @@ class DocSearchModel(QSqlQueryModel):
 
         self.setQuery(sql_query)
 
-        # insert columns for counter/type abbr/storage unit fields
-        self.insertColumns(11, 3)
+        # insert columns for counter field
+        self.insertColumns(0, 1)
+        # insert columns for type abbr/storage unit fields
+        self.insertColumns(10, 2)
         # insert column for flags abbr
-        self.insertColumns(16, 1)
+        self.insertColumns(14, 1)
 
-        self.setHeaderData(0, Qt.Horizontal, "Идентификатор документа")
-        self.setHeaderData(1, Qt.Horizontal, "Губерния")
-        self.setHeaderData(2, Qt.Horizontal, "Уезд")
-        self.setHeaderData(3, Qt.Horizontal, "Населенный пункт")
-        self.setHeaderData(4, Qt.Horizontal, "Наименование церкви")
-        self.setHeaderData(5, Qt.Horizontal, "Идентификатор церкви")
+        self.setHeaderData(0, Qt.Horizontal, "#")  # inserted
+        self.setHeaderData(1, Qt.Horizontal, "Идентификатор документа")
+        self.setHeaderData(2, Qt.Horizontal, "Губерния")
+        self.setHeaderData(3, Qt.Horizontal, "Уезд")
+        self.setHeaderData(4, Qt.Horizontal, "Населенный пункт")
+        self.setHeaderData(5, Qt.Horizontal, "Наименование церкви")
         self.setHeaderData(6, Qt.Horizontal, "Тип документа")
-        self.setHeaderData(7, Qt.Horizontal, "Идентификатор типа документа")
-        self.setHeaderData(8, Qt.Horizontal, "Фонд")
-        self.setHeaderData(9, Qt.Horizontal, "Опись")
-        self.setHeaderData(10, Qt.Horizontal, "Дело")
-        self.setHeaderData(11, Qt.Horizontal, "#")  # inserted
-        self.setHeaderData(12, Qt.Horizontal, "Тип документа")  # inserted
-        self.setHeaderData(13, Qt.Horizontal, "Ед. хранения")  # inserted
-        self.setHeaderData(14, Qt.Horizontal, "Листов")
-        self.setHeaderData(15, Qt.Horizontal, "Годы документов")
-        self.setHeaderData(16, Qt.Horizontal, "Флаги")  # inserted
-        self.setHeaderData(17, Qt.Horizontal, "Флаги")
-        self.setHeaderData(18, Qt.Horizontal, "Комментарий")
+        self.setHeaderData(7, Qt.Horizontal, "Фонд")
+        self.setHeaderData(8, Qt.Horizontal, "Опись")
+        self.setHeaderData(9, Qt.Horizontal, "Дело")
+        self.setHeaderData(10, Qt.Horizontal, "Тип документа")  # inserted
+        self.setHeaderData(11, Qt.Horizontal, "Ед. хранения")  # inserted
+        self.setHeaderData(12, Qt.Horizontal, "Листов")
+        self.setHeaderData(13, Qt.Horizontal, "Годы документов")
+        self.setHeaderData(14, Qt.Horizontal, "Флаги")  # inserted
+        self.setHeaderData(15, Qt.Horizontal, "Флаги")
+        self.setHeaderData(16, Qt.Horizontal, "Комментарий")
 
     def andFilterWhere(self, op, field, value, value2=""):
         if len(value) > 0 or len(value2) > 0:
@@ -135,10 +133,14 @@ class DocSearchModel(QSqlQueryModel):
                     if len(value) > 0 and len(value2) > 0:
                         if value2 == "=":
                             cond = "flags = '%s'" % value
-                        if value2 == "IN":
-                            cond = "flags IN (%s)" % value
 
-                        self.__filter_str__ += "EXISTS (SELECT GROUP_CONCAT(cfp_docflag.id ORDER BY cfp_docflag.id) AS flags FROM cfp_docflag LEFT JOIN cfp_docflags ON cfp_docflag.id = cfp_docflags.docflag_id WHERE cfp_doc.id = cfp_docflags.doc_id GROUP BY cfp_doc.id HAVING %s)" % cond
+                            self.__filter_str__ += "EXISTS (SELECT GROUP_CONCAT(cfp_docflag.id ORDER BY cfp_docflag.id) AS flags FROM cfp_docflag LEFT JOIN cfp_docflags ON cfp_docflag.id = cfp_docflags.docflag_id WHERE cfp_doc.id = cfp_docflags.doc_id GROUP BY cfp_doc.id HAVING %s)" % cond
+                        if value2 == "IN":
+                            cond = "(SELECT COUNT(*) FROM cfp_docflags WHERE cfp_docflags.doc_id=cfp_doc.id AND cfp_docflags.docflag_id IN (%s)) >= %s" % (value, len(value.split(",")))
+
+                            self.__filter_str__ += "EXISTS (SELECT cfp_docflag.id FROM cfp_docflag LEFT JOIN cfp_docflags ON cfp_docflag.id = cfp_docflags.docflag_id WHERE cfp_doc.id = cfp_docflags.doc_id GROUP BY cfp_doc.id HAVING %s)" % cond
+                    if len(value) == 0 and len(value2) > 0 and value2 == "=":
+                        self.__filter_str__ += "(SELECT GROUP_CONCAT(cfp_docflag.id ORDER BY cfp_docflag.id) AS flags FROM cfp_docflag LEFT JOIN cfp_docflags ON cfp_docflag.id = cfp_docflags.docflag_id WHERE cfp_doc.id = cfp_docflags.doc_id) IS NULL"
 
     def filter(self):
         return self.__filter_str__

@@ -7,10 +7,10 @@ from PyQt5.QtGui import QIcon
 from models import ComboProxyModel, CheckListProxyModel, GuberniaModel, DoctypeModel, DocflagModel, DocSearchModel
 
 
-class SearchDialog(QDialog):
+class DocSearchDialog(QDialog):
 
     def __init__(self, parent):
-        super(SearchDialog, self).__init__(parent)
+        super(DocSearchDialog, self).__init__(parent)
         self.ui = loadUi("ui/search_dialog.ui", self)
 
         self.ui.pushButton_search.clicked.connect(self.search)
@@ -97,3 +97,20 @@ class SearchDialog(QDialog):
         self.doc_search_model.refresh()
 
         self.ui.treeView_docs.setModel(self.doc_search_model)
+
+        self.ui.treeView_docs.resizeColumnToContents(0)
+        self.ui.treeView_docs.hideColumn(1)
+        self.ui.treeView_docs.setColumnWidth(2, 150)
+        self.ui.treeView_docs.setColumnWidth(3, 150)
+        self.ui.treeView_docs.setColumnWidth(4, 150)
+        self.ui.treeView_docs.setColumnWidth(5, 200)
+        self.ui.treeView_docs.hideColumn(6)
+        self.ui.treeView_docs.hideColumn(7)
+        self.ui.treeView_docs.hideColumn(8)
+        self.ui.treeView_docs.hideColumn(9)
+        self.ui.treeView_docs.setColumnWidth(10, 75)
+        self.ui.treeView_docs.setColumnWidth(11, 200)
+        self.ui.treeView_docs.setColumnWidth(12, 75)
+        self.ui.treeView_docs.setColumnWidth(13, 200)
+        self.ui.treeView_docs.hideColumn(15)
+        self.ui.treeView_docs.setColumnWidth(16, 300)

@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QMainWindow, QMessageBox, QWidget, QToolBar, QStatu
 from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
 from PyQt5.uic import loadUi
 
-from dialogs import (DoctypeDialog, DocflagDialog, DbSettingsDialog, SearchDialog)
+from dialogs import (DoctypeDialog, DocflagDialog, DbSettingsDialog, DocSearchDialog)
 from views import (GEOView, DocView)
 from models import ChurchModel
 
@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         self.doc_search = QAction("Поиск документов")
         self.doc_search.setIcon(QIcon(":/icons/doc-search-16.png"))
         self.doc_search.setShortcut(Qt.Key_F3)
-        self.doc_search.triggered.connect(self.openSearchDialog)
+        self.doc_search.triggered.connect(self.openDocSearchDialog)
 
         self.doc_create = QAction("Новый документ")
         self.doc_create.setIcon(QIcon(":/icons/doc-new-16.png"))
@@ -196,8 +196,8 @@ class MainWindow(QMainWindow):
         docflag_dialog = DocflagDialog(self)
         docflag_dialog.show()
 
-    def openSearchDialog(self):
-        search_dialog = SearchDialog(self)
+    def openDocSearchDialog(self):
+        search_dialog = DocSearchDialog(self)
         search_dialog.show()
 
     def openDbSettingsDialog(self):

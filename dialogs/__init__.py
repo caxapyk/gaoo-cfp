@@ -4,4 +4,4 @@ from .listviewdialog import ListViewDialog
 from .doctypedialog import DoctypeDialog
 from .docflagdialog import DocflagDialog
 from .dbsettingsdialog import DbSettingsDialog
-from .searchdialog import SearchDialog
+from .docsearchdialog import DocSearchDialog
