@@ -10,7 +10,7 @@ from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
 from PyQt5.QtSql import QSqlRelationalTableModel
 from PyQt5.QtCore import QModelIndex
 from models import DocModel
-from dialogs import DocFormDialog
+from dialogs import (DocFormDialog, DocViewDialog)
 from views import View
 import time
 
@@ -101,6 +101,7 @@ class DocView(View):
         self.c_menu.clear()
 
         if index.isValid():
+            self.c_menu.addAction(self.parent.doc_open)
             self.c_menu.addAction(self.parent.doc_update)
             self.c_menu.addAction(self.parent.doc_remove)
         else:
@@ -145,6 +146,13 @@ class DocView(View):
                     QMessageBox().critical(
                         self.tree_view, "Удаление документа",
                         "Не удалось удалить документ!", QMessageBox.Ok)
+
+    def viewDocDialog(self):
+        proxy_index = self.tree_view.currentIndex()
+        index = self.model.mapToSource(proxy_index)
+
+        docview_dialog = DocViewDialog(self.parent, self.doc_model, index.row())
+        res = docview_dialog.exec()
 
     def editDocDialog(self):
         proxy_index = self.tree_view.currentIndex()

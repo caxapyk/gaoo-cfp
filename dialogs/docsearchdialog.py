@@ -48,12 +48,9 @@ class DocSearchDialog(QDialog):
             self.ui.listView_docflag.model().reset()
 
     def search(self):
-        print("search")
-        filter_ = ""
-
         self.doc_search_model = DocSearchModel()
         # geo group
-        if self.ui.groupBox_geo.isEnabled():
+        if self.ui.groupBox_geo.isChecked():
             if self.ui.comboBox_gubernia.currentIndex() > 0:
                 self.doc_search_model.andFilterWhere(
                     "=", "cfp_gubernia.name", self.ui.comboBox_gubernia.currentText())
@@ -63,8 +60,8 @@ class DocSearchDialog(QDialog):
                 "LIKE", "cfp_locality.name", self.ui.lineEdit_locality.text())
             self.doc_search_model.andFilterWhere(
                 "LIKE", "cfp_church.name", self.ui.lineEdit_church.text())
-
-        if self.ui.groupBox_doc.isEnabled():
+        # doc groupt
+        if self.ui.groupBox_doc.isChecked():
             if self.ui.comboBox_doctype.currentIndex() > 0:
                 self.doc_search_model.andFilterWhere(
                     "=", "cfp_doctype.name", self.ui.comboBox_doctype.currentText())
@@ -78,22 +75,16 @@ class DocSearchDialog(QDialog):
                 "=", "cfp_doc.unit", self.ui.lineEdit_unit.text())
             self.doc_search_model.andFilterWhere(
                 "BETWEEN", "cfp_docyears.year", self.ui.lineEdit_year_from.text(), self.ui.lineEdit_year_to.text())
+        # flags group   
+        if self.ui.groupBox_flags.isChecked():
             if self.ui.checkBox_flaghard.checkState() == Qt.Checked:
-                self.doc_search_model.andFilterWhere(
-                    "IN", "cfp_docflag.id", self.doctype_clp_model.data_(), "=")
+                mode = "STRICT"
             else:
-                self.doc_search_model.andFilterWhere(
-                    "IN", "cfp_docflag.id", self.doctype_clp_model.data_(), "IN")
+                mode = "NONSTRICT"
 
-            #    filter_ += " cfp_gubernia.name=\"%s\"" % widget.currentText()
-            # elif widget.objectName() == "comboBox_doctype":
-            #    filter_ += " cfp_doctype.name.name=\"%s\"" % widget.currentText()
-        print(filter_)
+            self.doc_search_model.andFilterWhere(
+                "EXISTS", "cfp_docflag.id", self.doctype_clp_model.data_(), mode)
 
-        #    if len(self.ui.lineEdit_uezd.text()) > 0:
-        #        filter_ += " cfp_uezd.name LIKE \"%%%s%%\"" % self.ui.lineEdit_uezd.text()
-
-        # self.doc_search_model.setFilter(filter_)
         self.doc_search_model.refresh()
 
         self.ui.treeView_docs.setModel(self.doc_search_model)

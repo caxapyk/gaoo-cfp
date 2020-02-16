@@ -111,15 +111,15 @@ class DocSearchModel(QSqlQueryModel):
         self.setHeaderData(16, Qt.Horizontal, "Комментарий")
 
     def andFilterWhere(self, op, field, value, value2=""):
-        if len(value) > 0 or len(value2) > 0:
-            if len(self.filter()) > 0:
-                self.__filter_str__ += " AND "
-
-            if op == "=":
-                self.__filter_str__ += "%s=\"%s\"" % (field, value)
-            elif op == "LIKE":
-                self.__filter_str__ += "%s LIKE \"%%%s%%\"" % (field, value)
-            elif op == "BETWEEN":
+        a_filter = ""
+        if op == "=":
+            if len(value) > 0:
+                a_filter += "%s=\"%s\"" % (field, value)
+        elif op == "LIKE":
+            if len(value) > 0:
+                a_filter += "%s LIKE \"%%%s%%\"" % (field, value)
+        elif op == "BETWEEN":
+            if len(value) > 0 or len(value2) > 0:
                 if field == "cfp_docyears.year":
                     if len(value) > 0 and len(value2) > 0:
                         cond = "BETWEEN %s AND %s" % (value, value2)
@@ -127,20 +127,48 @@ class DocSearchModel(QSqlQueryModel):
                         cond = ">= %s" % value
                     elif len(value) == 0 and len(value2) > 0:
                         cond = "<= %s" % value2
-                    self.__filter_str__ += "EXISTS (SELECT cfp_docyears.year FROM cfp_docyears WHERE cfp_doc.id = cfp_docyears.doc_id AND cfp_docyears.year %s)" % cond
-            elif op == "IN":
-                if field == "cfp_docflag.id":
-                    if len(value) > 0 and len(value2) > 0:
-                        if value2 == "=":
-                            cond = "flags = '%s'" % value
+                    a_filter += "EXISTS (SELECT cfp_docyears.year FROM cfp_docyears WHERE cfp_doc.id = cfp_docyears.doc_id AND cfp_docyears.year %s)" % cond
+        elif op == "EXISTS":
+            if field == "cfp_docflag.id":
+                if len(value) > 0:
+                    if value2 == "STRICT":
+                        a_filter += "EXISTS \
+                        (SELECT GROUP_CONCAT(cfp_docflag.id ORDER BY cfp_docflag.id) AS flags \
+                        FROM cfp_docflag LEFT JOIN cfp_docflags \
+                        ON cfp_docflag.id = cfp_docflags.docflag_id \
+                        WHERE cfp_doc.id = cfp_docflags.doc_id \
+                        GROUP BY cfp_doc.id \
+                        HAVING flags = '%s')" % value
+                    elif value2 == "NONSTRICT":
+                        v_count = len(value.split(","))
+                        a_filter += "EXISTS \
+                        (SELECT cfp_docflag.id FROM cfp_docflag \
+                        LEFT JOIN cfp_docflags \
+                        ON cfp_docflag.id = cfp_docflags.docflag_id \
+                        WHERE cfp_doc.id = cfp_docflags.doc_id \
+                        AND cfp_docflags.docflag_id IN (%s) \
+                        GROUP BY cfp_doc.id \
+                        HAVING \
+                        (SELECT COUNT(*) FROM cfp_docflags \
+                        WHERE cfp_docflags.doc_id=cfp_doc.id \
+                        AND cfp_docflags.docflag_id IN (%s)\
+                        ) >= %s)" % (value, value, v_count)
+                elif len(value) == 0 and value2 == "STRICT":
+                    a_filter += "(SELECT \
+                    GROUP_CONCAT(cfp_docflag.id ORDER BY cfp_docflag.id) AS flags \
+                    FROM cfp_docflag \
+                    LEFT JOIN cfp_docflags ON cfp_docflag.id = cfp_docflags.docflag_id \
+                    WHERE cfp_doc.id = cfp_docflags.doc_id) IS NULL"
+        
+        if len(a_filter) > 0 and len(self.filter()) > 0:
+            a_filter = " AND " + a_filter
 
-                            self.__filter_str__ += "EXISTS (SELECT GROUP_CONCAT(cfp_docflag.id ORDER BY cfp_docflag.id) AS flags FROM cfp_docflag LEFT JOIN cfp_docflags ON cfp_docflag.id = cfp_docflags.docflag_id WHERE cfp_doc.id = cfp_docflags.doc_id GROUP BY cfp_doc.id HAVING %s)" % cond
-                        if value2 == "IN":
-                            cond = "(SELECT COUNT(*) FROM cfp_docflags WHERE cfp_docflags.doc_id=cfp_doc.id AND cfp_docflags.docflag_id IN (%s)) >= %s" % (value, len(value.split(",")))
-
-                            self.__filter_str__ += "EXISTS (SELECT cfp_docflag.id FROM cfp_docflag LEFT JOIN cfp_docflags ON cfp_docflag.id = cfp_docflags.docflag_id WHERE cfp_doc.id = cfp_docflags.doc_id GROUP BY cfp_doc.id HAVING %s)" % cond
-                    if len(value) == 0 and len(value2) > 0 and value2 == "=":
-                        self.__filter_str__ += "(SELECT GROUP_CONCAT(cfp_docflag.id ORDER BY cfp_docflag.id) AS flags FROM cfp_docflag LEFT JOIN cfp_docflags ON cfp_docflag.id = cfp_docflags.docflag_id WHERE cfp_doc.id = cfp_docflags.doc_id) IS NULL"
-
+        self.appendFilter(a_filter)
+    
     def filter(self):
         return self.__filter_str__
+
+    def appendFilter(self, filter_str):
+        self.__filter_str__ += filter_str
+
+

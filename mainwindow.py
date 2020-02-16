@@ -36,6 +36,11 @@ class MainWindow(QMainWindow):
         self.doc_create.setDisabled(True)
         self.doc_create.triggered.connect(self.doc_view.createDocDialog)
 
+        self.doc_open = QAction("Открыть")
+        self.doc_open.setIcon(QIcon(":/icons/doc-edit-16.png"))
+        self.doc_open.setDisabled(False)
+        self.doc_open.triggered.connect(self.doc_view.viewDocDialog)
+
         self.doc_update = QAction("Редактировать")
         self.doc_update.setIcon(QIcon(":/icons/doc-edit-16.png"))
         self.doc_update.setDisabled(True)

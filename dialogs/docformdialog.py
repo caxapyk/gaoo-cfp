@@ -89,12 +89,15 @@ class DocFormDialog(QDialog):
         self.ui.sheet_spinBox.valueChanged.connect(self.formChanged)
         self.ui.comment_textEdit.textChanged.connect(self.formChanged)
 
+    def storageUnit(self):
+        storage_unit = self.doc_model.data(
+                self.doc_model.index(self.m_row, 10))
+        return storage_unit
+
     def map(self):
         if self.m_row is not None:
             # set window title
-            storage_unit = self.doc_model.data(
-                self.doc_model.index(self.m_row, 10))
-            self.setWindowTitle("Редактировать документ [%s]" % storage_unit)
+            self.setWindowTitle("Редактировать документ [%s]" % self.storageUnit())
 
             # data mapper
             self.mapper = QDataWidgetMapper()
