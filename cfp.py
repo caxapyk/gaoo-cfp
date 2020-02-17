@@ -1,8 +1,9 @@
-import resources
 import os
 import sys
-from application import Application
+import resources
 import PyQt5
+from PyQt5.QtCore import (QTranslator, QLocale)
+from application import Application
 
 
 def main():
@@ -11,6 +12,10 @@ def main():
         pyqt, "Qt", "plugins")
     os.environ["LD_LIBRARY_PATH"] = os.path.join(pyqt, "Qt", "lib")
     app = Application(sys.argv)
+
+    qtTranslator = QTranslator()
+    if qtTranslator.load(QLocale(), ":/qtbase_ru.qm"):
+        app.installTranslator(qtTranslator)
 
     sys.exit(app.exec_())
 
