@@ -109,11 +109,11 @@ class MainWindow(QMainWindow):
 
         cat_menu = menubar.addMenu("Cправочники")
         doctype_action = cat_menu.addAction(
-            QIcon(":/icons/doctype-16.png"), "Типы документов")
+            QIcon(":/icons/doctype-16.png"), "Виды документов")
         doctype_action.triggered.connect(self.openDoctypeDialog)
 
         docflag_action = cat_menu.addAction(
-            QIcon(":/icons/flag-16.png"), "Флаги")
+            QIcon(":/icons/tag-16.png"), "Метки документов (примечания)")
         docflag_action.triggered.connect(self.openDocflagDialog)
 
         settings_menu = menubar.addMenu("Сервис")
@@ -197,7 +197,7 @@ class MainWindow(QMainWindow):
         docflag_dialog.show()
 
     def openDocSearchDialog(self):
-        search_dialog = DocSearchDialog(self)
+        search_dialog = DocSearchDialog()
         search_dialog.show()
 
     def openDbSettingsDialog(self):

@@ -19,13 +19,6 @@ class DocSearchModel(QSqlQueryModel):
             if index.column() == 0:
                 return index.row() + 1
 
-            elif index.column() == 10:
-                rec = self.record(index.row())
-                doctype_abbr = AbbrMaker().make(
-                    rec.value("cfp_doctype.name"))
-
-                return doctype_abbr
-
             elif index.column() == 11:
                 rec = self.record(index.row())
 
@@ -35,15 +28,6 @@ class DocSearchModel(QSqlQueryModel):
                     rec.value("cfp_doc.unit"))
 
                 return storage_unit
-
-            elif index.column() == 14:
-                rec = self.record(index.row())
-
-                flags_list = ""
-                for flag in rec.value("flags").split(","):
-                    flags_list += "%s/" % AbbrMaker().make(flag)
-
-                return flags_list[:-1]
 
         return super().data(index, role)
 
@@ -55,12 +39,12 @@ class DocSearchModel(QSqlQueryModel):
         cfp_locality.name AS `cfp_locality.name`, \
         cfp_church.name AS `cfp_church.name`, \
         cfp_doctype.name AS `cfp_doctype.name`, \
+        (SELECT GROUP_CONCAT(cfp_docyears.year ORDER BY cfp_docyears.year SEPARATOR '/') FROM cfp_docyears WHERE cfp_docyears.doc_id = cfp_doc.id) AS years, \
         cfp_doc.fund AS `cfp_doc.fund`, \
         cfp_doc.inventory AS `cfp_doc.inventory`, \
         cfp_doc.unit AS `cfp_doc.unit`, \
         cfp_doc.sheets AS `cfp_doc.sheets`, \
-        (SELECT GROUP_CONCAT(cfp_docyears.year ORDER BY cfp_docyears.year) FROM cfp_docyears WHERE cfp_docyears.doc_id = cfp_doc.id) AS years, \
-        (SELECT GROUP_CONCAT(cfp_docflag.name ORDER BY cfp_docflag.name) FROM cfp_docflags LEFT JOIN cfp_docflag ON cfp_docflags.docflag_id=cfp_docflag.id WHERE cfp_docflags.doc_id = cfp_doc.id) AS flags, \
+        (SELECT GROUP_CONCAT(cfp_docflag.name ORDER BY cfp_docflag.name SEPARATOR '/') FROM cfp_docflags LEFT JOIN cfp_docflag ON cfp_docflags.docflag_id=cfp_docflag.id WHERE cfp_docflags.doc_id = cfp_doc.id) AS flags, \
         cfp_doc.comment AS `cfp_doc.comment` \
         FROM cfp_doc \
         LEFT JOIN cfp_church ON cfp_doc.church_id = cfp_church.id \
@@ -85,10 +69,8 @@ class DocSearchModel(QSqlQueryModel):
 
         # insert columns for counter field
         self.insertColumns(0, 1)
-        # insert columns for type abbr/storage unit fields
-        self.insertColumns(10, 2)
-        # insert column for flags abbr
-        self.insertColumns(14, 1)
+        # insert columns for storage unit field
+        self.insertColumns(11, 1)
 
         self.setHeaderData(0, Qt.Horizontal, "#")  # inserted
         self.setHeaderData(1, Qt.Horizontal, "Идентификатор документа")
@@ -97,16 +79,14 @@ class DocSearchModel(QSqlQueryModel):
         self.setHeaderData(4, Qt.Horizontal, "Населенный пункт")
         self.setHeaderData(5, Qt.Horizontal, "Наименование церкви")
         self.setHeaderData(6, Qt.Horizontal, "Тип документа")
-        self.setHeaderData(7, Qt.Horizontal, "Фонд")
-        self.setHeaderData(8, Qt.Horizontal, "Опись")
-        self.setHeaderData(9, Qt.Horizontal, "Дело")
-        self.setHeaderData(10, Qt.Horizontal, "Тип документа")  # inserted
-        self.setHeaderData(11, Qt.Horizontal, "Ед. хранения")  # inserted
-        self.setHeaderData(12, Qt.Horizontal, "Листов")
-        self.setHeaderData(13, Qt.Horizontal, "Годы документов")
-        self.setHeaderData(14, Qt.Horizontal, "Флаги")  # inserted
-        self.setHeaderData(15, Qt.Horizontal, "Флаги")
-        self.setHeaderData(16, Qt.Horizontal, "Комментарий")
+        self.setHeaderData(7, Qt.Horizontal, "Годы документов")
+        self.setHeaderData(8, Qt.Horizontal, "Фонд")
+        self.setHeaderData(9, Qt.Horizontal, "Опись")
+        self.setHeaderData(10, Qt.Horizontal, "Дело")
+        self.setHeaderData(11, Qt.Horizontal, "Шифр (основание)")  # inserted
+        self.setHeaderData(12, Qt.Horizontal, "Кол.-во листов")
+        self.setHeaderData(13, Qt.Horizontal, "Примечание")
+        self.setHeaderData(14, Qt.Horizontal, "Комментарий")
 
     def andFilterWhere(self, op, field, value, value2=""):
         a_filter = ""

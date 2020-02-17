@@ -29,14 +29,12 @@ class DocModel(QSqlRelationalTableModel):
 
             elif item.column() == 9:
                 rec = self.record(item.row())
-                val = rec.value("cfp_doctype.name")
-                if isinstance(val, str):
-                    doctype_abbr = AbbrMaker().make(val)
-                    return doctype_abbr
+                return rec.value("cfp_doctype.name")
 
-                return ""
+            if item.column() == 10:
+                return self.docYears(item.row())
 
-            elif item.column() == 10:
+            elif item.column() == 11:
                 rec = self.record(item.row())
 
                 storage_unit = "Ф. %s Оп. %s Д. %s" % (
@@ -46,12 +44,9 @@ class DocModel(QSqlRelationalTableModel):
 
                 return storage_unit
 
-            if item.column() == 11:
+            if item.column() == 12:
                 rec = self.record(item.row())
                 return rec.value("cfp_doc.sheets")
-
-            if item.column() == 12:
-                return self.docYears(item.row())
 
             elif item.column() == 13:
                 val = self.docFlags(item.row())
@@ -140,11 +135,11 @@ class DocModel(QSqlRelationalTableModel):
             self.insertColumns(8, 7, QModelIndex())
 
             self.setHeaderData(8, Qt.Horizontal, "#")
-            self.setHeaderData(9, Qt.Horizontal, "Тип документа")
-            self.setHeaderData(10, Qt.Horizontal, "Ед. хранения")
-            self.setHeaderData(11, Qt.Horizontal, "Листов")
-            self.setHeaderData(12, Qt.Horizontal, "Годы документов")
-            self.setHeaderData(13, Qt.Horizontal, "Флаги")
+            self.setHeaderData(9, Qt.Horizontal, "Вид документа")
+            self.setHeaderData(10, Qt.Horizontal, "Годы документов")
+            self.setHeaderData(11, Qt.Horizontal, "Шифр (основание)")
+            self.setHeaderData(12, Qt.Horizontal, "Кол.-во листов")
+            self.setHeaderData(13, Qt.Horizontal, "Примечание")
             self.setHeaderData(14, Qt.Horizontal, "Комментарий")
 
             self.__cache_years__.clear()

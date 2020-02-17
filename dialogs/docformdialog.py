@@ -91,13 +91,14 @@ class DocFormDialog(QDialog):
 
     def storageUnit(self):
         storage_unit = self.doc_model.data(
-                self.doc_model.index(self.m_row, 10))
+            self.doc_model.index(self.m_row, 10))
         return storage_unit
 
     def map(self):
         if self.m_row is not None:
             # set window title
-            self.setWindowTitle("Редактировать документ [%s]" % self.storageUnit())
+            self.setWindowTitle(
+                "Редактировать документ [%s]" % self.storageUnit())
 
             # data mapper
             self.mapper = QDataWidgetMapper()
@@ -167,7 +168,7 @@ class DocFormDialog(QDialog):
                 self, "Сохранение документа",
                 'Не удалось сохранить документ!\n'
                 'Проверьте правильность заполнения формы.', QMessageBox.Ok)
-            return None
+            return False
 
         # check document is a new
         if self.m_row is None:
@@ -193,10 +194,16 @@ class DocFormDialog(QDialog):
                 # then connect wi QDataWidgetMapper
                 self.m_row = self.doc_model.rowCount() - 1
                 self.map()
+            else:
+                QMessageBox().critical(
+                    self, "Редактирование/Создание документа",
+                    "Не удалось сохранить документ!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
+                return False
         else:
             self.mapper.submit()
 
         if self.doc_model.submitAll():
+            print(self.doc_model.submitAll())
             # get current document ID and set to years/flags models
             doc_id = self.doc_model.getItemId(self.m_row)
 
@@ -214,6 +221,11 @@ class DocFormDialog(QDialog):
             self.currentChanged = False
 
             return True
+        else:
+            self.doc_model.revertAll()
+            QMessageBox().critical(
+                self, "Редактирование/Создание документа",
+                "Не удалось сохранить документ!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
 
         return False
 

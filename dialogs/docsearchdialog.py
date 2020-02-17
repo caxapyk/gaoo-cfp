@@ -12,11 +12,9 @@ from dialogs import DocViewDialog
 
 class DocSearchDialog(QDialog):
 
-    def __init__(self, parent):
-        super(DocSearchDialog, self).__init__(parent)
+    def __init__(self):
+        super(DocSearchDialog, self).__init__()
         self.ui = loadUi("ui/search_dialog.ui", self)
-
-        self.parent = parent
 
         self.ui.pushButton_search.clicked.connect(self.search)
         self.ui.pushButton_clear.clicked.connect(self.clearForm)
@@ -65,7 +63,7 @@ class DocSearchDialog(QDialog):
                 "LIKE", "cfp_locality.name", self.ui.lineEdit_locality.text())
             self.doc_search_model.andFilterWhere(
                 "LIKE", "cfp_church.name", self.ui.lineEdit_church.text())
-        # doc groupt
+        # doc group
         if self.ui.groupBox_doc.isChecked():
             if self.ui.comboBox_doctype.currentIndex() > 0:
                 self.doc_search_model.andFilterWhere(
@@ -80,6 +78,8 @@ class DocSearchDialog(QDialog):
                 "=", "cfp_doc.unit", self.ui.lineEdit_unit.text())
             self.doc_search_model.andFilterWhere(
                 "BETWEEN", "cfp_docyears.year", self.ui.lineEdit_year_from.text(), self.ui.lineEdit_year_to.text())
+            self.doc_search_model.andFilterWhere(
+                "LIKE", "cfp_doc.comment", self.ui.lineEdit_comment.text())
         # flags group
         if self.ui.groupBox_flags.isChecked():
             if self.ui.checkBox_flaghard.checkState() == Qt.Checked:
@@ -99,20 +99,19 @@ class DocSearchDialog(QDialog):
 
         self.ui.treeView_docs.resizeColumnToContents(0)
         self.ui.treeView_docs.hideColumn(1)
-        self.ui.treeView_docs.setColumnWidth(2, 150)
-        self.ui.treeView_docs.setColumnWidth(3, 150)
-        self.ui.treeView_docs.setColumnWidth(4, 150)
-        self.ui.treeView_docs.setColumnWidth(5, 200)
-        self.ui.treeView_docs.hideColumn(6)
-        self.ui.treeView_docs.hideColumn(7)
+        self.ui.treeView_docs.resizeColumnToContents(2)
+        self.ui.treeView_docs.resizeColumnToContents(3)
+        self.ui.treeView_docs.resizeColumnToContents(4)
+        self.ui.treeView_docs.resizeColumnToContents(5)
+        self.ui.treeView_docs.resizeColumnToContents(6)
+        self.ui.treeView_docs.resizeColumnToContents(7)
         self.ui.treeView_docs.hideColumn(8)
         self.ui.treeView_docs.hideColumn(9)
-        self.ui.treeView_docs.setColumnWidth(10, 75)
-        self.ui.treeView_docs.setColumnWidth(11, 200)
-        self.ui.treeView_docs.setColumnWidth(12, 75)
-        self.ui.treeView_docs.setColumnWidth(13, 200)
-        self.ui.treeView_docs.hideColumn(15)
-        self.ui.treeView_docs.setColumnWidth(16, 300)
+        self.ui.treeView_docs.hideColumn(10)
+        self.ui.treeView_docs.resizeColumnToContents(11)
+        self.ui.treeView_docs.resizeColumnToContents(12)
+        self.ui.treeView_docs.resizeColumnToContents(13)
+        self.ui.treeView_docs.setColumnWidth(14, 500)
 
         self.ui.treeView_docs.doubleClicked.connect(self.viewDocDialog)
 
@@ -136,5 +135,5 @@ class DocSearchDialog(QDialog):
         doc_model.setFilter("cfp_doc.id=%s" % doc_id)
         doc_model.select()
 
-        docview_dialog = DocViewDialog(self.parent, doc_model, 0)
-        res = docview_dialog.exec()
+        docview_dialog = DocViewDialog(self, doc_model, 0)
+        docview_dialog.show()

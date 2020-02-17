@@ -12,7 +12,6 @@
          <file>icons/doc-search-16.png</file>
         <file>icons/doctype-16.png</file>
         <file>icons/exit-16.png</file>
-        <file>icons/flag-16.png</file>
         <file>icons/folder-16.png</file>
         <file>icons/folder-new-16.png</file>
         <file>icons/info-16.png</file>
@@ -24,6 +23,7 @@
         <file>icons/sort19-16.png</file>
         <file>icons/sort-az-16.png</file>
         <file>icons/sort-za-16.png</file>
+        <file>icons/tag-16.png</file>
         <file>icons/tree-16.png</file>
         <file>icons/types-16.png</file>
         <file>qtbase_ru.qm</file>

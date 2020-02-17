@@ -1,9 +1,10 @@
+import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtGui import QIcon
 from connection import Connection
 from mainwindow import MainWindow
-from dialogs import DbSettingsDialog
+from dialogs import (DbSettingsDialog, DocSearchDialog)
 from PyQt5.QtCore import (QTranslator, QLocale)
 
 
@@ -16,7 +17,11 @@ class Application(QApplication):
 
     def initialize(self):
         if self.dbConnect():
-            main_window = MainWindow()
+            if len(sys.argv) > 1 and sys.argv[1] == "--searchmode":
+                main_window = DocSearchDialog()
+            else:
+                main_window = MainWindow()
+
             main_window.show()
         else:
             dbsettings_dialog = DbSettingsDialog()

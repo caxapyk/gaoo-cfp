@@ -16,7 +16,8 @@ class Connection():
         db.setHostName(settings.value("server"))
         db.setDatabaseName(settings.value("db"))
         db.setUserName(settings.value("user"))
-        # qS4yMREesPtayIaO
+        # db_nsa:qS4yMREesPtayIaO
+        # db_oiipd:qs}@yo(j62F5
         db.setPassword(settings.value("password"))
         settings.endGroup()
 

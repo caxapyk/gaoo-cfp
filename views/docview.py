@@ -85,10 +85,10 @@ class DocView(View):
         self.tree_view.hideColumn(6)
         self.tree_view.hideColumn(7)
         self.tree_view.resizeColumnToContents(8)
-        self.tree_view.setColumnWidth(9, 150)
-        self.tree_view.setColumnWidth(10, 200)
-        self.tree_view.setColumnWidth(11, 100)
-        self.tree_view.setColumnWidth(12, 150)
+        self.tree_view.setColumnWidth(9, 250)
+        self.tree_view.setColumnWidth(10, 150)
+        self.tree_view.setColumnWidth(11, 200)
+        self.tree_view.setColumnWidth(12, 125)
         self.tree_view.setColumnWidth(13, 150)
         self.tree_view.resizeColumnToContents(14)
 
@@ -117,7 +117,7 @@ class DocView(View):
 
         self.tree_view.expandAll()
 
-        self.model.setFilterKeyColumn(10)
+        self.model.setFilterKeyColumn(11)
         self.model.setFilterRegExp(
             QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
 
@@ -143,9 +143,11 @@ class DocView(View):
                 if self.model.removeRow(index.row()):
                     self.tree_view.setCurrentIndex(QModelIndex())
                 else:
+                    self.tree_view.setRowHidden(
+                    index.row(), QModelIndex(), False)
                     QMessageBox().critical(
                         self.tree_view, "Удаление документа",
-                        "Не удалось удалить документ!", QMessageBox.Ok)
+                        "Не удалось удалить документ!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
 
     def viewDocDialog(self):
         proxy_index = self.tree_view.currentIndex()

@@ -133,8 +133,16 @@ class GEOView(View):
             source_index = self.model.mapToSource(index)
             sql_model = source_index.internalPointer()
 
+            child_name = ""
+            if isinstance(sql_model.model(), GuberniaModel):
+                child_name = "уезд"
+            elif isinstance(sql_model.model(), UezdModel):
+                child_name = "населенный пункт"
+            elif isinstance(sql_model.model(), LocalityModel):
+                child_name = "церковь"
+
             default_actions = (
-                (":/icons/folder-new-16.png", "Добавить",
+                (":/icons/folder-new-16.png", "Добавить %s" % child_name,
                     self.insertItem),
                 (":/icons/rename-16.png", "Переименовать", self.editItem),
                 (":/icons/delete-16.png", "Удалить", self.removeItem),
@@ -157,11 +165,11 @@ class GEOView(View):
                 action.setIcon(QIcon(icon))
                 action.triggered.connect(func)
 
-            self.c_menu.exec(
+            self.c_menu.exec_(
                 self.tree_view.viewport().mapToGlobal(point))
 
         else:
-            ins_action = self.c_menu.addAction("Новая губерния")
+            ins_action = self.c_menu.addAction("Добавить губернию")
             ins_action.setIcon(QIcon(":/icons/folder-new-16.png"))
             ins_action.triggered.connect(self.insertTopItem)
 
@@ -202,9 +210,12 @@ class GEOView(View):
         self.currentSortType = sort_type
 
     def insertTopItem(self):
-        self.model.insertRows(1, 1, QModelIndex())
-
-        self.openItemEditor(QModelIndex())
+        if self.model.insertRows(1, 1, QModelIndex()):
+            self.openItemEditor(QModelIndex())
+        else:
+            QMessageBox().critical(
+                    self.tree_view, "Создание объекта",
+                    "Не удалось добавить губернию!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
 
     def insertItem(self):
         index = self.tree_view.currentIndex()
@@ -221,8 +232,12 @@ class GEOView(View):
             # !important: branch must be expanded before new row inserted
             self.tree_view.setExpanded(index, True)
 
-            self.model.insertRows(0, 1, index)
-            self.openItemEditor(index)
+            if self.model.insertRows(0, 1, index):
+                self.openItemEditor(index)
+            else:
+                QMessageBox().critical(
+                    self.tree_view, "Создание объекта",
+                    "Не удалось добавить новый объект!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
 
     def editItem(self):
         index = self.tree_view.currentIndex()
@@ -240,7 +255,7 @@ class GEOView(View):
             if result == QMessageBox.Yes:
                 if not self.model.removeRows(index.row(), 1, index.parent()):
                     QMessageBox().critical(self.tree_view, "Удаление объекта",
-                                           "Не удалось удалить объект!\nПроверьте нет ли связей с другими объектами.",
+                                           "Не удалось удалить объект!\n\nПроверьте нет ли связей с другими объектами или возможно у Вас недостаточно привилегий.",
                                            QMessageBox.Ok)
 
     def onEditorClosed(self):

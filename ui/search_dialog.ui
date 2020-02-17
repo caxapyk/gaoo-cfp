@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>777</width>
-    <height>547</height>
+    <width>1042</width>
+    <height>763</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,7 +31,7 @@
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>250</height>
+       <height>275</height>
       </size>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
@@ -168,13 +168,13 @@
              <bool>true</bool>
             </property>
             <property name="checked">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <layout class="QFormLayout" name="formLayout_3">
              <item row="0" column="0">
               <widget class="QLabel" name="label_5">
                <property name="text">
-                <string>Тип</string>
+                <string>Вид документа</string>
                </property>
               </widget>
              </item>
@@ -226,7 +226,7 @@
              <item row="4" column="0">
               <widget class="QLabel" name="label_9">
                <property name="text">
-                <string>Годы</string>
+                <string>Годы документа</string>
                </property>
               </widget>
              </item>
@@ -283,6 +283,16 @@
                </item>
               </layout>
              </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Комментарий содержит</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QLineEdit" name="lineEdit_comment"/>
+             </item>
             </layout>
            </widget>
           </item>
@@ -295,7 +305,7 @@
              </size>
             </property>
             <property name="title">
-             <string>Флаги</string>
+             <string>Метки (примечания)</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
@@ -335,7 +345,7 @@
              <item>
               <widget class="QCheckBox" name="checkBox_flaghard">
                <property name="text">
-                <string>Строгий поиск</string>
+                <string>Строгое соответствие</string>
                </property>
               </widget>
              </item>

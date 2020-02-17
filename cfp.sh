@@ -1,2 +1,2 @@
 #!/bin/bash
-cd $HOME/bin/gaoo-cfp/ && python3 cfp.py
+cd $HOME/bin/gaoo-cfp/ && python3 cfp.py $1
