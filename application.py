@@ -1,10 +1,10 @@
-import resources
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtGui import QIcon
 from connection import Connection
 from mainwindow import MainWindow
 from dialogs import DbSettingsDialog
+from PyQt5.QtCore import (QTranslator, QLocale)
 
 
 class Application(QApplication):
@@ -26,6 +26,10 @@ class Application(QApplication):
     def initializeDefaults(self):
         QCoreApplication.setOrganizationName("GAOO")
         QCoreApplication.setApplicationName("cfp")
+
+        qtTranslator = QTranslator()
+        if qtTranslator.load(QLocale(), ":/qtbase_ru.qm"):
+            QCoreApplication.installTranslator(qtTranslator)
 
         self.setWindowIcon(QIcon(":/icons/church-16.png"))
 

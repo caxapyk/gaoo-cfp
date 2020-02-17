@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Межфондовый указатель
+Comment=
+Exec=/home/USERNAME/bin/gaoo-cfp/cfp.sh
+Icon=/home/USERNAME/bin/gaoo-cfp/icon.ico
+Path=
+Terminal=false
+StartupNotify=false
