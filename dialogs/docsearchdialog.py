@@ -1,10 +1,13 @@
 from PyQt5.Qt import Qt
-from PyQt5.QtWidgets import (
-    QDialog, QWidget, QDialogButtonBox, QMessageBox, QLineEdit, QComboBox, QGroupBox)
+from PyQt5.QtWidgets import (QDialog, QWidget, QDialogButtonBox,
+                             QMessageBox, QLineEdit, QComboBox, QGroupBox)
 from PyQt5.uic import loadUi
-from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
+from PyQt5.QtCore import (QModelIndex, QItemSelection,
+                          QItemSelectionModel, QSortFilterProxyModel)
 from PyQt5.QtGui import QIcon
-from models import ComboProxyModel, CheckListProxyModel, GuberniaModel, DoctypeModel, DocflagModel, DocSearchModel
+from models import (ComboProxyModel, CheckListProxyModel, GuberniaModel,
+                    DoctypeModel, DocflagModel, DocSearchModel, DocModel)
+from dialogs import DocViewDialog
 
 
 class DocSearchDialog(QDialog):
@@ -12,6 +15,8 @@ class DocSearchDialog(QDialog):
     def __init__(self, parent):
         super(DocSearchDialog, self).__init__(parent)
         self.ui = loadUi("ui/search_dialog.ui", self)
+
+        self.parent = parent
 
         self.ui.pushButton_search.clicked.connect(self.search)
         self.ui.pushButton_clear.clicked.connect(self.clearForm)
@@ -75,7 +80,7 @@ class DocSearchDialog(QDialog):
                 "=", "cfp_doc.unit", self.ui.lineEdit_unit.text())
             self.doc_search_model.andFilterWhere(
                 "BETWEEN", "cfp_docyears.year", self.ui.lineEdit_year_from.text(), self.ui.lineEdit_year_to.text())
-        # flags group   
+        # flags group
         if self.ui.groupBox_flags.isChecked():
             if self.ui.checkBox_flaghard.checkState() == Qt.Checked:
                 mode = "STRICT"
@@ -87,7 +92,10 @@ class DocSearchDialog(QDialog):
 
         self.doc_search_model.refresh()
 
-        self.ui.treeView_docs.setModel(self.doc_search_model)
+        self.proxy_model = QSortFilterProxyModel()
+        self.proxy_model.setSourceModel(self.doc_search_model)
+
+        self.ui.treeView_docs.setModel(self.proxy_model)
 
         self.ui.treeView_docs.resizeColumnToContents(0)
         self.ui.treeView_docs.hideColumn(1)
@@ -105,3 +113,28 @@ class DocSearchDialog(QDialog):
         self.ui.treeView_docs.setColumnWidth(13, 200)
         self.ui.treeView_docs.hideColumn(15)
         self.ui.treeView_docs.setColumnWidth(16, 300)
+
+        self.ui.treeView_docs.doubleClicked.connect(self.viewDocDialog)
+
+        self.setStatus()
+
+    def setStatus(self):
+        rows = self.doc_search_model.rowCount()
+        status_text = "Найдено результатов: %s" % rows
+        if rows > 499:
+            status_text += ". \
+Количество результатов ограничено до 500, уточните параметры поиска!"
+        self.ui.label_status.setText(status_text)
+
+    def viewDocDialog(self):
+        proxy_index = self.ui.treeView_docs.currentIndex()
+        index = self.proxy_model.mapToSource(proxy_index)
+        doc_id = self.doc_search_model.data(
+            self.doc_search_model.index(index.row(), 1))  # `id` column is 1
+
+        doc_model = DocModel()
+        doc_model.setFilter("cfp_doc.id=%s" % doc_id)
+        doc_model.select()
+
+        docview_dialog = DocViewDialog(self.parent, doc_model, 0)
+        res = docview_dialog.exec()

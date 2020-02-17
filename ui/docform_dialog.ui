@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>480</width>
+    <width>408</width>
     <height>512</height>
    </rect>
   </property>
@@ -201,6 +201,12 @@
              <width>16777215</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
+           <property name="showDropIndicator" stdset="0">
+            <bool>false</bool>
            </property>
           </widget>
          </item>

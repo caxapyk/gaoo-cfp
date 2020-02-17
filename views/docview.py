@@ -36,6 +36,7 @@ class DocView(View):
         self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tree_view.customContextMenuRequested.connect(
             self.showContextMenu)
+        self.tree_view.doubleClicked.connect(self.viewDocDialog)
 
         v_layout.addWidget(self.tree_view)
 
@@ -101,7 +102,6 @@ class DocView(View):
         self.c_menu.clear()
 
         if index.isValid():
-            self.c_menu.addAction(self.parent.doc_open)
             self.c_menu.addAction(self.parent.doc_update)
             self.c_menu.addAction(self.parent.doc_remove)
         else:

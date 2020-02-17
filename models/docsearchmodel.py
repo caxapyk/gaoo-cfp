@@ -10,7 +10,7 @@ class DocSearchModel(QSqlQueryModel):
 
         self.__filter_str__ = ""
 
-    def data(self, index, role):
+    def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return None
 
@@ -74,8 +74,6 @@ class DocSearchModel(QSqlQueryModel):
 
         query += " LIMIT 500"
 
-        print(query)
-
         sql_query = QSqlQuery()
         sql_query.prepare(query)
 
@@ -127,7 +125,11 @@ class DocSearchModel(QSqlQueryModel):
                         cond = ">= %s" % value
                     elif len(value) == 0 and len(value2) > 0:
                         cond = "<= %s" % value2
-                    a_filter += "EXISTS (SELECT cfp_docyears.year FROM cfp_docyears WHERE cfp_doc.id = cfp_docyears.doc_id AND cfp_docyears.year %s)" % cond
+                    a_filter += "EXISTS \
+                    (SELECT cfp_docyears.year \
+                    FROM cfp_docyears \
+                    WHERE cfp_doc.id = cfp_docyears.doc_id \
+                    AND cfp_docyears.year %s)" % cond
         elif op == "EXISTS":
             if field == "cfp_docflag.id":
                 if len(value) > 0:
@@ -159,16 +161,14 @@ class DocSearchModel(QSqlQueryModel):
                     FROM cfp_docflag \
                     LEFT JOIN cfp_docflags ON cfp_docflag.id = cfp_docflags.docflag_id \
                     WHERE cfp_doc.id = cfp_docflags.doc_id) IS NULL"
-        
+
         if len(a_filter) > 0 and len(self.filter()) > 0:
             a_filter = " AND " + a_filter
 
         self.appendFilter(a_filter)
-    
+
     def filter(self):
         return self.__filter_str__
 
     def appendFilter(self, filter_str):
         self.__filter_str__ += filter_str
-
-

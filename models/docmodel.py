@@ -155,34 +155,42 @@ class DocModel(QSqlRelationalTableModel):
             return False
 
     def locality(self):
-        query = "SELECT \
-        cfp_church.id AS `cfp_church.id`, \
-        cfp_church.name AS `cfp_church.name`, \
-        cfp_gubernia.name AS `cfp_gubernia.name`, \
-        cfp_uezd.name AS `cfp_uezd.name`, \
-        cfp_locality.name AS `cfp_locality.name` \
-        FROM cfp_church \
-        LEFT JOIN cfp_locality ON cfp_church.locality_id = cfp_locality.id \
-        LEFT JOIN cfp_uezd ON cfp_locality.uezd_id = cfp_uezd.id \
-        LEFT JOIN cfp_gubernia ON cfp_uezd.gub_id = cfp_gubernia.id \
-        WHERE cfp_church.id=%s" % self.churchId()
+        if self.rowCount() > 0:
+            # used in search model
+            if self.churchId():
+                churchId = self.churchId()
+            else:
+                churchId = self.record(0).value("cfp_doc.church_id")
 
-        sql_query = QSqlQuery()
-        sql_query.prepare(query)
+            query = "SELECT \
+            cfp_church.id AS `cfp_church.id`, \
+            cfp_church.name AS `cfp_church.name`, \
+            cfp_gubernia.name AS `cfp_gubernia.name`, \
+            cfp_uezd.name AS `cfp_uezd.name`, \
+            cfp_locality.name AS `cfp_locality.name` \
+            FROM cfp_church \
+            LEFT JOIN cfp_locality ON cfp_church.locality_id = cfp_locality.id \
+            LEFT JOIN cfp_uezd ON cfp_locality.uezd_id = cfp_uezd.id \
+            LEFT JOIN cfp_gubernia ON cfp_uezd.gub_id = cfp_gubernia.id \
+            WHERE cfp_church.id=%s" % churchId
 
-        if not sql_query.exec_():
-            print(sql_query.lastError().text())
-            return None
+            sql_query = QSqlQuery()
+            sql_query.prepare(query)
 
-        sql_query.last()
+            if not sql_query.exec_():
+                print(sql_query.lastError().text())
+                return None
 
-        val = "%s, %s, %s, %s" % (
-            sql_query.value("cfp_gubernia.name"),
-            sql_query.value("cfp_uezd.name"),
-            sql_query.value("cfp_locality.name"),
-            sql_query.value("cfp_church.name"))
+            sql_query.last()
 
-        return val
+            val = "%s, %s, %s, %s" % (
+                sql_query.value("cfp_gubernia.name"),
+                sql_query.value("cfp_uezd.name"),
+                sql_query.value("cfp_locality.name"),
+                sql_query.value("cfp_church.name"))
+
+            return val
+        return ""
 
     def getItemId(self, row):
         if row is not None and row <= self.rowCount():

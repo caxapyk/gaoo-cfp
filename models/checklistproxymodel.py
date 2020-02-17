@@ -10,6 +10,7 @@ class CheckListProxyModel(QAbstractListModel):
         self.column = 0
 
         self.__idx__ = []
+        self.__readOnly__ = False
 
         self.refresh()
 
@@ -51,7 +52,7 @@ class CheckListProxyModel(QAbstractListModel):
         return ",".join(str(x) for x in data)
 
     def setData(self, index, value, role):
-        if role == Qt.CheckStateRole:
+        if role == Qt.CheckStateRole and not self.__readOnly__:
             if value == Qt.Checked:
                 self.__idx__.append(index)
                 return True
@@ -66,3 +67,6 @@ class CheckListProxyModel(QAbstractListModel):
     def reset(self):
         self.__idx__.clear()
         self.modelReset.emit()
+
+    def setReadOnly(self, value):
+        self.__readOnly__ = value

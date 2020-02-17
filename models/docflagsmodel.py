@@ -15,6 +15,7 @@ class DocFlagsModel(DocflagModel):
         super().select()
 
         self.__data = {}
+        self.__readOnly__ = False
 
         while self.query().next():
             v_id = self.query().value("id")
@@ -42,7 +43,7 @@ class DocFlagsModel(DocflagModel):
         return super().data(index, role)
 
     def setData(self, index, value, role):
-        if role == Qt.CheckStateRole:
+        if role == Qt.CheckStateRole and not self.__readOnly__:
             v_name = super().record(index.row()).value("name")
             v_id = super().record(index.row()).value("id")
 
@@ -92,3 +93,6 @@ class DocFlagsModel(DocflagModel):
 
     def setDoc(self, doc_id):
         self.doc_id = doc_id
+
+    def setReadOnly(self, value):
+        self.__readOnly__ = value
