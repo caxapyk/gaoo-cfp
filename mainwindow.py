@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QMainWindow, QMessageBox, QWidget, QToolBar, QStatu
 from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
 from PyQt5.uic import loadUi
 
-from dialogs import (DoctypeDialog, DocflagDialog, DbSettingsDialog, DocSearchDialog)
+from dialogs import (DoctypeDialog, DocflagDialog, FundDialog, DbSettingsDialog, DocSearchDialog)
 from views import (GEOView, DocView)
 from models import ChurchModel
 
@@ -108,6 +108,12 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self.doc_refresh)
 
         cat_menu = menubar.addMenu("Cправочники")
+        
+        fund_action = cat_menu.addAction("Фонды")
+        fund_action.triggered.connect(self.openFundDialog)
+
+        cat_menu.addSeparator()
+
         doctype_action = cat_menu.addAction(
             QIcon(":/icons/doctype-16.png"), "Виды документов")
         doctype_action.triggered.connect(self.openDoctypeDialog)
@@ -195,6 +201,10 @@ class MainWindow(QMainWindow):
     def openDocflagDialog(self):
         docflag_dialog = DocflagDialog(self)
         docflag_dialog.show()
+
+    def openFundDialog(self):
+        fund_dialog = FundDialog(self)
+        fund_dialog.show()
 
     def openDocSearchDialog(self):
         search_dialog = DocSearchDialog()

@@ -1,5 +1,6 @@
 from .checklistproxymodel import CheckListProxyModel
 from .comboproxymodel import ComboProxyModel
+from .fundmodel import FundModel
 from .geobasemodel import GEOBaseModel
 from .guberniamodel import GuberniaModel
 from .uezdmodel import UezdModel
