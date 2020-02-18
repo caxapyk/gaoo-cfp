@@ -142,11 +142,12 @@ class MainWindow(QMainWindow):
         toolbar = QToolBar(self)
 
         toolbar.addAction(self.doc_create)
+        toolbar.addSeparator()
         toolbar.addAction(self.doc_update)
         toolbar.addAction(self.doc_remove)
-        toolbar.addAction(self.doc_refresh)
         toolbar.addSeparator()
         toolbar.addAction(self.doc_search)
+        toolbar.addAction(self.doc_refresh)
 
         toolbar.addWidget(self.filter_panel)
 

@@ -19,11 +19,11 @@ class DocSearchModel(QSqlQueryModel):
             if index.column() == 0:
                 return index.row() + 1
 
-            elif index.column() == 11:
+            elif index.column() == 12:
                 rec = self.record(index.row())
 
                 storage_unit = "Ф. %s Оп. %s Д. %s" % (
-                    rec.value("cfp_doc.fund"),
+                    rec.value("cfp_fund.name"),
                     rec.value("cfp_doc.inventory"),
                     rec.value("cfp_doc.unit"))
 
@@ -37,10 +37,11 @@ class DocSearchModel(QSqlQueryModel):
         cfp_gubernia.name AS `cfp_gubernia.name`, \
         cfp_uezd.name AS `cfp_uezd.name`, \
         cfp_locality.name AS `cfp_locality.name`, \
+        cfp_church.id AS `cfp_church.id`, \
         cfp_church.name AS `cfp_church.name`, \
         cfp_doctype.name AS `cfp_doctype.name`, \
         (SELECT GROUP_CONCAT(cfp_docyears.year ORDER BY cfp_docyears.year SEPARATOR '/') FROM cfp_docyears WHERE cfp_docyears.doc_id = cfp_doc.id) AS years, \
-        cfp_doc.fund AS `cfp_doc.fund`, \
+        cfp_fund.name AS `cfp_fund.name`, \
         cfp_doc.inventory AS `cfp_doc.inventory`, \
         cfp_doc.unit AS `cfp_doc.unit`, \
         cfp_doc.sheets AS `cfp_doc.sheets`, \
@@ -51,12 +52,13 @@ class DocSearchModel(QSqlQueryModel):
         LEFT JOIN cfp_locality ON cfp_church.locality_id = cfp_locality.id \
         LEFT JOIN cfp_uezd ON cfp_locality.uezd_id = cfp_uezd.id \
         LEFT JOIN cfp_gubernia ON cfp_uezd.gub_id = cfp_gubernia.id \
-        LEFT JOIN cfp_doctype ON cfp_doc.doctype_id=cfp_doctype.id"
+        LEFT JOIN cfp_doctype ON cfp_doc.doctype_id=cfp_doctype.id \
+        LEFT JOIN cfp_fund ON cfp_doc.fund_id=cfp_fund.id"
 
         if len(self.filter()) > 0:
             query += " WHERE " + self.filter()
 
-        query += " LIMIT 500"
+        query += " ORDER BY cfp_doc.id LIMIT 500"
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)
@@ -77,16 +79,17 @@ class DocSearchModel(QSqlQueryModel):
         self.setHeaderData(2, Qt.Horizontal, "Губерния")
         self.setHeaderData(3, Qt.Horizontal, "Уезд")
         self.setHeaderData(4, Qt.Horizontal, "Населенный пункт")
-        self.setHeaderData(5, Qt.Horizontal, "Наименование церкви")
-        self.setHeaderData(6, Qt.Horizontal, "Тип документа")
-        self.setHeaderData(7, Qt.Horizontal, "Годы документов")
-        self.setHeaderData(8, Qt.Horizontal, "Фонд")
-        self.setHeaderData(9, Qt.Horizontal, "Опись")
-        self.setHeaderData(10, Qt.Horizontal, "Дело")
-        self.setHeaderData(11, Qt.Horizontal, "Шифр (основание)")  # inserted
-        self.setHeaderData(12, Qt.Horizontal, "Кол.-во листов")
-        self.setHeaderData(13, Qt.Horizontal, "Примечание")
-        self.setHeaderData(14, Qt.Horizontal, "Комментарий")
+        self.setHeaderData(5, Qt.Horizontal, "ID церкви")
+        self.setHeaderData(6, Qt.Horizontal, "Наименование церкви")
+        self.setHeaderData(7, Qt.Horizontal, "Тип документа")
+        self.setHeaderData(8, Qt.Horizontal, "Годы документов")
+        self.setHeaderData(9, Qt.Horizontal, "Фонд")
+        self.setHeaderData(10, Qt.Horizontal, "Опись")
+        self.setHeaderData(11, Qt.Horizontal, "Дело")
+        self.setHeaderData(12, Qt.Horizontal, "Шифр")  # inserted
+        self.setHeaderData(13, Qt.Horizontal, "Кол.-во листов")
+        self.setHeaderData(14, Qt.Horizontal, "Примечание")
+        self.setHeaderData(15, Qt.Horizontal, "Комментарий")
 
     def andFilterWhere(self, op, field, value, value2=""):
         a_filter = ""

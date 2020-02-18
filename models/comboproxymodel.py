@@ -20,7 +20,7 @@ class ComboProxyModel(QAbstractListModel):
     def rowCount(self, parent):
         return self.parent.rowCount() + 1
 
-    def data(self, index, role):
+    def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return None
 

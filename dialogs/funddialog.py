@@ -8,7 +8,6 @@ class FundDialog(ListViewDialog):
         self.setWindowTitle("Справочник [Фонды]")
 
         model = FundModel()
-        model.setEditStrategy(FundModel.OnFieldChange)
         model.select()
 
         self.setModel(model)

@@ -1,17 +1,14 @@
 from .listviewdialog import ListViewDialog
-from models import (DoctypeModel, DefaultItemProxyModel)
+from models import DoctypeModel
 
 
 class DoctypeDialog(ListViewDialog):
-    def __init__(self, parent):
+    def __init__(self, parent, model=None):
         super(DoctypeDialog, self).__init__(parent)
         self.setWindowTitle("Справочник [Виды документов]")
 
-        model = DoctypeModel()
-        model.setEditStrategy(DoctypeModel.OnFieldChange)
-        model.select()
+        if not model:
+            model = DoctypeModel()
+            model.select()
 
-        list_model = DefaultItemProxyModel(2)
-        list_model.setSourceModel(model)
-
-        self.setModel(list_model)
+        self.setModel(model, 2)

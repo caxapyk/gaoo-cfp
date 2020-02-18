@@ -1,12 +1,13 @@
-from PyQt5.Qt import Qt
+from PyQt5.Qt import (Qt, QRegExp)
 from PyQt5.QtWidgets import (QDialog, QWidget, QDialogButtonBox,
-                             QMessageBox, QLineEdit, QComboBox, QGroupBox)
+                             QMessageBox, QLineEdit, QComboBox, QGroupBox, QCompleter)
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import (QModelIndex, QItemSelection,
                           QItemSelectionModel, QSortFilterProxyModel)
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import (QIcon,  QRegExpValidator)
+from PyQt5.QtSql import QSqlTableModel
 from models import (ComboProxyModel, CheckListProxyModel, GuberniaModel,
-                    DoctypeModel, DocflagModel, DocSearchModel, DocModel)
+                    DoctypeModel, DocflagModel, DocSearchModel, DocModel, FundModel, ChurchModel)
 from dialogs import DocViewDialog
 
 
@@ -30,25 +31,41 @@ class DocSearchDialog(QDialog):
         self.doctype_cp_model.setModelColumn(1)
         self.ui.comboBox_doctype.setModel(self.doctype_cp_model)
 
+        self.fund_model = FundModel()
+        self.fund_cp_model = ComboProxyModel(self.fund_model)
+        self.fund_cp_model.setModelColumn(1)
+        self.ui.comboBox_fund.setModel(self.fund_cp_model)
+
         self.docflag_model = DocflagModel()
         self.doctype_clp_model = CheckListProxyModel(self.docflag_model)
         self.doctype_clp_model.setModelColumn(1)
         self.ui.listView_docflag.setModel(self.doctype_clp_model)
 
-    def clearForm(self):
-        result = QMessageBox().critical(
-            self, "Поиск документов",
-            "Вы уверены, что хотите очистить параметры поиска?",
-            QMessageBox.Cancel | QMessageBox.Yes)
+        # geo completers
+        geo_tables = {
+            "cfp_church": self.ui.lineEdit_church,
+            "cfp_uezd": self.ui.lineEdit_uezd,
+            "cfp_locality": self.ui.lineEdit_locality}
 
-        if result == QMessageBox.Yes:
-            self.ui.comboBox_gubernia.setCurrentIndex(0)
-            self.ui.comboBox_doctype.setCurrentIndex(0)
+        for gt in geo_tables.items():
+            geo_model = QSqlTableModel()
+            geo_model.setTable(gt[0])
+            geo_model.select()
 
-            for widget in self.ui.findChildren(QLineEdit):
-                widget.clear()
+            geo_completer = QCompleter(self)
+            geo_completer.setModel(geo_model)
+            geo_completer.setCompletionColumn(2)
+            geo_completer.setCaseSensitivity(Qt.CaseInsensitive)
 
-            self.ui.listView_docflag.model().reset()
+            widget = gt[1]
+            widget.setCompleter(geo_completer)
+
+        # set validators on year lineEdits
+        year_regex = QRegExp("\\d{4,4}")
+        self.ui.lineEdit_year_from.setValidator(QRegExpValidator(year_regex))
+        self.ui.lineEdit_year_to.setValidator(QRegExpValidator(year_regex))
+
+        self.ui.treeView_docs.doubleClicked.connect(self.viewDocDialog)
 
     def search(self):
         self.doc_search_model = DocSearchModel()
@@ -68,8 +85,9 @@ class DocSearchDialog(QDialog):
             if self.ui.comboBox_doctype.currentIndex() > 0:
                 self.doc_search_model.andFilterWhere(
                     "=", "cfp_doctype.name", self.ui.comboBox_doctype.currentText())
-            self.doc_search_model.andFilterWhere(
-                "=", "cfp_doc.fund", self.ui.lineEdit_fund.text())
+            if self.ui.comboBox_fund.currentIndex() > 0:
+                self.doc_search_model.andFilterWhere(
+                    "=", "cfp_fund.name", self.ui.comboBox_fund.currentText())
             self.doc_search_model.andFilterWhere(
                 "=", "cfp_doc.inventory", self.ui.lineEdit_inventory.text())
             self.doc_search_model.andFilterWhere(
@@ -96,24 +114,25 @@ class DocSearchDialog(QDialog):
         self.proxy_model.setSourceModel(self.doc_search_model)
 
         self.ui.treeView_docs.setModel(self.proxy_model)
+        # disable default sorting
+        self.ui.treeView_docs.sortByColumn(-1, Qt.AscendingOrder)
 
         self.ui.treeView_docs.resizeColumnToContents(0)
         self.ui.treeView_docs.hideColumn(1)
         self.ui.treeView_docs.resizeColumnToContents(2)
         self.ui.treeView_docs.resizeColumnToContents(3)
         self.ui.treeView_docs.resizeColumnToContents(4)
-        self.ui.treeView_docs.resizeColumnToContents(5)
+        self.ui.treeView_docs.hideColumn(5)
         self.ui.treeView_docs.resizeColumnToContents(6)
         self.ui.treeView_docs.resizeColumnToContents(7)
-        self.ui.treeView_docs.hideColumn(8)
+        self.ui.treeView_docs.resizeColumnToContents(8)
         self.ui.treeView_docs.hideColumn(9)
         self.ui.treeView_docs.hideColumn(10)
-        self.ui.treeView_docs.resizeColumnToContents(11)
+        self.ui.treeView_docs.hideColumn(11)
         self.ui.treeView_docs.resizeColumnToContents(12)
         self.ui.treeView_docs.resizeColumnToContents(13)
-        self.ui.treeView_docs.setColumnWidth(14, 500)
-
-        self.ui.treeView_docs.doubleClicked.connect(self.viewDocDialog)
+        self.ui.treeView_docs.resizeColumnToContents(14)
+        self.ui.treeView_docs.setColumnWidth(15, 300)
 
         self.setStatus()
 
@@ -125,15 +144,35 @@ class DocSearchDialog(QDialog):
 Количество результатов ограничено до 500, уточните параметры поиска!"
         self.ui.label_status.setText(status_text)
 
+    def clearForm(self):
+        result = QMessageBox().critical(
+            self, "Поиск документов",
+            "Вы уверены, что хотите очистить параметры поиска?",
+            QMessageBox.Cancel | QMessageBox.Yes)
+
+        if result == QMessageBox.Yes:
+            for widget in self.ui.findChildren((QComboBox, QLineEdit)):
+                if isinstance(widget, QComboBox):
+                    widget.setCurrentIndex(0)
+                elif isinstance(widget, QLineEdit):
+                    widget.clear()
+
+            self.ui.listView_docflag.model().reset()
+
     def viewDocDialog(self):
+        print("here")
         proxy_index = self.ui.treeView_docs.currentIndex()
         index = self.proxy_model.mapToSource(proxy_index)
+
         doc_id = self.doc_search_model.data(
             self.doc_search_model.index(index.row(), 1))  # `id` column is 1
+        church_id = self.doc_search_model.data(
+            self.doc_search_model.index(index.row(), 5))  # `church_id` column is 5
 
         doc_model = DocModel()
         doc_model.setFilter("cfp_doc.id=%s" % doc_id)
+        doc_model.setChurch(church_id)
         doc_model.select()
 
         docview_dialog = DocViewDialog(self, doc_model, 0)
-        docview_dialog.show()
+        docview_dialog.exec_()

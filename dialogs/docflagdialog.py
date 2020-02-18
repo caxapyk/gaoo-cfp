@@ -1,5 +1,5 @@
 from .listviewdialog import ListViewDialog
-from models import (DocflagModel, DefaultItemProxyModel)
+from models import DocflagModel
 
 
 class DocflagDialog(ListViewDialog):
@@ -9,10 +9,6 @@ class DocflagDialog(ListViewDialog):
             "Справочник [Метки документов (примечания)]")
 
         model = DocflagModel()
-        model.setEditStrategy(DocflagDialog.OnFieldChange)
         model.select()
 
-        list_model = DefaultItemProxyModel(2)
-        list_model.setSourceModel(model)
-
-        self.setModel(list_model)
+        self.setModel(model, 2)

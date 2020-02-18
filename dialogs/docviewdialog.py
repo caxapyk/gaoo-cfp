@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import (
-    QWidget, QDialogButtonBox, QComboBox, QLineEdit, QSpinBox, QListView, QTextEdit, QPlainTextEdit)
+from PyQt5.QtWidgets import (QWidget, QDialogButtonBox, QComboBox,
+                             QLineEdit, QSpinBox, QListView, QTextEdit, QPlainTextEdit, QPushButton)
 from dialogs import DocFormDialog
 
 
@@ -9,14 +9,19 @@ class DocViewDialog(DocFormDialog):
 
         self.setWindowTitle("Просмотр документа [%s]" % super().storageUnit())
         for widget in self.ui.tabWidget.findChildren(
-                (QComboBox, QLineEdit, QSpinBox, QTextEdit, QPlainTextEdit)):
+                (QComboBox,
+                    QLineEdit,
+                    QSpinBox,
+                    QTextEdit,
+                    QPlainTextEdit,
+                    QPushButton)):
             if isinstance(widget, QComboBox):
                 widget.setDisabled(True)
+            elif isinstance(widget, QPushButton):
+                widget.hide()
             else:
                 widget.setReadOnly(True)
 
         self.flags_model.setReadOnly(True)
 
-        self.ui.yearInsert_pushButton.hide()
-        self.ui.yearRemove_pushButton.hide()
         self.ui.buttonBox.button(QDialogButtonBox.Save).hide()

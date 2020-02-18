@@ -4,8 +4,8 @@ from PyQt5.QtWidgets import (
     QDialog, QDialogButtonBox, QDataWidgetMapper, QMessageBox)
 from PyQt5.QtGui import (QIcon, QRegExpValidator)
 from PyQt5.uic import loadUi
-
 from models import (DocFlagsModel, DocYearsModel)
+from .doctypedialog import DoctypeDialog
 from .yearitemdelegate import YearItemDelegate
 
 
@@ -27,7 +27,6 @@ class DocFormDialog(QDialog):
         self.ui.buttonBox.rejected.connect(self.reject)
 
         # set validators
-        self.ui.fund_lineEdit.setValidator(QRegExpValidator(self.regex))
         self.ui.inventory_lineEdit.setValidator(QRegExpValidator(self.regex))
         self.ui.unit_lineEdit.setValidator(QRegExpValidator(self.regex))
 
@@ -54,6 +53,15 @@ class DocFormDialog(QDialog):
 
         self.ui.doctype_comboBox.setModel(self.doctype_model)
         self.ui.doctype_comboBox.setModelColumn(1)
+
+        self.ui.pushButton_doctype_dlg.clicked.connect(self.doctypeDialog)
+
+        # fund model
+        self.fund_model = self.doc_model.relationModel(3)
+        self.fund_model.dataChanged.connect(self.formChanged)
+
+        self.ui.fund_comboBox.setModel(self.fund_model)
+        self.ui.fund_comboBox.setModelColumn(1)
 
         # years
         years_list = self.doc_model.docYears(self.m_row)
@@ -83,7 +91,7 @@ class DocFormDialog(QDialog):
 
         # set triggers to doc_model form changed
         self.ui.doctype_comboBox.currentIndexChanged.connect(self.formChanged)
-        self.ui.fund_lineEdit.textChanged.connect(self.formChanged)
+        self.ui.fund_comboBox.currentIndexChanged.connect(self.formChanged)
         self.ui.inventory_lineEdit.textChanged.connect(self.formChanged)
         self.ui.unit_lineEdit.textChanged.connect(self.formChanged)
         self.ui.sheet_spinBox.valueChanged.connect(self.formChanged)
@@ -91,8 +99,21 @@ class DocFormDialog(QDialog):
 
     def storageUnit(self):
         storage_unit = self.doc_model.data(
-            self.doc_model.index(self.m_row, 10))
+            self.doc_model.index(self.m_row, 11))
         return storage_unit
+
+    def doctypeDialog(self):
+        doctype_dialog = DoctypeDialog(self, self.doctype_model)
+        result = doctype_dialog.exec_()
+
+        if result == DoctypeDialog.Accepted:
+            current_index = self.ui.doctype_comboBox.currentIndex()
+            dlg_index = doctype_dialog.ui.listView.currentIndex()
+
+            if dlg_index.row() >= 0:
+                current_index = dlg_index.row()
+
+            self.ui.doctype_comboBox.setCurrentIndex(current_index)
 
     def map(self):
         if self.m_row is not None:
@@ -109,8 +130,8 @@ class DocFormDialog(QDialog):
             dt_name_field = self.doc_model.fieldIndex("cfp_doctype.name")
             self.mapper.addMapping(self.ui.doctype_comboBox, dt_name_field)
 
-            doc_fund_field = self.doc_model.fieldIndex("cfp_doc.fund")
-            self.mapper.addMapping(self.ui.fund_lineEdit, doc_fund_field)
+            doc_fund_field = self.doc_model.fieldIndex("cfp_fund.name")
+            self.mapper.addMapping(self.ui.fund_comboBox, doc_fund_field)
 
             doc_inv_field = self.doc_model.fieldIndex("cfp_doc.inventory")
             self.mapper.addMapping(self.ui.inventory_lineEdit, doc_inv_field)
@@ -149,9 +170,7 @@ class DocFormDialog(QDialog):
         self.ui.buttonBox.button(QDialogButtonBox.Save).setDisabled(False)
 
     def validateForm(self):
-        if not self.ui.fund_lineEdit.hasAcceptableInput():
-            return False
-        elif not self.ui.inventory_lineEdit.hasAcceptableInput():
+        if not self.ui.inventory_lineEdit.hasAcceptableInput():
             return False
         elif not self.ui.unit_lineEdit.hasAcceptableInput():
             return False
@@ -176,12 +195,16 @@ class DocFormDialog(QDialog):
                 self.ui.doctype_comboBox.currentIndex(), 0)
             doctype_id = self.doctype_model.data(doctype_index)
 
+            fund_index = self.fund_model.index(
+                self.ui.fund_comboBox.currentIndex(), 0)
+            fund_id = self.fund_model.data(fund_index)
+
             record = self.doc_model.record()
             # remove id field
             record.remove(0)
             record.setValue("cfp_doc.church_id", self.doc_model.churchId())
             record.setValue("cfp_doctype.name", doctype_id)
-            record.setValue("cfp_doc.fund", self.ui.fund_lineEdit.text())
+            record.setValue("cfp_fund.name", fund_id)
             record.setValue("cfp_doc.inventory",
                             self.ui.inventory_lineEdit.text())
             record.setValue("cfp_doc.unit", self.ui.unit_lineEdit.text())
@@ -195,9 +218,10 @@ class DocFormDialog(QDialog):
                 self.m_row = self.doc_model.rowCount() - 1
                 self.map()
             else:
+                print(self.doc_model.lastError().text())
                 QMessageBox().critical(
                     self, "Редактирование/Создание документа",
-                    "Не удалось сохранить документ!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
+                    "Не удалось сохранить документ!\nВозможно у Вас недостаточно привилегий", QMessageBox.Ok)
                 return False
         else:
             self.mapper.submit()

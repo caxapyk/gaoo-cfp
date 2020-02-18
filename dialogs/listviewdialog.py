@@ -2,87 +2,119 @@ from PyQt5.Qt import Qt
 from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QMessageBox)
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import (QModelIndex, QItemSelection, QItemSelectionModel)
+from models import DefaultItemProxyModel
 
 
 class ListViewDialog(QDialog):
 
+    NO_DEFAULT_COLUMN = -1
+
     def __init__(self, parent):
         super(ListViewDialog, self).__init__(parent)
-        ui = loadUi("ui/listview_dialog.ui", self)
+        self.ui = loadUi("ui/listview_dialog.ui", self)
 
-        ui.pushButton_create.clicked.connect(self.insertAction)
-        ui.pushButton_remove.clicked.connect(self.removeAction)
-        ui.pushButton_edit.clicked.connect(self.editAction)
-        ui.listView_doctype.pressed.connect(self.setButtonState)
-        ui.buttonBox.rejected.connect(self.closeAction)
+        self.ui.pushButton_create.clicked.connect(self.insertAction)
+        self.ui.pushButton_remove.clicked.connect(self.removeAction)
+        self.ui.pushButton_edit.clicked.connect(self.editAction)
+        self.ui.listView.pressed.connect(self.setButtonState)
+        self.ui.buttonBox.rejected.connect(self.reject)
+        self.ui.buttonBox.accepted.connect(self.accept)
 
         self.model = None
-        self.ui = ui
 
         self.setButtonState()
 
-    def setModel(self, model):
+    def setModel(self, model, col=-1):
+        """
+        col (int) need if model have default items,
+        col means column in database
+        """
         self.model = model
+        self.model.setEditStrategy(model.OnRowChange)
+
+        if col != self.NO_DEFAULT_COLUMN:
+            # model with default items
+            proxy_model = DefaultItemProxyModel(col)
+            proxy_model.setSourceModel(self.model)
+
         self.model.dataChanged.connect(self.dataChangedAction)
 
-        self.ui.listView_doctype.setModel(self.model)
-        self.ui.listView_doctype.setModelColumn(1)
+        self.ui.listView.setModel(self.model)
+        self.ui.listView.setModelColumn(1)
 
     def insertAction(self):
         total = self.model.rowCount()
-        column = self.listView_doctype.modelColumn()
+        column = self.ui.listView.modelColumn()
 
         self.model.insertRow(total)
 
-        index = self.model.index(total, column, QModelIndex())
+        index = self.model.index(total, column,)
         self.model.setData(index, "Новая запись", Qt.EditRole)
 
-        self.model.submit()
+        if self.model.submit():
+            selection = QItemSelection()
+            selection.select(index, index)
+            self.ui.listView.selectionModel().select(
+                selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear)
 
-        selection = QItemSelection()
-        selection.select(index, index)
-        self.ui.listView_doctype.selectionModel().select(
-            selection, QItemSelectionModel.Rows | QItemSelectionModel.Select | QItemSelectionModel.Clear)
+            self.setButtonState()
 
-        self.setButtonState()
-
-        # edit new item
-        self.ui.listView_doctype.edit(index)
+            # edit new item
+            self.ui.listView.edit(index)
+        else:
+            self.model.removeRow(index.row())
+            QMessageBox().critical(self, "Удаление объекта",
+                "Не удалось создать объект!\nДублирование записи с одинаковым имененем или возможно у Вас недостаточно привилегий.",
+                QMessageBox.Ok)
 
     def removeAction(self):
-        idx = self.listView_doctype.selectedIndexes()
-        if idx:
+        idx = self.ui.listView.selectedIndexes()
+        if len(idx) > 0:
+            index = idx[0]
             result = QMessageBox().critical(
                 self, "Удаление объекта",
-                "Вы уверены что хотите удалить \"%s\"?" % idx[0].data(),
+                "Вы уверены что хотите удалить \"%s\"?" % index.data(),
                 QMessageBox.No | QMessageBox.Yes)
 
             if result == QMessageBox.Yes:
-                column = self.listView_doctype.modelColumn()
-                self.model.removeRows(idx[0].row(), column, QModelIndex())
+                del_result = self.model.removeRow(index.row())
 
-                if not self.model.removeRows(idx[0].row(), column, QModelIndex()):
+                if del_result:
+                    self.ui.listView.setRowHidden(index.row(), True)
+                else:
                     QMessageBox().critical(self, "Удаление объекта",
-                                           "Не удалось удалить объект!\nПроверьте нет ли связей с другими объектами",
+                                           "Не удалось удалить объект!\n\nПроверьте нет ли связей с другими объектами или возможно у Вас недостаточно привилегий.",
                                            QMessageBox.Ok)
-
-                self.model.sourceModel().select()
-
                 self.setButtonState()
 
     def editAction(self):
-        idx = self.listView_doctype.selectedIndexes()
+        idx = self.ui.listView.selectedIndexes()
         if idx:
-            self.ui.listView_doctype.edit(idx[0])
+            self.ui.listView.edit(idx[0])
 
     def dataChangedAction(self):
         self.ui.buttonBox.button(QDialogButtonBox.Cancel).setDisabled(True)
 
+    def saveAction(self):
+        if self.model.submitAll():
+            self.model.select()
+            self.ui.buttonBox.button(QDialogButtonBox.Apply).setDisabled(True)
+            return True
+        else:
+            row = 0
+            while row < self.model.rowCount():
+                if self.ui.listView.isRowHidden(row):
+                    self.ui.listView.setRowHidden(row, False)
+                row += 1
+            self.model.revertAll()
+            QMessageBox().critical(self, "Сохранение объектов справочника",
+                                   "Не удалось сохранить объекты справочника!\n\nВозможно у Вас недостаточно привилегий.",
+                                   QMessageBox.Ok)
+        return False
+
     def setButtonState(self):
-        isSelected = len(self.listView_doctype.selectedIndexes()) > 0
+        isSelected = len(self.ui.listView.selectedIndexes()) > 0
 
         self.ui.pushButton_remove.setDisabled(not isSelected)
         self.ui.pushButton_edit.setDisabled(not isSelected)
 
-    def closeAction(self):
-        self.destroy()

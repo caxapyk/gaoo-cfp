@@ -170,7 +170,7 @@ class DocView(View):
         res = docform_dialog.exec()
 
         if res == DocFormDialog.Accepted:
-            self.model.sort(8)
+            self.model.sort(-1)
             index = self.doc_model.index(self.doc_model.rowCount() - 1, 0)
             proxy_index = self.model.mapFromSource(index)
 
