@@ -210,7 +210,7 @@ class GEOView(View):
         self.currentSortType = sort_type
 
     def insertTopItem(self):
-        if self.model.insertRows(1, 1, QModelIndex()):
+        if self.model.insertRows(0, 1, QModelIndex()):
             self.openItemEditor(QModelIndex())
         else:
             QMessageBox().critical(

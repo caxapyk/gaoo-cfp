@@ -4,8 +4,9 @@ from PyQt5.QtWidgets import (
     QDialog, QDialogButtonBox, QDataWidgetMapper, QMessageBox)
 from PyQt5.QtGui import (QIcon, QRegExpValidator)
 from PyQt5.uic import loadUi
-from models import (DocFlagsModel, DocYearsModel)
+from models import (DoctypeModel, FundModel, DocFlagsModel, DocYearsModel)
 from .doctypedialog import DoctypeDialog
+from .funddialog import FundDialog
 from .yearitemdelegate import YearItemDelegate
 
 
@@ -48,20 +49,30 @@ class DocFormDialog(QDialog):
         self.ui.locality_textEdit.setText(self.doc_model.locality())
 
         # doctype model
-        self.doctype_model = self.doc_model.relationModel(2)
+        self.doctype_model = DoctypeModel()
+        self.doctype_model.select()
         self.doctype_model.dataChanged.connect(self.formChanged)
 
         self.ui.doctype_comboBox.setModel(self.doctype_model)
         self.ui.doctype_comboBox.setModelColumn(1)
+        self.ui.doctype_comboBox.setCurrentIndex(-1)
 
-        self.ui.pushButton_doctype_dlg.clicked.connect(self.doctypeDialog)
+        self.ui.pushButton_doctype_dlg.clicked.connect(
+            lambda: self.chooseDialog(
+                DoctypeDialog(self, self.doctype_model), self.ui.doctype_comboBox))
 
         # fund model
-        self.fund_model = self.doc_model.relationModel(3)
+        self.fund_model = FundModel()
+        self.fund_model.select()
         self.fund_model.dataChanged.connect(self.formChanged)
 
         self.ui.fund_comboBox.setModel(self.fund_model)
         self.ui.fund_comboBox.setModelColumn(1)
+        self.ui.fund_comboBox.setCurrentIndex(-1)
+
+        self.ui.pushButton_fund_dlg.clicked.connect(
+            lambda: self.chooseDialog(
+                FundDialog(self, self.fund_model), self.ui.fund_comboBox))
 
         # years
         years_list = self.doc_model.docYears(self.m_row)
@@ -72,7 +83,6 @@ class DocFormDialog(QDialog):
         self.ui.year_listView.setModel(self.years_model)
 
         self.year_delegate = YearItemDelegate()
-        self.year_delegate.closeEditor.connect(self.validateYear)
         self.ui.year_listView.setItemDelegateForColumn(0, self.year_delegate)
 
         self.ui.yearInsert_pushButton.clicked.connect(self.insertYear)
@@ -102,18 +112,13 @@ class DocFormDialog(QDialog):
             self.doc_model.index(self.m_row, 11))
         return storage_unit
 
-    def doctypeDialog(self):
-        doctype_dialog = DoctypeDialog(self, self.doctype_model)
-        result = doctype_dialog.exec_()
+    def chooseDialog(self, dialog, widget):
+        #doctype_dialog = DoctypeDialog(self, self.doctype_model)
+        result = dialog.exec_()
 
-        if result == DoctypeDialog.Accepted:
-            current_index = self.ui.doctype_comboBox.currentIndex()
-            dlg_index = doctype_dialog.ui.listView.currentIndex()
-
-            if dlg_index.row() >= 0:
-                current_index = dlg_index.row()
-
-            self.ui.doctype_comboBox.setCurrentIndex(current_index)
+        if result == dialog.Accepted:
+            dlg_index = dialog.ui.listView.currentIndex()
+            widget.setCurrentIndex(dlg_index.row())
 
     def map(self):
         if self.m_row is not None:
@@ -160,23 +165,26 @@ class DocFormDialog(QDialog):
         if len(idx) > 0:
             self.years_model.removeRows(idx[0].row(), 1)
 
-    def validateYear(self, editor):
-        if not editor.hasAcceptableInput():
-            self.years_model.removeRows(self.years_model.rowCount() - 1, 1)
-
     def formChanged(self):
         self.currentChanged = True
         self.ui.buttonBox.button(QDialogButtonBox.Cancel).setDisabled(False)
         self.ui.buttonBox.button(QDialogButtonBox.Save).setDisabled(False)
 
     def validateForm(self):
-        if not self.ui.inventory_lineEdit.hasAcceptableInput():
+        if not self.ui.doctype_comboBox.currentIndex() >= 0:
+            print("d1")
+            return False
+        elif not self.ui.fund_comboBox.currentIndex() >= 0:
+            print("d2")
+            return False
+        elif not self.ui.inventory_lineEdit.hasAcceptableInput():
+            print("d3")
             return False
         elif not self.ui.unit_lineEdit.hasAcceptableInput():
+            print("d4")
             return False
         elif self.years_model.rowCount() == 0:
-            return False
-        elif self.flags_model.rowCount() == 0:
+            print("d5")
             return False
 
         return True

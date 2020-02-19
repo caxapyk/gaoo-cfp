@@ -1,7 +1,6 @@
 from PyQt5.Qt import Qt, QCursor, QRegExp
-from PyQt5.QtCore import (QModelIndex, QItemSelection,
-                          QItemSelectionModel, QSortFilterProxyModel,
-                          QSize, QModelIndex, QItemSelectionModel)
+from PyQt5.QtCore import (QModelIndex, QItemSelectionModel, QSortFilterProxyModel,
+                          QSize, QModelIndex)
 from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy,
                              QHBoxLayout, QVBoxLayout, QLineEdit,
                              QButtonGroup, QPushButton, QTreeView, QMenu,
@@ -109,7 +108,7 @@ class DocView(View):
             self.c_menu.addSeparator()
             self.c_menu.addAction(self.parent.doc_refresh)
 
-        self.c_menu.exec(
+        self.c_menu.exec_(
             self.tree_view.viewport().mapToGlobal(point))
 
     def filter(self, text):
@@ -175,8 +174,6 @@ class DocView(View):
             proxy_index = self.model.mapFromSource(index)
 
             self.tree_view.setCurrentIndex(proxy_index)
-
-            # self.model.setDynamicSortFilter(True)
 
     def docSelected(self, index):
         self.parent.doc_update.setDisabled(not index.isValid())
