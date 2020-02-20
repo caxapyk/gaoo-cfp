@@ -95,7 +95,7 @@ class GEOView(View):
 
         geo_model = SqlTreeModel(
             (gubernia, uezd, locality, church),
-            ("Территория",))
+            ("Документы (по территор. признаку)",))
 
         geo_model.select()
 
