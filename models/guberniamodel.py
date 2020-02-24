@@ -1,7 +1,7 @@
-from models import GEOBaseModel
+from models import SqlTreeBaseModel
 
 
-class GuberniaModel(GEOBaseModel):
+class GuberniaModel(SqlTreeBaseModel):
     def __init__(self):
         super(GuberniaModel, self).__init__()
         self.setTable("cfp_gubernia")

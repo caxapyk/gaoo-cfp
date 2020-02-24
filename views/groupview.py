@@ -6,60 +6,19 @@ from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy,
                              QPushButton, QTreeView, QMenu, QAction,
                              QMessageBox)
 from models import (GuberniaModel, UezdModel,
-                    LocalityModel, ChurchModel, SqlTreeModel)
+                    LocalityModel, ChurchModel, SqlTreeModel, GroupModel)
 from views import (View, GeoItemDelegate)
+from widgets import TreeSortFilter
 
 
-class GEOView(View):
+class GroupView(View):
     def __init__(self, parent):
-        super(GEOView, self).__init__(parent)
+        super(GroupView, self).__init__(parent)
 
         self.parent = parent
         self.docview = self.parent.doc_view
 
-        # 0 - sort by ID asc, 1 - sort by name asc, 2 - sort by name desc
-        self.currentSortType = 0
-        self.filtered = False
-
         # Build UI
-        filter_panel = QFrame()
-        f_layout = QHBoxLayout(filter_panel)
-        f_layout.setContentsMargins(0, 5, 0, 5)
-        f_layout.setSpacing(5)
-
-        geofilter_lineedit = QLineEdit(filter_panel)
-        geofilter_lineedit.setPlaceholderText("Фильтр по справочнику...")
-        geofilter_lineedit.textChanged.connect(self.filter)
-
-        clearfilter_btn = QPushButton(filter_panel)
-        clearfilter_btn.setIcon(QIcon(":/icons/clear-filter-16.png"))
-        clearfilter_btn.setToolTip("Сбросить фильтр")
-        clearfilter_btn.setDisabled(True)
-        clearfilter_btn.clicked.connect(self.clearFilter)
-
-        f_layout.addWidget(geofilter_lineedit)
-        f_layout.addWidget(clearfilter_btn)
-
-        sort_group = QButtonGroup(filter_panel)
-        sort_buttons = (
-            (":/icons/sort19-16.png", "Cортировка по списку заполнения"),
-            (":/icons/sort-az-16.png", "Cортировка по алфавиту \
-                (по возрастанию)"),
-            (":/icons/sort-za-16.png", "Cортировка по алфавиту (по убыванию)"),
-        )
-        for i, button in enumerate(sort_buttons):
-            sort_btn = QPushButton(filter_panel)
-            sort_btn.setIcon(QIcon(button[0]))
-            sort_btn.setToolTip(button[1])
-            sort_btn.setCheckable(True)
-            if i == 0:
-                sort_btn.setChecked(True)
-
-            sort_group.addButton(sort_btn, i)
-            f_layout.addWidget(sort_btn)
-
-        sort_group.buttonClicked[int].connect(self.sort)
-
         main = QFrame()
         v_layout = QVBoxLayout(main)
         v_layout.setContentsMargins(2, 0, 0, 0)
@@ -77,7 +36,13 @@ class GEOView(View):
 
         tree_view.setItemDelegateForColumn(0, tree_view_delegate)
 
-        v_layout.addWidget(filter_panel)
+        # tree filter
+        tree_filter = TreeSortFilter()
+        tree_filter.setMode(TreeSortFilter.SortFilterMode)
+        tree_filter.setWidget(tree_view)
+        tree_filter.setFilterPlaceHolder("Фильтр по справочнику...")
+
+        v_layout.addWidget(tree_filter)
         v_layout.addWidget(tree_view)
 
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -87,36 +52,31 @@ class GEOView(View):
 
         c_menu = QMenu(tree_view)
 
-        # set models
-        gubernia = GuberniaModel()
-        uezd = UezdModel()
-        locality = LocalityModel()
-        church = ChurchModel()
+        # set model
+        groupfolder_model = GroupModel()
 
-        geo_model = SqlTreeModel(
-            (gubernia, uezd, locality, church),
-            ("Документы (по территор. признаку)",))
-        geo_model.setModelColumn(0, 1)
-        geo_model.setModelColumn(1, 2)
-        geo_model.setModelColumn(2, 2)
-        geo_model.setModelColumn(3, 2)
+        group_model = SqlTreeModel(
+            (groupfolder_model,),
+            ("Группировки",))
 
-        geo_model.select()
+        group_model.setModelColumn(0, 2)
+
+        group_model.select()
 
         proxy_model = QSortFilterProxyModel()
-        proxy_model.setSourceModel(geo_model)
+        proxy_model.setFilterKeyColumn(0)
+        proxy_model.setSourceModel(group_model)
         # disable auto filtering
         proxy_model.setDynamicSortFilter(False)
         # set model to tree_view
         tree_view.setModel(proxy_model)
 
-        self.geofilter_lineedit = geofilter_lineedit
-        self.clearfilter_btn = clearfilter_btn
         self.tree_view = tree_view
+        self.tree_filter = tree_filter
         self.c_menu = c_menu
 
         self.model = proxy_model
-        self.geo_model = geo_model
+        self.group_model = group_model
 
         # set main ad default widget
         self.setMainWidget(main)
@@ -146,21 +106,23 @@ class GEOView(View):
                 child_name = "церковь"
 
             default_actions = (
-                (":/icons/folder-new-16.png", "Добавить %s" % child_name,
-                    self.insertItem),
+                (":/icons/folder-new-16.png", "Добавить раздел%s" % child_name,
+                    lambda: self.insertItem()),
+                (":/icons/delete-16.png", "Добавить группировку%s" % child_name,
+                    lambda: self.insertItem()),
                 (":/icons/rename-16.png", "Переименовать", self.editItem),
                 (":/icons/delete-16.png", "Удалить", self.removeItem),
             )
 
-            church_actions = (
+            group_actions = (
                 (":/icons/docs-folder-16.png", "Открыть документы",
                  lambda: self.loadDocs(index)),
                 (":/icons/rename-16.png", "Переименовать", self.editItem),
                 (":/icons/delete-16.png", "Удалить", self.removeItem),
             )
 
-            if isinstance(sql_model.model(), ChurchModel):
-                actions_list = church_actions
+            if isinstance(sql_model.model(), GuberniaModel):
+                actions_list = group_actions
             else:
                 actions_list = default_actions
 
@@ -179,39 +141,9 @@ class GEOView(View):
 
             self.c_menu.exec(QCursor.pos())
 
-    def filter(self, text):
-        self.clearfilter_btn.setDisabled((len(text) == 0))
-
-        self.tree_view.expandAll()
-
-        self.model.setRecursiveFilteringEnabled(True)
-        self.model.setFilterRegExp(
-            QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
-
-        self.model.setFilterKeyColumn(0)
-
-        self.filtered = True
-
-    def clearFilter(self):
-        if len(self.geofilter_lineedit.text()) > 0:
-            self.geofilter_lineedit.setText("")
-            self.clearfilter_btn.setDisabled(True)
-
-            self.model.invalidateFilter()
-
-            self.sort(self.currentSortType)
-
-    def sort(self, sort_type):
-        if sort_type == 0:
-            self.model.sort(-1)
-        elif sort_type == 1:
-            self.model.sort(0, Qt.AscendingOrder)
-        elif sort_type == 2:
-            self.model.sort(0, Qt.DescendingOrder)
-        else:
-            self.sort(self.currentSortType)
-
-        self.currentSortType = sort_type
+    def onEditorClosed(self):
+        if self.tree_filter.isSorted():
+            self.tree_filter.sort(self.model.sortOrder())
 
     def insertTopItem(self):
         if self.model.insertRows(0, 1, QModelIndex()):
@@ -224,11 +156,11 @@ class GEOView(View):
     def insertItem(self):
         index = self.tree_view.currentIndex()
         if index:
-            if self.filtered:
+            if self.tree_filter.isFiltered():
                 # store source model index to reload after clearFilter()
                 # because index of proxy model will be changed
                 m_index = self.model.mapToSource(index)
-                self.clearFilter()
+                self.tree_filter.clearAllFilters()
                 # restore index
                 index = self.model.mapFromSource(m_index)
                 self.tree_view.setCurrentIndex(index)
@@ -262,13 +194,10 @@ class GEOView(View):
                                            "Не удалось удалить объект!\n\nПроверьте нет ли связей с другими объектами или возможно у Вас недостаточно привилегий.",
                                            QMessageBox.Ok)
 
-    def onEditorClosed(self):
-        self.sort(self.currentSortType)
-
     def openItemEditor(self, parent):
         # map underlying model index
         geo_parent = self.model.mapToSource(parent)
-        geo_index = self.geo_model.index(self.geo_model.rowCount(
+        geo_index = self.group_model.index(self.group_model.rowCount(
             geo_parent) - 1, 0, geo_parent)
 
         # map back to proxy model

@@ -2,9 +2,9 @@ from PyQt5.QtSql import QSqlQueryModel, QSqlQuery
 from PyQt5.QtGui import QIcon
 
 
-class GEOBaseModel(QSqlQueryModel):
+class GroupBaseModel(QSqlQueryModel):
     def __init__(self):
-        super(GEOBaseModel, self).__init__()
+        super(GroupBaseModel, self).__init__()
         self.m_table = None
         self.m_parent_id = None
         self.m_fk = None
@@ -43,7 +43,11 @@ class GEOBaseModel(QSqlQueryModel):
         query = "SELECT * FROM %s" % self.m_table
 
         if self.getParentId():
-            query += " WHERE %s = ?" % self.m_fk
+            if self.getParentId() == "NULL":
+                query += " WHERE %s IS NULL" % self.m_fk
+            else:
+                query += " WHERE %s = ?" % self.m_fk
+            
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)

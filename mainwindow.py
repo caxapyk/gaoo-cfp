@@ -6,7 +6,7 @@ from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
 from PyQt5.uic import loadUi
 
 from dialogs import (DoctypeDialog, DocflagDialog, FundDialog, DbSettingsDialog, DocSearchDialog)
-from views import (GEOView, DocView)
+from views import (GEOView, GroupView, DocView)
 from models import ChurchModel
 
 
@@ -23,6 +23,8 @@ class MainWindow(QMainWindow):
         # load views
         self.doc_view = DocView(self)
         self.geo_view = GEOView(self)
+
+        self.group_view = GroupView(self)
 
         # global actions
         self.doc_search = QAction("Поиск документов")
@@ -81,7 +83,13 @@ class MainWindow(QMainWindow):
 
         # main widget
         splitter = QSplitter(self)
-        splitter.addWidget(self.geo_view.mainWidget())
+
+        splitter_tmp = QSplitter(Qt.Vertical, self)
+        splitter_tmp.addWidget(self.geo_view.mainWidget())
+        splitter_tmp.addWidget(self.group_view.mainWidget())
+
+        # splitter.addWidget(self.geo_view.mainWidget())
+        splitter.addWidget(splitter_tmp)
         splitter.addWidget(self.doc_view.mainWidget())
 
         self.setCentralWidget(splitter)
