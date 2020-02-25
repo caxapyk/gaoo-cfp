@@ -5,7 +5,6 @@ from .sqltreefixedmodel import SqlTreeFixedModel
 from .checklistproxymodel import CheckListProxyModel
 from .comboproxymodel import ComboProxyModel
 from .fundmodel import FundModel
-from .groupbasemodel import GroupBaseModel
 from .groupmodel import GroupModel
 from .guberniamodel import GuberniaModel
 from .uezdmodel import UezdModel

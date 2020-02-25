@@ -8,3 +8,4 @@ from .doctypedialog import DoctypeDialog
 from .docflagdialog import DocflagDialog
 from .dbsettingsdialog import DbSettingsDialog
 from .docsearchdialog import DocSearchDialog
+from .inputdialog import InputDialog

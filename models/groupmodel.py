@@ -7,5 +7,6 @@ class GroupModel(SqlTreeBaseModel):
         self.setParentId("NULL")
         self.setTable("cfp_group")
         self.setForeignKey('parent')
-        self.setNewItemName("Новый раздел")
+        self.setDisplayName("группировку")
+        self.setNewItemName("Новая группировка")
         self.setIconResource(":/icons/folder-16.png")

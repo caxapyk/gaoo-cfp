@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy,
                              QMessageBox)
 from models import (GuberniaModel, UezdModel,
                     LocalityModel, ChurchModel, SqlTreeModel)
-from views import (View, GeoItemDelegate)
+from views import (View, TreeItemDelegate)
 
 
 class GEOView(View):
@@ -72,7 +72,7 @@ class GEOView(View):
             self.showContextMenu)
         tree_view.doubleClicked.connect(self.loadDocs)
 
-        tree_view_delegate = GeoItemDelegate()
+        tree_view_delegate = TreeItemDelegate()
         tree_view_delegate.closeEditor.connect(self.onEditorClosed)
 
         tree_view.setItemDelegateForColumn(0, tree_view_delegate)

@@ -1,9 +1,11 @@
-from PyQt5.Qt import Qt
-from PyQt5.QtWidgets import (QDialog, QDialogButtonBox, QMessageBox)
+from PyQt5.Qt import Qt, QRegExp
+from PyQt5.QtWidgets import (
+    QDialog, QDialogButtonBox, QMessageBox, QInputDialog)
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import QModelIndex
 from models import DefaultItemProxyModel
 from .listviewdelegate import ListViewDelegate
+from .inputdialog import InputDialog
 
 
 class ListViewDialog(QDialog):
@@ -25,6 +27,7 @@ class ListViewDialog(QDialog):
         self.ui.listView.setItemDelegate(self.delegate)
 
         self.model = None
+        self.regex = QRegExp("^[(А-яA-z-0-9.,)\\s]+$")
 
         self.setButtonState()
 
@@ -48,16 +51,49 @@ class ListViewDialog(QDialog):
         self.ui.listView.setModelColumn(1)
 
     def insertAction(self):
-        total = self.model.rowCount()
-        column = self.ui.listView.modelColumn()
+        namedialog = InputDialog(self)
+        title = "Cоздание объекта"
 
-        if self.model.insertRow(total):
-            index = self.model.index(total, column)
+        val, res = namedialog.getText(
+            title, "Название", "", self.regex)
+
+        if res == InputDialog.Accepted:
+            total = self.model.rowCount()
+            column = self.ui.listView.modelColumn()
+
+            if self.model.insertRow(total):
+                index = self.model.index(total, column)
+                if (not self.model.setData(index, val)) | (not self.model.submit()):
+                    box = QMessageBox()
+                    box.critical(self, title,
+                                 "Не удалось сохранить объект!\n", QMessageBox.Ok)
+                    return False
+            else:
+                box = QMessageBox()
+                box.critical(self, title,
+                             "Не удалось сохранить объект!\n", QMessageBox.Ok)
+                return False
+
             self.listView.setCurrentIndex(index)
+            self.setButtonState()
 
-            # edit new item
-            self.ui.listView.edit(index)
+    def editAction(self):
+        index = self.ui.listView.currentIndex()
 
+        namedialog = InputDialog(self)
+        title = "Редактирование объекта"
+
+        val, res = namedialog.getText(
+            title, "Название", index.data(), self.regex)
+
+        if res == InputDialog.Accepted:
+            if (not self.model.setData(index, val)) | (not self.model.submit()):
+                box = QMessageBox()
+                box.critical(self, title,
+                             "Не удалось сохранить объект!\n", QMessageBox.Ok)
+                return False
+
+            self.listView.setCurrentIndex(index)
             self.setButtonState()
 
     def removeAction(self):
@@ -76,14 +112,10 @@ class ListViewDialog(QDialog):
                 else:
                     self.model.revert()
                     self.ui.listView.setCurrentIndex(QModelIndex())
-                    QMessageBox().critical(self, "Удаление объекта",
-                                           "Не удалось удалить объект!\n\nПроверьте нет ли связей с другими объектами или возможно у Вас недостаточно привилегий.",
-                                           QMessageBox.Ok)
+                    box = QMessageBox()
+                    box.critical(self, "Удаление объекта",
+                                 "Не удалось удалить объект!", QMessageBox.Ok)
                 self.setButtonState()
-
-    def editAction(self):
-        index = self.ui.listView.currentIndex()
-        self.ui.listView.edit(index)
 
     def dataChangedAction(self):
         self.ui.buttonBox.button(QDialogButtonBox.Cancel).setDisabled(True)

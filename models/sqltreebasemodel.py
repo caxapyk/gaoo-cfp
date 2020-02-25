@@ -9,7 +9,8 @@ class SqlTreeBaseModel(QSqlQueryModel):
         self.m_parent_id = None
         self.m_fk = None
 
-        self.diplay_name = "Новый элемент"
+        self.diplay_name = "объект"
+        self.new_item_name = "Новый объект"
         self.icon_resource = ":/icons/folder-16.png"
 
     def setTable(self, table_name):
@@ -24,11 +25,17 @@ class SqlTreeBaseModel(QSqlQueryModel):
     def setParentId(self, parent_id):
         self.m_parent_id = parent_id
 
-    def getNewItemName(self):
+    def displayName(self):
         return self.diplay_name
 
-    def setNewItemName(self, name):
+    def setDisplayName(self, name):
         self.diplay_name = name
+
+    def newItemName(self):
+        return self.new_item_name
+
+    def setNewItemName(self, name):
+        self.new_item_name = name
 
     def setForeignKey(self, fk):
         self.m_fk = fk

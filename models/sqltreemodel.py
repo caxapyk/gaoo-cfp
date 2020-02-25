@@ -253,9 +253,9 @@ class SqlTreeModel(QAbstractItemModel):
             # model.refresh()
 
         # set default name for a new item
-        el_name = model.getNewItemName()
+        el_name = model.newItemName()
 
-        result_id = model.insert(model.getNewItemName())
+        result_id = model.insert(model.newItemName())
         child_count = parent_item.childCount()
 
         if result_id:
