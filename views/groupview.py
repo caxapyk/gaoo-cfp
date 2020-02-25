@@ -1,9 +1,10 @@
-from PyQt5.Qt import Qt, QCursor
+from PyQt5.Qt import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import (QModelIndex, QSortFilterProxyModel, QSize)
-from PyQt5.QtWidgets import (QSizePolicy, QMenu)
+from PyQt5.QtWidgets import (QSizePolicy, QMenu, QFrame,QTreeView, QVBoxLayout)
 from models import (SqlTreeModel, GroupModel)
 from widgets import TreeSortFilter
+from views import (View, TreeItemDelegate)
 from .treebaseview import TreeBaseView
 
 
@@ -30,24 +31,48 @@ class GroupView(TreeBaseView):
         # disable auto filtering
         self.model.setDynamicSortFilter(False)
 
-        self.treeView().setContextMenuPolicy(Qt.CustomContextMenu)
-        self.treeView().customContextMenuRequested.connect(
+        self.main_widget = QFrame()
+        v_layout = QVBoxLayout(self.main_widget)
+        v_layout.setContentsMargins(2, 0, 0, 0)
+        v_layout.setSpacing(0)
+
+        # Build UI
+        self.tree_view = QTreeView(self.main_widget)
+        self.tree_view.setEditTriggers(QTreeView.NoEditTriggers)
+
+        tree_view_delegate = TreeItemDelegate()
+        tree_view_delegate.closeEditor.connect(self.onEditorClosed)
+
+        self.tree_view.setItemDelegateForColumn(0, tree_view_delegate)
+
+        self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree_view.customContextMenuRequested.connect(
             self.showContextMenu)
-        self.treeView().doubleClicked.connect(self.loadDocs)
+        self.tree_view.doubleClicked.connect(self.loadDocs)
+
+        # tree filter
+        self.tree_filter = TreeSortFilter()
+        self.tree_filter.setWidget(self.tree_view)
+        self.tree_filter.setFilterPlaceHolder("Фильтр по справочнику...")
+        self.tree_filter.setMode(TreeSortFilter.SortFilterMode)
+
+        v_layout.addWidget(self.tree_filter)
+        v_layout.addWidget(self.tree_view)
 
         # set model to tree_view
-        self.treeView().setModel(self.model)
-
-        self.treeFilter().setFilterPlaceHolder("Фильтр по справочнику...")
-        self.treeFilter().setMode(TreeSortFilter.SortFilterMode)
+        self.tree_view.setModel(self.model)
 
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(15)
 
-        self.mainWidget().setSizePolicy(sizePolicy)
-        self.mainWidget().setMinimumSize(QSize(250, 0))
+        self.main_widget.setSizePolicy(sizePolicy)
+        self.main_widget.setMinimumSize(QSize(250, 0))
 
-        self.context_menu = QMenu(self.treeView())
+        self.setTreeView(self.tree_view)
+        self.setTreeFilter(self.tree_filter)
+
+        # set main ad default widget
+        self.setMainWidget(self.main_widget)
 
     def loadDocs(self, index):
         index = self.model.mapToSource(index)
@@ -56,42 +81,17 @@ class GroupView(TreeBaseView):
         self.docview.loadData(sql_model.uid())
 
     def showContextMenu(self, point):
-        index = self.treeView().indexAt(point)
-
-        self.context_menu.clear()
+        index = self.tree_view.indexAt(point)
 
         if index.isValid():
-            source_index = self.model.mapToSource(index)
-            sql_model = source_index.internalPointer()
+            context_menu = self.contextMenu()
+            action_doc_open = self.context_menu.addAction("Открыть документы")
+            action_doc_open.triggered.connect(self.loadDocs)
 
-            display_name = sql_model.model().displayName()
+            context_menu.addSeparator()
 
-            actions = (
-                (None, "Открыть документы",
-                    lambda: self.loadDocs(index)),
-                (":/icons/folder-new-16.png", "Создать %s" % display_name,
-                    self.insertRow),
-                (":/icons/rename-16.png", "Переименовать", self.editRow),
-                (":/icons/delete-16.png", "Удалить", self.removeRow),
-            )
+            # disable open documents if index has childen
+            if self.model.hasChildren(index):
+                action_doc_open.setDisabled(True)
 
-            for i, action in enumerate(actions):
-                _action = self.context_menu.addAction(action[1])
-                _action.setIcon(QIcon(action[0]))
-                _action.triggered.connect(action[2])
-                if i == 0:
-                    self.context_menu.addSeparator()
-                if i == 0 and index.model().hasChildren(index):
-                    # disable open documents if index has childen
-                    _action.setDisabled(True)
-
-            self.context_menu.exec_(
-                self.treeView().viewport().mapToGlobal(point))
-
-        else:
-            ins_action = self.context_menu.addAction("Создать группировку")
-            ins_action.setIcon(QIcon(":/icons/folder-new-16.png"))
-            ins_action.triggered.connect(self.insertRow)
-
-            self.treeView().setCurrentIndex(QModelIndex())
-            self.context_menu.exec_(QCursor.pos())
+        super().showContextMenu(point)

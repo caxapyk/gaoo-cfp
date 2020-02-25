@@ -98,6 +98,8 @@ class TreeSortFilter(QFrame):
         	self.clearSort()
         	return
 
+        self.sort_group.button(order).setChecked(True)
+
         self.widget.model().sort(0, sort_order)
 
         self.__isSorted__ = True
@@ -107,13 +109,14 @@ class TreeSortFilter(QFrame):
 
     def clearSort(self):
     	if self.isSorted():
-	        self.sort_group.setExclusive(False)
-	        self.sort_group.checkedButton().setChecked(False)
-	        self.sort_group.setExclusive(True)
+            if self.sort_group.checkedButton() is not None:
+                self.sort_group.setExclusive(False)
+                self.sort_group.checkedButton().setChecked(False)
+                self.sort_group.setExclusive(True)
 
-	        self.widget.model().sort(-1)
+            self.widget.model().sort(-1)
 
-	        self.__isSorted__ = False
+            self.__isSorted__ = False
 
     def clearAllFilters(self):
         self.clearFilter()
