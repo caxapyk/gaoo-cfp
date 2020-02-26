@@ -1,10 +1,9 @@
 from PyQt5.Qt import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import (QModelIndex, QSortFilterProxyModel, QSize)
-from PyQt5.QtWidgets import (QSizePolicy, QMenu, QFrame,QTreeView, QVBoxLayout)
+from PyQt5.QtCore import (QSortFilterProxyModel, QSize)
+from PyQt5.QtWidgets import (QSizePolicy, QFrame, QTreeView, QVBoxLayout)
 from models import (SqlTreeModel, GroupModel)
 from widgets import TreeSortFilter
-from views import (View, TreeItemDelegate)
+from views import (TreeItemDelegate)
 from .treebaseview import TreeBaseView
 
 
@@ -51,7 +50,7 @@ class GroupView(TreeBaseView):
         self.tree_view.doubleClicked.connect(self.loadDocs)
 
         # tree filter
-        self.tree_filter = TreeSortFilter()
+        self.tree_filter = TreeSortFilter(self)
         self.tree_filter.setWidget(self.tree_view)
         self.tree_filter.setFilterPlaceHolder("Фильтр по справочнику...")
         self.tree_filter.setMode(TreeSortFilter.SortFilterMode)
@@ -67,9 +66,6 @@ class GroupView(TreeBaseView):
 
         self.main_widget.setSizePolicy(sizePolicy)
         self.main_widget.setMinimumSize(QSize(250, 0))
-
-        self.setTreeView(self.tree_view)
-        self.setTreeFilter(self.tree_filter)
 
         # set main ad default widget
         self.setMainWidget(self.main_widget)

@@ -1,44 +1,49 @@
-from PyQt5.Qt import Qt, QCursor
-from PyQt5.QtCore import QModelIndex
+from PyQt5.Qt import Qt, QRegExp, QCursor
+from PyQt5.QtCore import (QObject, QModelIndex, pyqtSignal)
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QFrame, QVBoxLayout, QTreeView, QMenu, QMessageBox)
+from PyQt5.QtWidgets import (QMenu, QMessageBox)
 from views import View
 
 
 class TreeBaseView(View):
+
+    treeSorted = pyqtSignal(int)
+    treeFilterCleared = pyqtSignal()
+    treeSortCleared = pyqtSignal()
+
     def __init__(self, parent):
         super(TreeBaseView, self).__init__(parent)
 
         self.parent = parent
         self.tree_view = None
-        self.tree_filter = None
+
+        self.__isFiltered__ = False
+        self.__isSorted__ = False
 
         self.context_menu = QMenu(self.tree_view)
 
     def setTreeView(self, tree_view):
         self.tree_view = tree_view
 
-    def setTreeFilter(self, tree_filter):
-        self.tree_filter = tree_filter
-
-    def isFilterSet(self):
-        return (self.tree_filter is not None)
-
     def contextMenu(self):
         return self.context_menu
 
     def onEditorClosed(self):
-        if self.isFilterSet() & self.tree_filter.isSorted():
-            self.tree_filter.sort(self.model.sortOrder())
+        if self.isSorted():
+            self.sort(self.model.sortOrder())
+
+    #
+    # CRUD
+    #
 
     def insertRow(self):
         index = self.tree_view.currentIndex()
         if index.isValid():
-            if self.isFilterSet() & self.tree_filter.isFiltered():
+            if self.isFiltered():
                 # store source model index to reload after clearAllFilters()
                 # because index of proxy model will be changed
                 m_index = self.model.mapToSource(index)
-                self.tree_filter.clearAllFilters()
+                self.clearAllFilters()
                 # restore index
                 index = self.model.mapFromSource(m_index)
                 self.tree_view.setCurrentIndex(index)
@@ -89,20 +94,25 @@ class TreeBaseView(View):
                     QMessageBox().critical(self.tree_view, "Удаление объекта",
                                            "Не удалось удалить объект!\n\nПроверьте нет ли связей с другими объектами или возможно у Вас недостаточно привилегий.",
                                            QMessageBox.Ok)
+    #
+    # CONTEXT MENU
+    #
 
     def showContextMenu(self, point):
         index = self.tree_view.indexAt(point)
 
         actions = []
 
-        if self.isFilterSet():
-            sort_actions = [
-                ("", "Сортировка по возрастанию", lambda: self.tree_filter.sort(0)),
-                ("", "Сортировка по убыванию", lambda: self.tree_filter.sort(1)),
-                ("", "Очистить сортировку", lambda: self.tree_filter.sort(3)),
-                "separator"
-            ]
-            actions.extend(sort_actions)
+        sort_actions = [
+            (":/icons/sort-az-16.png", "Сортировка по возрастанию",
+                lambda: self.sort(0)),
+            (":/icons/sort-za-16.png", "Сортировка по убыванию",
+                lambda: self.sort(1)),
+            (":/icons/delete-16.png", "Очистить сортировку",
+                lambda: self.sort(3)),
+            "separator"
+        ]
+        actions.extend(sort_actions)
 
         if index.isValid():
             source_index = self.model.mapToSource(index)
@@ -140,3 +150,60 @@ class TreeBaseView(View):
 
         self.context_menu.clear()
 
+    #
+    # SORT AND FILTER
+    #
+
+    def filter(self, text):
+        self.tree_view.expandAll()
+
+        self.model.setRecursiveFilteringEnabled(True)
+        self.model.setFilterRegExp(
+            QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
+
+        self.__isFiltered__ = True
+
+    def isFiltered(self):
+        return self.__isFiltered__
+
+    def clearFilter(self):
+        self.treeFilterCleared.emit()
+
+        self.model.invalidateFilter()
+        self.__isFiltered__ = False
+
+    def sort(self, order):
+        current_sort = self.model.sortOrder()
+
+        self.treeSorted.emit(order)
+
+        if self.isSorted() and current_sort == order:
+            self.clearSort()
+            return False
+
+        if order == 0:
+            sort_order = Qt.AscendingOrder
+        elif order == 1:
+            sort_order = Qt.DescendingOrder
+        else:
+            self.clearSort()
+            return False
+
+        self.model.sort(0, sort_order)
+
+        self.__isSorted__ = True
+
+        return True
+
+    def isSorted(self):
+        return self.__isSorted__
+
+    def clearSort(self):
+        self.treeSortCleared.emit()
+
+        self.model.sort(-1)
+        self.__isSorted__ = False
+
+    def clearAllFilters(self):
+        self.clearFilter()
+        self.clearSort()
