@@ -1,88 +1,96 @@
 from PyQt5.Qt import Qt, QRegExp, QCursor
 from PyQt5.QtCore import (QObject, QModelIndex, pyqtSignal)
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QMenu, QMessageBox)
-from views import View
+from PyQt5.QtWidgets import (QWidget, QMenu, QMessageBox, QTreeView)
+from views import (View, TreeItemDelegate)
 
 
-class TreeBaseView(View):
+class TreeBaseView(QTreeView):
 
     treeSorted = pyqtSignal(int)
     treeFilterCleared = pyqtSignal()
     treeSortCleared = pyqtSignal()
 
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super(TreeBaseView, self).__init__(parent)
 
         self.parent = parent
-        self.tree_view = None
+        # Build UI
+        #self = QTreeView()
+        self.setEditTriggers(QTreeView.NoEditTriggers)
+
+        tree_view_delegate = TreeItemDelegate()
+        tree_view_delegate.closeEditor.connect(self.onEditorClosed)
+
+        self.setItemDelegateForColumn(0, tree_view_delegate)
+
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(
+            self.showContextMenu)
 
         self.__isFiltered__ = False
         self.__isSorted__ = False
 
-        self.context_menu = QMenu(self.tree_view)
-
-    def setTreeView(self, tree_view):
-        self.tree_view = tree_view
+        self.context_menu = QMenu(self)
 
     def contextMenu(self):
         return self.context_menu
 
     def onEditorClosed(self):
         if self.isSorted():
-            self.sort(self.model.sortOrder())
+            self.sort(self.model().sortOrder())
 
     #
     # CRUD
     #
 
     def insertRow(self):
-        index = self.tree_view.currentIndex()
+        index = self.currentIndex()
         if index.isValid():
             if self.isFiltered():
                 # store source model index to reload after clearAllFilters()
                 # because index of proxy model will be changed
-                m_index = self.model.mapToSource(index)
+                m_index = self.model().mapToSource(index)
                 self.clearAllFilters()
                 # restore index
-                index = self.model.mapFromSource(m_index)
-                self.tree_view.setCurrentIndex(index)
+                index = self.model().mapFromSource(m_index)
+                self.setCurrentIndex(index)
 
             # !important: branch must be expanded before new row inserted
-            self.tree_view.setExpanded(index, True)
+            self.setExpanded(index, True)
 
-            if not self.model.insertRows(0, 1, index):
+            if not self.model().insertRows(0, 1, index):
                 QMessageBox().critical(
-                    self.tree_view, "Создание объекта",
+                    self, "Создание объекта",
                     "Не удалось создать объект!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
                 return False
         else:
-            if not self.model.insertRows(0, 1, QModelIndex()):
+            if not self.model().insertRows(0, 1, QModelIndex()):
                 QMessageBox().critical(
-                    self.tree_view, "Создание объекта",
+                    self, "Создание объекта",
                     "Не удалось создать объект!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
                 return False
 
         # map underlying model index
-        source_parent = self.model.mapToSource(index)
-        source_index = self.model.sourceModel().index(
-            self.model.sourceModel().rowCount(source_parent) - 1, 0, source_parent)
+        source_parent = self.model().mapToSource(index)
+        source_index = self.model().sourceModel().index(
+            self.model().sourceModel().rowCount(source_parent) - 1, 0, source_parent)
 
         # map back to proxy model
-        index = self.model.mapFromSource(source_index)
+        index = self.model().mapFromSource(source_index)
 
-        self.tree_view.setCurrentIndex(index)
+        self.setCurrentIndex(index)
 
         # edit new item
-        self.tree_view.edit(index)
+        self.edit(index)
 
     def editRow(self):
-        index = self.tree_view.currentIndex()
+        index = self.currentIndex()
         if index.isValid():
-            self.tree_view.edit(index)
+            self.edit(index)
 
     def removeRow(self):
-        index = self.tree_view.currentIndex()
+        index = self.currentIndex()
         if index.isValid():
             result = QMessageBox().critical(
                 self.parent, "Удаление объекта",
@@ -90,8 +98,8 @@ class TreeBaseView(View):
                 QMessageBox.No | QMessageBox.Yes)
 
             if result == QMessageBox.Yes:
-                if not self.model.removeRows(index.row(), 1, index.parent()):
-                    QMessageBox().critical(self.tree_view, "Удаление объекта",
+                if not self.model().removeRows(index.row(), 1, index.parent()):
+                    QMessageBox().critical(self, "Удаление объекта",
                                            "Не удалось удалить объект!\n\nПроверьте нет ли связей с другими объектами или возможно у Вас недостаточно привилегий.",
                                            QMessageBox.Ok)
     #
@@ -99,7 +107,7 @@ class TreeBaseView(View):
     #
 
     def showContextMenu(self, point):
-        index = self.tree_view.indexAt(point)
+        index = self.indexAt(point)
 
         actions = []
 
@@ -115,7 +123,7 @@ class TreeBaseView(View):
         actions.extend(sort_actions)
 
         if index.isValid():
-            source_index = self.model.mapToSource(index)
+            source_index = self.model().mapToSource(index)
             sql_model = source_index.internalPointer()
 
             display_name = sql_model.model().displayName()
@@ -143,9 +151,9 @@ class TreeBaseView(View):
 
         if index.isValid():
             self.context_menu.exec_(
-                self.tree_view.viewport().mapToGlobal(point))
+                self.viewport().mapToGlobal(point))
         else:
-            self.tree_view.setCurrentIndex(QModelIndex())
+            self.setCurrentIndex(QModelIndex())
             self.context_menu.exec_(QCursor.pos())
 
         self.context_menu.clear()
@@ -155,10 +163,11 @@ class TreeBaseView(View):
     #
 
     def filter(self, text):
-        self.tree_view.expandAll()
+        self.expandAll()
+        self.clearSort()
 
-        self.model.setRecursiveFilteringEnabled(True)
-        self.model.setFilterRegExp(
+        self.model().setRecursiveFilteringEnabled(True)
+        self.model().setFilterRegExp(
             QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
 
         self.__isFiltered__ = True
@@ -169,11 +178,12 @@ class TreeBaseView(View):
     def clearFilter(self):
         self.treeFilterCleared.emit()
 
-        self.model.invalidateFilter()
+        self.model().invalidateFilter()
+
         self.__isFiltered__ = False
 
     def sort(self, order):
-        current_sort = self.model.sortOrder()
+        current_sort = self.model().sortOrder()
 
         self.treeSorted.emit(order)
 
@@ -189,7 +199,7 @@ class TreeBaseView(View):
             self.clearSort()
             return False
 
-        self.model.sort(0, sort_order)
+        self.model().sort(0, sort_order)
 
         self.__isSorted__ = True
 
@@ -201,7 +211,7 @@ class TreeBaseView(View):
     def clearSort(self):
         self.treeSortCleared.emit()
 
-        self.model.sort(-1)
+        self.model().sort(-1)
         self.__isSorted__ = False
 
     def clearAllFilters(self):

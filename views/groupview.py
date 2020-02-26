@@ -3,11 +3,11 @@ from PyQt5.QtCore import (QSortFilterProxyModel, QSize)
 from PyQt5.QtWidgets import (QSizePolicy, QFrame, QTreeView, QVBoxLayout)
 from models import (SqlTreeModel, GroupModel)
 from widgets import TreeSortFilter
-from views import (TreeItemDelegate)
+from views import (View, TreeItemDelegate)
 from .treebaseview import TreeBaseView
 
 
-class GroupView(TreeBaseView):
+class GroupView(View):
     def __init__(self, parent):
         super(GroupView, self).__init__(parent)
 
@@ -35,18 +35,10 @@ class GroupView(TreeBaseView):
         v_layout.setContentsMargins(2, 0, 0, 0)
         v_layout.setSpacing(0)
 
-        # Build UI
-        self.tree_view = QTreeView(self.main_widget)
-        self.tree_view.setEditTriggers(QTreeView.NoEditTriggers)
+        self.tree_view = TreeBaseView()
+        # set model to tree_view
+        self.tree_view.setModel(self.model)
 
-        tree_view_delegate = TreeItemDelegate()
-        tree_view_delegate.closeEditor.connect(self.onEditorClosed)
-
-        self.tree_view.setItemDelegateForColumn(0, tree_view_delegate)
-
-        self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.tree_view.customContextMenuRequested.connect(
-            self.showContextMenu)
         self.tree_view.doubleClicked.connect(self.loadDocs)
 
         # tree filter
@@ -57,9 +49,6 @@ class GroupView(TreeBaseView):
 
         v_layout.addWidget(self.tree_filter)
         v_layout.addWidget(self.tree_view)
-
-        # set model to tree_view
-        self.tree_view.setModel(self.model)
 
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(15)

@@ -1,6 +1,7 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QHBoxLayout, QPushButton, QLineEdit, QButtonGroup, QFrame)
+from views import TreeBaseView
 
 
 class TreeSortFilter(QFrame):
@@ -13,17 +14,13 @@ class TreeSortFilter(QFrame):
     def __init__(self, parent):
         super(TreeSortFilter, self).__init__()
 
-        self.parent = parent
+        self.treeview = None
 
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0, 5, 0, 5)
         self.layout.setSpacing(0)
 
         self.filterUi()
-
-        self.parent.treeSorted.connect(self.externalSorted)
-        self.parent.treeFilterCleared.connect(self.clearFilter)
-        self.parent.treeSortCleared.connect(self.clearSort)
 
     def setMode(self, mode=0):
         if mode == self.SortFilterMode:
@@ -63,25 +60,36 @@ class TreeSortFilter(QFrame):
         self.sort_group.buttonClicked[int].connect(self.sort)
 
     def setWidget(self, widget):
-        self.widget = widget
+        if isinstance(widget, TreeBaseView):
+            self.treeview = widget
+
+            self.treeview.treeSorted.connect(self.externalSorted)
+            self.treeview.treeFilterCleared.connect(self.clearFilter)
+            self.treeview.treeSortCleared.connect(self.clearSort)
+        else:
+            print("Error! Widget must be instance of TreeBaseView Class")
 
     def setFilterPlaceHolder(self, text):
         self.geofilter_lineedit.setPlaceholderText(text)
 
     def doFilter(self, text):
         self.clearfilter_btn.setDisabled((len(text) == 0))
+        for button in self.sort_group.buttons():
+            button.setDisabled(True)
 
-        self.parent.filter(text)
+        self.treeview.filter(text)
 
     def clearFilter(self):
         if len(self.geofilter_lineedit.text()) > 0:
             self.geofilter_lineedit.setText("")
             self.clearfilter_btn.setDisabled(True)
+            for button in self.sort_group.buttons():
+                button.setDisabled(False)
 
-            self.parent.clearFilter()
+            self.treeview.clearFilter()
 
     def sort(self, order):
-        return self.parent.sort(order)
+        return self.treeview.sort(order)
 
     def externalSorted(self, order):
         if order < 2:
