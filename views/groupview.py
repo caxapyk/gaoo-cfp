@@ -39,7 +39,7 @@ class GroupView(View):
         # set model to tree_view
         self.tree_view.setModel(self.model)
 
-        self.tree_view.doubleClicked.connect(self.loadDocs)
+        self.tree_view.treeView().doubleClicked.connect(self.loadDocs)
 
         # tree filter
         self.tree_filter = TreeSortFilter(self)
@@ -48,7 +48,7 @@ class GroupView(View):
         self.tree_filter.setMode(TreeSortFilter.SortFilterMode)
 
         v_layout.addWidget(self.tree_filter)
-        v_layout.addWidget(self.tree_view)
+        v_layout.addWidget(self.tree_view.mainWidget())
 
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(15)
@@ -66,6 +66,8 @@ class GroupView(View):
         self.docview.loadData(sql_model.uid())
 
     def showContextMenu(self, point):
+        # do not work
+
         index = self.tree_view.indexAt(point)
 
         if index.isValid():
