@@ -14,7 +14,7 @@ class TreeSortFilter(QFrame):
     def __init__(self, parent):
         super(TreeSortFilter, self).__init__()
 
-        self.treeview = None
+        self.view = None
 
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0, 5, 0, 5)
@@ -60,15 +60,12 @@ class TreeSortFilter(QFrame):
 
         self.sort_group.buttonClicked[int].connect(self.sort)
 
-    def setWidget(self, widget):
-        if isinstance(widget, TreeBaseView):
-            self.treeview = widget
+    def setView(self, view):
+        self.view = view
 
-            self.treeview.treeSorted.connect(self.externalSorted)
-            self.treeview.treeFilterCleared.connect(self.clearFilter_)
-            self.treeview.treeSortCleared.connect(self.clearSort_)
-        else:
-            print("Error! Widget must be instance of TreeBaseView Class")
+        self.view.treeSorted.connect(self.externalSorted)
+        self.view.treeFilterCleared.connect(self.clearFilter_)
+        self.view.treeSortCleared.connect(self.clearSort_)
 
     def setFilterPlaceHolder(self, text):
         self.filter_lineedit.setPlaceholderText(text)
@@ -76,7 +73,7 @@ class TreeSortFilter(QFrame):
     def filter(self, text):
         self.clearfilter_btn.setDisabled((len(text) == 0))
 
-        self.treeview.filter(text)
+        self.view.filter(text)
 
     def clearFilter_(self):
         if len(self.filter_lineedit.text()) > 0:
@@ -88,10 +85,10 @@ class TreeSortFilter(QFrame):
 
     def clearFilter(self):
         if self.clearFilter_():
-            self.treeview.clearFilter()
+            self.view.clearFilter()
 
     def sort(self, order):
-        return self.treeview.sort(order)
+        return self.view.sort(order)
 
     def externalSorted(self, order):
         if order < len(self.sort_group.buttons()):

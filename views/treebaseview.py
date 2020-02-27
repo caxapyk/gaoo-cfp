@@ -10,23 +10,23 @@ class TreeBaseView(View):
     treeSorted = pyqtSignal(int)
     treeFilterCleared = pyqtSignal()
     treeSortCleared = pyqtSignal()
-    contextMenuBeforeOpen = pyqtSignal(QModelIndex)
+    #contextMenuBeforeOpen = pyqtSignal(QModelIndex)
 
     def __init__(self, parent=None):
         super(TreeBaseView, self).__init__(parent)
 
         self.parent = parent
         # Build UI
-        self.treeview = QTreeView()
-        self.treeview.setEditTriggers(QTreeView.NoEditTriggers)
+        self.tree_view = QTreeView()
+        self.tree_view.setEditTriggers(QTreeView.NoEditTriggers)
 
         tree_view_delegate = TreeItemDelegate()
         tree_view_delegate.closeEditor.connect(self.onEditorClosed)
 
-        self.treeview.setItemDelegateForColumn(0, tree_view_delegate)
+        self.tree_view.setItemDelegateForColumn(0, tree_view_delegate)
 
-        self.treeview.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.treeview.customContextMenuRequested.connect(
+        self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree_view.customContextMenuRequested.connect(
             self.showContextMenu)
 
         self.__isFiltered__ = False
@@ -34,23 +34,24 @@ class TreeBaseView(View):
 
         self.model = None
 
-        self.context_menu = QMenu(self.treeview)
+        self.context_menu = QMenu(self.tree_view)
+        self.default_actions = []
 
-        self.setMainWidget(self.treeview)
+        self.setMainWidget(self.tree_view)
 
-    def treeView(self):
-        return self.treeview
+    #def treeView(self):
+    #    return self.tree_view
 
     def setModel(self, model):
         self.model = model
-        self.treeview.setModel(self.model)
+        self.tree_view.setModel(self.model)
 
     def refreshModel(self):
         self.model.sourceModel().select()
         self.parent.statusBar().showMessage("Загрука данных...", 500)
 
-    def contextMenu(self):
-        return self.context_menu
+    #def contextMenu(self):
+    #    return self.context_menu
 
     def onEditorClosed(self):
         if self.isSorted():
@@ -60,7 +61,7 @@ class TreeBaseView(View):
     # CRUD
     #
     def insertRow(self):
-        index = self.treeview.currentIndex()
+        index = self.tree_view.currentIndex()
         if index.isValid():
             if self.isFiltered():
                 # store source model index to reload after clearAllFilters()
@@ -69,10 +70,10 @@ class TreeBaseView(View):
                 self.clearAllFilters()
                 # restore index
                 index = self.model.mapFromSource(m_index)
-                self.treeview.setCurrentIndex(index)
+                self.tree_view.setCurrentIndex(index)
 
             # !important: branch must be expanded before new row inserted
-            self.treeview.setExpanded(index, True)
+            self.tree_view.setExpanded(index, True)
 
             if not self.model.insertRows(0, 1, index):
                 QMessageBox().critical(
@@ -95,18 +96,18 @@ class TreeBaseView(View):
         # map back to proxy model
         index = self.model.mapFromSource(source_index)
 
-        self.treeview.setCurrentIndex(index)
+        self.tree_view.setCurrentIndex(index)
 
         # edit new item
-        self.treeview.edit(index)
+        self.tree_view.edit(index)
 
     def editRow(self):
-        index = self.treeview.currentIndex()
+        index = self.tree_view.currentIndex()
         if index.isValid():
-            self.treeview.edit(index)
+            self.tree_view.edit(index)
 
     def removeRow(self):
-        index = self.treeview.currentIndex()
+        index = self.tree_view.currentIndex()
         if index.isValid():
             result = QMessageBox().critical(
                 self.parent, "Удаление объекта",
@@ -122,21 +123,25 @@ class TreeBaseView(View):
     # CONTEXT MENU
     #
 
+    def isEndPointReached(self, index):
+        return False
+
     def showContextMenu(self, point):
-        index = self.treeview.indexAt(point)
+        index = self.tree_view.indexAt(point)
 
-        self.contextMenuBeforeOpen.emit(index)
+        #self.contextMenuBeforeOpen.emit(index)
 
-        actions = []
+        self.default_actions = []
 
-        source_index = self.model.mapToSource(index)
-        model_count = len(self.model.sourceModel().models())
-        level = source_index.internalPointer().level()
+        #source_index = self.model.mapToSource(index)
+        #model_count = len(self.model.sourceModel().models())
+        #level = source_index.internalPointer().level()
 
         # check model is last in models list, disable create new item
         # only if model is multimodel
-        if (model_count == 1) or (level < (model_count - 1)):
-            actions.append((":/icons/folder-new-16.png", "Создать объект",
+        #if (model_count == 1) or (level < (model_count - 1)):
+        if not self.isEndPointReached(index):
+            self.default_actions.append((":/icons/folder-new-16.png", "Создать объект",
                             self.insertRow))
 
         if index.isValid():
@@ -145,7 +150,7 @@ class TreeBaseView(View):
                 (":/icons/delete-16.png", "Удалить", self.removeRow),
                 "separator"
             ]
-            actions.extend(item_actions)
+            self.default_actions.extend(item_actions)
 
         sort_actions = [
             "separator",
@@ -159,12 +164,12 @@ class TreeBaseView(View):
             (None, "Сбросить все фильтры", self.clearAllFilters),
             "separator"
         ]
-        actions.extend(sort_actions)
+        self.default_actions.extend(sort_actions)
 
-        actions.append((":/icons/refresh-16.png",
+        self.default_actions.append((":/icons/refresh-16.png",
                         "Обновить", self.refreshModel))
 
-        for action in actions:
+        for action in self.default_actions:
             if action == "separator":
                 self.context_menu.addSeparator()
             else:
@@ -176,9 +181,9 @@ class TreeBaseView(View):
 
         if index.isValid():
             self.context_menu.exec_(
-                self.treeview.viewport().mapToGlobal(point))
+                self.tree_view.viewport().mapToGlobal(point))
         else:
-            self.treeview.setCurrentIndex(QModelIndex())
+            self.tree_view.setCurrentIndex(QModelIndex())
             self.context_menu.exec_(QCursor.pos())
 
         self.context_menu.clear()
@@ -187,7 +192,7 @@ class TreeBaseView(View):
     # SORT AND FILTER
     #
     def filter(self, text):
-        self.treeview.expandAll()
+        self.tree_view.expandAll()
 
         self.model.setRecursiveFilteringEnabled(True)
         self.model.setFilterRegExp(

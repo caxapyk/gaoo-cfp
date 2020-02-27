@@ -9,9 +9,18 @@ class SqlTreeBaseModel(QSqlQueryModel):
         self.m_parent_id = None
         self.m_fk = None
 
+        self.type_column = None
+
         self.diplay_name = "объект"
         self.new_item_name = "Новый объект"
         self.icon_resource = ":/icons/folder-16.png"
+        self.type_icon_resource = {}
+
+    def setTypeColumn(self, column):
+        self.type_column = column
+
+    def typeColumn(self):
+        return self.type_column
 
     def setTable(self, table_name):
         self.m_table = table_name
@@ -43,8 +52,17 @@ class SqlTreeBaseModel(QSqlQueryModel):
     def setIconResource(self, resource):
         self.icon_resource = resource
 
+    def setTypeIconResource(self, itype, resource):
+        self.type_icon_resource[itype] = resource
+
+    def getTypeIcon(self, itype):
+        return QIcon(self.type_icon_resource[itype])
+
     def getIcon(self):
-        return QIcon(self.icon_resource)
+        if self.typeColumn() is not None:
+            return
+        else:
+            return QIcon(self.icon_resource)
 
     def reset(self):
         self.beginResetModel()

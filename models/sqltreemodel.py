@@ -76,6 +76,11 @@ class SqlTreeModel(QAbstractItemModel):
             item_id = model.data(model.index(i, 0))
             item = SqlTreeItem(item_data, pos, item_id, parent, model)
 
+            # check type of item if model is Typed
+            if model.typeColumn() is not None:
+                item_type = model.data(model.index(i, model.typeColumn()))
+                item.setItemType(item_type)
+
             parent.childAppend(item)
             i += 1
 
@@ -196,7 +201,11 @@ class SqlTreeModel(QAbstractItemModel):
 
         if role == Qt.DecorationRole:
             item_model = index.internalPointer().model()
-            return item_model.getIcon()
+            item_type = index.internalPointer().itemType()
+            if item_model.typeColumn() is not None:
+                return item_model.getTypeIcon(item_type)
+            else:
+                return item_model.getIcon()
 
         if role != Qt.DisplayRole and role != Qt.EditRole:
             return None
