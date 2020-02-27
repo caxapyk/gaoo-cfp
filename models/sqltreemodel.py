@@ -19,11 +19,21 @@ class SqlTreeModel(QAbstractItemModel):
         self.columns = columns
         self.model_columns = {}
 
-        self.root = SqlTreeItem(columns, -1)
-        self.root.map()
+        self.root = SqlTreeItem(self.columns, -1)
+        #self.root.map()
 
     def select(self):
+        self.beginResetModel()
+        for model in self.data:
+            model.reset()
+
+        self.root.clear()
         self.setupModelData()
+
+        self.endResetModel()
+
+    def models(self):
+        return self.data
 
     def setModelColumn(self, level, column):
         self.model_columns[level] = column

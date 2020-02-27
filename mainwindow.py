@@ -6,7 +6,7 @@ from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
 from PyQt5.uic import loadUi
 
 from dialogs import (DoctypeDialog, DocflagDialog, FundDialog, DbSettingsDialog, DocSearchDialog)
-from views import (GEOView, GroupView, DocView)
+from views import (GeoView, GroupView, DocView)
 from models import ChurchModel
 
 
@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
 
         # load views
         self.doc_view = DocView(self)
-        self.geo_view = GEOView(self)
+        self.geo_view = GeoView(self)
 
         self.group_view = GroupView(self)
 

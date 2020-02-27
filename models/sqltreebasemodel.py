@@ -46,6 +46,11 @@ class SqlTreeBaseModel(QSqlQueryModel):
     def getIcon(self):
         return QIcon(self.icon_resource)
 
+    def reset(self):
+        self.beginResetModel()
+        self.__init__()
+        self.endResetModel()
+
     def refresh(self):
         query = "SELECT * FROM %s" % self.m_table
 

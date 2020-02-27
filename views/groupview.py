@@ -1,9 +1,8 @@
-from PyQt5.Qt import Qt
 from PyQt5.QtCore import (QSortFilterProxyModel, QSize)
-from PyQt5.QtWidgets import (QSizePolicy, QFrame, QTreeView, QVBoxLayout)
+from PyQt5.QtWidgets import (QSizePolicy, QFrame, QVBoxLayout)
 from models import (SqlTreeModel, GroupModel)
 from widgets import TreeSortFilter
-from views import (View, TreeItemDelegate)
+from views import View
 from .treebaseview import TreeBaseView
 
 
@@ -35,16 +34,16 @@ class GroupView(View):
         v_layout.setContentsMargins(2, 0, 0, 0)
         v_layout.setSpacing(0)
 
-        self.tree_view = TreeBaseView()
+        self.tree_view = TreeBaseView(parent)
         # set model to tree_view
         self.tree_view.setModel(self.model)
 
         self.tree_view.treeView().doubleClicked.connect(self.loadDocs)
+        self.tree_view.contextMenuBeforeOpen.connect(self.initContextMenu)
 
         # tree filter
         self.tree_filter = TreeSortFilter(self)
         self.tree_filter.setWidget(self.tree_view)
-        self.tree_filter.setFilterPlaceHolder("Фильтр по справочнику...")
         self.tree_filter.setMode(TreeSortFilter.SortFilterMode)
 
         v_layout.addWidget(self.tree_filter)
@@ -65,20 +64,14 @@ class GroupView(View):
 
         self.docview.loadData(sql_model.uid())
 
-    def showContextMenu(self, point):
-        # do not work
-
-        index = self.tree_view.indexAt(point)
-
+    def initContextMenu(self, index):
         if index.isValid():
-            context_menu = self.contextMenu()
-            action_doc_open = self.context_menu.addAction("Открыть документы")
-            action_doc_open.triggered.connect(self.loadDocs)
+            context_menu = self.tree_view.contextMenu()
+            action_doc_open = context_menu.addAction("Связанные документы")
+            action_doc_open.triggered.connect(lambda: self.loadDocs(index))
 
             context_menu.addSeparator()
 
             # disable open documents if index has childen
             if self.model.hasChildren(index):
                 action_doc_open.setDisabled(True)
-
-        super().showContextMenu(point)

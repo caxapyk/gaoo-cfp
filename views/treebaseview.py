@@ -1,7 +1,7 @@
 from PyQt5.Qt import Qt, QRegExp, QCursor
-from PyQt5.QtCore import (QObject, QModelIndex, pyqtSignal)
+from PyQt5.QtCore import (QModelIndex, pyqtSignal)
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QWidget, QMenu, QMessageBox, QTreeView)
+from PyQt5.QtWidgets import (QMenu, QMessageBox, QTreeView)
 from views import (View, TreeItemDelegate)
 
 
@@ -10,6 +10,7 @@ class TreeBaseView(View):
     treeSorted = pyqtSignal(int)
     treeFilterCleared = pyqtSignal()
     treeSortCleared = pyqtSignal()
+    contextMenuBeforeOpen = pyqtSignal(QModelIndex)
 
     def __init__(self, parent=None):
         super(TreeBaseView, self).__init__(parent)
@@ -44,6 +45,10 @@ class TreeBaseView(View):
         self.model = model
         self.treeview.setModel(self.model)
 
+    def refreshModel(self):
+        self.model.sourceModel().select()
+        self.parent.statusBar().showMessage("Загрука данных...", 500)
+
     def contextMenu(self):
         return self.context_menu
 
@@ -54,7 +59,6 @@ class TreeBaseView(View):
     #
     # CRUD
     #
-
     def insertRow(self):
         index = self.treeview.currentIndex()
         if index.isValid():
@@ -72,14 +76,14 @@ class TreeBaseView(View):
 
             if not self.model.insertRows(0, 1, index):
                 QMessageBox().critical(
-                    self, "Создание объекта",
+                    self.parent, "Создание объекта",
                     "Не удалось создать объект!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
                 return False
         else:
             self.clearAllFilters()
             if not self.model.insertRows(0, 1, QModelIndex()):
                 QMessageBox().critical(
-                    self, "Создание объекта",
+                    self.parent, "Создание объекта",
                     "Не удалось создать объект!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
                 return False
 
@@ -111,7 +115,7 @@ class TreeBaseView(View):
 
             if result == QMessageBox.Yes:
                 if not self.model.removeRows(index.row(), 1, index.parent()):
-                    QMessageBox().critical(self, "Удаление объекта",
+                    QMessageBox().critical(self.parent, "Удаление объекта",
                                            "Не удалось удалить объект!\n\nПроверьте нет ли связей с другими объектами или возможно у Вас недостаточно привилегий.",
                                            QMessageBox.Ok)
     #
@@ -121,47 +125,54 @@ class TreeBaseView(View):
     def showContextMenu(self, point):
         index = self.treeview.indexAt(point)
 
+        self.contextMenuBeforeOpen.emit(index)
+
         actions = []
 
-        sort_actions = [
-            (":/icons/sort-az-16.png", "Сортировка по возрастанию",
-                lambda: self.sort(0)),
-            (":/icons/sort-za-16.png", "Сортировка по убыванию",
-                lambda: self.sort(1)),
-            (":/icons/delete-16.png", "Очистить сортировку",
-                lambda: self.sort(3)),
-            "separator",
-            ("", "Сбросить все фильтры", self.clearFilter),
-            "separator"
-        ]
-        actions.extend(sort_actions)
+        source_index = self.model.mapToSource(index)
+        model_count = len(self.model.sourceModel().models())
+        level = source_index.internalPointer().level()
+
+        # check model is last in models list, disable create new item
+        # only if model is multimodel
+        if (model_count == 1) or (level < (model_count - 1)):
+            actions.append((":/icons/folder-new-16.png", "Создать объект",
+                            self.insertRow))
 
         if index.isValid():
-            source_index = self.model.mapToSource(index)
-            sql_model = source_index.internalPointer()
-
-            display_name = sql_model.model().displayName()
-
-            crud_actions = [
-                (":/icons/folder-new-16.png", "Создать %s" % display_name,
-                    self.insertRow),
+            item_actions = [
                 (":/icons/rename-16.png", "Переименовать", self.editRow),
                 (":/icons/delete-16.png", "Удалить", self.removeRow),
                 "separator"
             ]
-            actions.extend(crud_actions)
+            actions.extend(item_actions)
 
-        else:
-            actions.insert(0, ("", "Создать группировку", self.insertRow))
-            actions.insert(1, "separator")
+        sort_actions = [
+            "separator",
+            (":/icons/sort-az-16.png", "Сортировка по возрастанию",
+                lambda: self.sort(0)),
+            (":/icons/sort-za-16.png", "Сортировка по убыванию",
+                lambda: self.sort(1)),
+            (None, "Очистить сортировку",
+                lambda: self.sort(3)),
+            "separator",
+            (None, "Сбросить все фильтры", self.clearAllFilters),
+            "separator"
+        ]
+        actions.extend(sort_actions)
+
+        actions.append((":/icons/refresh-16.png",
+                        "Обновить", self.refreshModel))
 
         for action in actions:
             if action == "separator":
                 self.context_menu.addSeparator()
             else:
                 _action = self.context_menu.addAction(action[1])
-                _action.setIcon(QIcon(action[0]))
                 _action.triggered.connect(action[2])
+                # set icon
+                if action[0]:
+                    _action.setIcon(QIcon(action[0]))
 
         if index.isValid():
             self.context_menu.exec_(
@@ -175,11 +186,8 @@ class TreeBaseView(View):
     #
     # SORT AND FILTER
     #
-
     def filter(self, text):
         self.treeview.expandAll()
-
-        self.clearSort()
 
         self.model.setRecursiveFilteringEnabled(True)
         self.model.setFilterRegExp(
