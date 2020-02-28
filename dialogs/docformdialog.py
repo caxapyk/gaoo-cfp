@@ -113,9 +113,10 @@ class DocFormDialog(QDialog):
         result = dialog.exec_()
 
         if result == dialog.Accepted:
+            # update relation
+            self.doc_model.relationModel(2).select()
+
             dlg_index = dialog.ui.listView.currentIndex()
-            self.doctype_model.select()
-            print(dlg_index.data())
             self.ui.doctype_comboBox.setCurrentIndex(dlg_index.row())
 
     def fundDialog(self):
@@ -123,6 +124,9 @@ class DocFormDialog(QDialog):
         result = dialog.exec_()
 
         if result == dialog.Accepted:
+            # update relation
+            self.doc_model.relationModel(3).select()
+
             dlg_index = dialog.ui.listView.currentIndex()
             self.ui.fund_comboBox.setCurrentIndex(dlg_index.row())
 
@@ -204,7 +208,7 @@ class DocFormDialog(QDialog):
                 self.ui.doctype_comboBox.currentIndex(), 0)
             doctype_id = self.doctype_model.data(doctype_index)
             print("INDEX DATA SAVE:",doctype_index.data())
-            print("doctype_id:",doctype_index.data())
+            print("doctype_id:",doctype_id)
 
             fund_index = self.fund_model.index(
                 self.ui.fund_comboBox.currentIndex(), 0)
@@ -222,6 +226,8 @@ class DocFormDialog(QDialog):
             record.setValue("cfp_doc.sheets", self.ui.sheet_spinBox.value())
             record.setValue("cfp_doc.comment",
                             self.ui.comment_textEdit.toPlainText())
+
+            print(record.value("cfp_doctype.name"))
 
             if self.doc_model.insertRecord(-1, record):
                 # set m_row to latest record row im model,

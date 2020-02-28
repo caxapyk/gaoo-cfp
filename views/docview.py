@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy,
 from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
 from PyQt5.QtSql import QSqlRelationalTableModel
 from PyQt5.QtCore import QModelIndex
-from models import DocModel
+from models import (DocModel, DocProxyModel)
 from dialogs import (DocFormDialog, DocViewDialog)
 from views import View
 import time
@@ -61,7 +61,7 @@ class DocView(View):
         self.parent.statusBar().showMessage("Загружено документов: %s" %
                                             self.doc_model.query().size())
 
-        self.model = QSortFilterProxyModel()
+        self.model = DocProxyModel()
         self.model.setSourceModel(self.doc_model)
         self.model.setDynamicSortFilter(False)
 

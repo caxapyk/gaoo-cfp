@@ -7,7 +7,7 @@ from PyQt5.QtCore import (QModelIndex, QItemSelection,
 from PyQt5.QtGui import (QIcon,  QRegExpValidator)
 from PyQt5.QtSql import QSqlTableModel
 from models import (ComboProxyModel, CheckListProxyModel, GuberniaModel,
-                    DoctypeModel, DocflagModel, DocSearchModel, DocModel, FundModel, ChurchModel)
+                    DoctypeModel, DocflagModel, DocSearchModel, DocModel, FundModel, ChurchModel, DocSearchProxyModel)
 from dialogs import DocViewDialog
 
 
@@ -110,14 +110,14 @@ class DocSearchDialog(QDialog):
 
         self.doc_search_model.refresh()
 
-        self.proxy_model = QSortFilterProxyModel()
+        self.proxy_model = DocSearchProxyModel()
         self.proxy_model.setSourceModel(self.doc_search_model)
 
         self.ui.treeView_docs.setModel(self.proxy_model)
         # disable default sorting
         self.ui.treeView_docs.sortByColumn(-1, Qt.AscendingOrder)
 
-        self.ui.treeView_docs.hideColumn(0)
+        self.ui.treeView_docs.resizeColumnToContents(2)
         self.ui.treeView_docs.hideColumn(1)
         self.ui.treeView_docs.resizeColumnToContents(2)
         self.ui.treeView_docs.resizeColumnToContents(3)

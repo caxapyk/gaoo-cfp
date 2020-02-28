@@ -16,3 +16,5 @@ from .docflagsmodel import DocFlagsModel
 from .docmodel import DocModel
 from .docitem import DocItem
 from .docsearchmodel import DocSearchModel
+from .docproxymodel import DocProxyModel
+from .docsearchproxymodel import DocSearchProxyModel
