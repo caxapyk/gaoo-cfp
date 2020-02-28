@@ -60,8 +60,10 @@ class TreeBaseView(View):
     #
     # CRUD
     #
-    def insertRow(self):
+    def insertRow(self, itype=0):
         index = self.tree_view.currentIndex()
+        self.model.sourceModel().setDefaultModelType(itype)
+
         if index.isValid():
             if self.isFiltered():
                 # store source model index to reload after clearAllFilters()

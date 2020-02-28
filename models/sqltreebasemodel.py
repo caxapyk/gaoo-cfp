@@ -10,6 +10,7 @@ class SqlTreeBaseModel(QSqlQueryModel):
         self.m_fk = None
 
         self.type_column = None
+        self.m_type = 0
 
         self.diplay_name = "объект"
         self.new_item_name = "Новый объект"
@@ -21,6 +22,12 @@ class SqlTreeBaseModel(QSqlQueryModel):
 
     def typeColumn(self):
         return self.type_column
+
+    def setItemType(self, itype):
+        self.m_type = itype
+
+    def itemType(self):
+        return self.m_type
 
     def setTable(self, table_name):
         self.m_table = table_name
@@ -105,6 +112,30 @@ class SqlTreeBaseModel(QSqlQueryModel):
 
         if self.m_parent_id:
             sql_query.addBindValue(self.m_parent_id)
+
+        if sql_query.exec_() and sql_query.lastInsertId():
+            return sql_query.lastInsertId()
+
+        self.printError(sql_query)
+
+        return False
+
+    def insertTyped(self, name):
+        if self.m_parent_id and self.m_fk:
+            query = "INSERT INTO %s (name, %s, type) \
+                VALUES (?, ?, ?)" % (self.m_table, self.m_fk)
+        else:
+            query = "INSERT INTO %s (name, type) VALUES (?, ?)" % self.m_table
+
+        sql_query = QSqlQuery()
+        sql_query.prepare(query)
+
+        sql_query.addBindValue(name)
+
+        if self.m_parent_id:
+            sql_query.addBindValue(self.m_parent_id)
+
+        sql_query.addBindValue(self.m_type)
 
         if sql_query.exec_() and sql_query.lastInsertId():
             return sql_query.lastInsertId()

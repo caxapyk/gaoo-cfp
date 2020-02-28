@@ -12,7 +12,7 @@ class SqlTreeItem(QAbstractItemView):
         self.__uid = uid
         self.__model = model
         self.__mapped = False
-        self.__type = None
+        self.__type = 0
 
     def map(self):
         self.__mapped = True
@@ -65,9 +65,8 @@ class SqlTreeItem(QAbstractItemView):
     def data(self, section):
         return self.__data[section]
 
-    def setItemType(self, type):
-        self.__type = type
+    def setItemType(self, itype):
+        self.__type = itype
 
     def itemType(self):
         return self.__type
-

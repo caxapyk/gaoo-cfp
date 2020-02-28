@@ -19,8 +19,16 @@ class SqlTreeModel(QAbstractItemModel):
         self.columns = columns
         self.model_columns = {}
 
+        self.default_type = 0
+
         self.root = SqlTreeItem(self.columns, -1)
         #self.root.map()
+
+    def setDefaultModelType(self, itype):
+        self.default_type = itype
+
+    def defaultModelType(self):
+        return self.default_type
 
     def select(self):
         self.beginResetModel()
@@ -267,6 +275,10 @@ class SqlTreeModel(QAbstractItemModel):
             # set foreign key (parent id) to the current model
             model.setParentId(parent_item.uid())
 
+        # set type
+        if model.typeColumn() is not None:
+            model.setItemType(self.defaultModelType())
+
         # refresh model for an empty branch
         # if parent_item.childCount() == 0:
             # model.refresh()
@@ -274,7 +286,11 @@ class SqlTreeModel(QAbstractItemModel):
         # set default name for a new item
         el_name = model.newItemName()
 
-        result_id = model.insert(model.newItemName())
+        if model.typeColumn() is not None:
+            result_id = model.insertTyped(model.newItemName())
+        else:
+            result_id = model.insert(model.newItemName())
+
         child_count = parent_item.childCount()
 
         if result_id:
@@ -288,6 +304,10 @@ class SqlTreeModel(QAbstractItemModel):
 
             new_item = SqlTreeItem(
                 (el_name,), child_level, result_id, parent_item, model)
+
+            # set type
+            if model.typeColumn() is not None:
+                new_item.setItemType(self.defaultModelType())
 
             parent_item.childAppend(new_item)
 

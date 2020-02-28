@@ -41,7 +41,7 @@ class GroupView(TreeBaseView):
         self.tree_view.setModel(self.model)
 
         self.tree_view.doubleClicked.connect(self.loadDocs)
-        #self.tree_view.contextMenuBeforeOpen.connect(self.initContextMenu)
+        # self.tree_view.contextMenuBeforeOpen.connect(self.initContextMenu)
 
         # tree filter
         self.tree_filter = TreeSortFilter(self)
@@ -69,18 +69,25 @@ class GroupView(TreeBaseView):
 
     def showContextMenu(self, point):
         index = self.tree_view.indexAt(point)
-        source_index = self.model.mapToSource(index)
-        item_type = source_index.internalPointer().itemType()
+        if index.isValid():
+            source_index = self.model.mapToSource(index)
+            item_type = source_index.internalPointer().itemType()
 
-        if item_type == GroupModel.TypeGroup:
-            action_doc_open = self.context_menu.addAction("Связанные документы")
-            action_doc_open.triggered.connect(lambda: self.loadDocs(index))
+            if item_type == GroupModel.TypeGroup:
+                action_doc_open = self.context_menu.addAction(
+                    "Связанные документы")
+                action_doc_open.triggered.connect(lambda: self.loadDocs(index))
 
-            self.context_menu.addSeparator()
+                self.context_menu.addSeparator()
 
-            # disable open documents if index has childen
-            if self.model.hasChildren(index):
-                action_doc_open.setDisabled(True)
+                # disable open documents if index has childen
+                if self.model.hasChildren(index):
+                    action_doc_open.setDisabled(True)
+
+            action_create_group = self.context_menu.addAction(
+                "Создать группировку")
+            action_create_group.triggered.connect(
+                lambda: self.insertRow(GroupModel.TypeGroup))
 
         super().showContextMenu(point)
 
@@ -93,4 +100,3 @@ class GroupView(TreeBaseView):
             if item_type == GroupModel.TypeGroup:
                 return True
         return False
-
