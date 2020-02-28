@@ -117,15 +117,15 @@ class DocSearchDialog(QDialog):
         # disable default sorting
         self.ui.treeView_docs.sortByColumn(-1, Qt.AscendingOrder)
 
-        self.ui.treeView_docs.resizeColumnToContents(0)
+        self.ui.treeView_docs.hideColumn(0)
         self.ui.treeView_docs.hideColumn(1)
         self.ui.treeView_docs.resizeColumnToContents(2)
         self.ui.treeView_docs.resizeColumnToContents(3)
         self.ui.treeView_docs.resizeColumnToContents(4)
         self.ui.treeView_docs.hideColumn(5)
-        self.ui.treeView_docs.resizeColumnToContents(6)
+        self.ui.treeView_docs.setColumnWidth(6, 200)
         self.ui.treeView_docs.resizeColumnToContents(7)
-        self.ui.treeView_docs.resizeColumnToContents(8)
+        self.ui.treeView_docs.setColumnWidth(8, 200)
         self.ui.treeView_docs.hideColumn(9)
         self.ui.treeView_docs.hideColumn(10)
         self.ui.treeView_docs.hideColumn(11)

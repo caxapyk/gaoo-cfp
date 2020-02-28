@@ -57,9 +57,7 @@ class DocFormDialog(QDialog):
         self.ui.doctype_comboBox.setModelColumn(1)
         self.ui.doctype_comboBox.setCurrentIndex(-1)
 
-        self.ui.pushButton_doctype_dlg.clicked.connect(
-            lambda: self.chooseDialog(
-                DoctypeDialog(self, self.doctype_model), self.ui.doctype_comboBox))
+        self.ui.pushButton_doctype_dlg.clicked.connect(self.doctypeDialog)
 
         # fund model
         self.fund_model = FundModel()
@@ -70,9 +68,7 @@ class DocFormDialog(QDialog):
         self.ui.fund_comboBox.setModelColumn(1)
         self.ui.fund_comboBox.setCurrentIndex(-1)
 
-        self.ui.pushButton_fund_dlg.clicked.connect(
-            lambda: self.chooseDialog(
-                FundDialog(self, self.fund_model), self.ui.fund_comboBox))
+        self.ui.pushButton_fund_dlg.clicked.connect(self.fundDialog)
 
         # years
         years_list = self.doc_model.docYears(self.m_row)
@@ -112,13 +108,23 @@ class DocFormDialog(QDialog):
             self.doc_model.index(self.m_row, 11))
         return storage_unit
 
-    def chooseDialog(self, dialog, widget):
-        #doctype_dialog = DoctypeDialog(self, self.doctype_model)
+    def doctypeDialog(self):
+        dialog = DoctypeDialog(self, self.doctype_model)
         result = dialog.exec_()
 
         if result == dialog.Accepted:
             dlg_index = dialog.ui.listView.currentIndex()
-            widget.setCurrentIndex(dlg_index.row())
+            self.doctype_model.select()
+            print(dlg_index.data())
+            self.ui.doctype_comboBox.setCurrentIndex(dlg_index.row())
+
+    def fundDialog(self):
+        dialog = FundDialog(self, self.fund_model)
+        result = dialog.exec_()
+
+        if result == dialog.Accepted:
+            dlg_index = dialog.ui.listView.currentIndex()
+            self.ui.fund_comboBox.setCurrentIndex(dlg_index.row())
 
     def map(self):
         if self.m_row is not None:
@@ -172,20 +178,15 @@ class DocFormDialog(QDialog):
 
     def validateForm(self):
         if not self.ui.doctype_comboBox.currentIndex() >= 0:
-            print("d1")
             return False
         elif not self.ui.fund_comboBox.currentIndex() >= 0:
-            print("d2")
             return False
         elif not self.ui.inventory_lineEdit.hasAcceptableInput():
-            print("d3")
             return False
         elif not self.ui.unit_lineEdit.hasAcceptableInput():
-            print("d4")
             return False
-        elif self.years_model.rowCount() == 0:
-            print("d5")
-            return False
+        #elif self.years_model.rowCount() == 0:
+        #    return False
 
         return True
 
@@ -202,6 +203,8 @@ class DocFormDialog(QDialog):
             doctype_index = self.doctype_model.index(
                 self.ui.doctype_comboBox.currentIndex(), 0)
             doctype_id = self.doctype_model.data(doctype_index)
+            print("INDEX DATA SAVE:",doctype_index.data())
+            print("doctype_id:",doctype_index.data())
 
             fund_index = self.fund_model.index(
                 self.ui.fund_comboBox.currentIndex(), 0)
