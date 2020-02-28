@@ -3,7 +3,7 @@ from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtWidgets import (QItemDelegate, QLineEdit)
 
 
-class GeoItemDelegate(QItemDelegate):
+class TreeItemDelegate(QItemDelegate):
     def createEditor(self, parent, option, index):
         editor = QLineEdit(parent)
 

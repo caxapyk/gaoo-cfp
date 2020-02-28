@@ -15,27 +15,14 @@ class SqlTreeModel(QAbstractItemModel):
 
     def __init__(self, data, columns):
         super(SqlTreeModel, self).__init__()
-        self.data = data
-        self.columns = columns
-        self.model_columns = {}
+        self.__data = data
+        self.__columns = columns
 
-        self.root = SqlTreeItem(self.columns, -1)
+        self.__root = SqlTreeItem(columns, -1)
+        self.__root.map()
 
     def select(self):
-        self.beginResetModel()
-        for model in self.data:
-            model.reset()
-
-        self.root.clear()
         self.setupModelData()
-
-        self.endResetModel()
-
-    def models(self):
-        return self.data
-
-    def setModelColumn(self, level, column):
-        self.model_columns[level] = column
 
     """
     Compose QSqlQueryModels into TreeView hierarchy.
@@ -47,23 +34,17 @@ class SqlTreeModel(QAbstractItemModel):
 
     def setupModelData(self, parent=None, pos=0):
         # create instance of model
-        model = self.data[pos]
+        model = self.__data[pos]
 
         if not parent:
-            parent = self.root
+            parent = self.__root
+            name_col_id = 1
 
-        # set parent for top level nodes
         if pos != 0:
             # set foreign key to current model
             model.setParentId(parent.uid())
-
-        # map parent
-        parent.map()
-
-        name_col_id = 0
-
-        if self.model_columns.get(pos):
-            name_col_id = self.model_columns[pos]
+            name_col_id = 2
+            parent.map()
 
         model.refresh()
 
@@ -83,14 +64,10 @@ class SqlTreeModel(QAbstractItemModel):
             return True
 
         item = index.internalPointer()
-        child_level = item.level()
+        child_level = item.level() + 1
 
-        # change level for multilevel model
-        if len(self.data) > 1:
-            child_level += 1
-
-        if child_level < len(self.data):
-            model = self.data[child_level]
+        if child_level < len(self.__data):
+            model = self.__data[child_level]
             model.setParentId(item.uid())
 
             if model.count() > 0:
@@ -106,10 +83,7 @@ class SqlTreeModel(QAbstractItemModel):
 
     def fetchMore(self, index):
         item = index.internalPointer()
-        child_level = item.level()
-        # change level for multilevel model
-        if len(self.data) > 1:
-            child_level += 1
+        child_level = item.level() + 1
 
         self.setupModelData(item, child_level)
 
@@ -131,7 +105,7 @@ class SqlTreeModel(QAbstractItemModel):
         if parent.isValid():
             return parent.internalPointer().columnCount()
         else:
-            return self.root.columnCount()
+            return self.__root.columnCount()
 
     """
     Implement
@@ -142,7 +116,7 @@ class SqlTreeModel(QAbstractItemModel):
             return 0
 
         if not parent.isValid():
-            parentItem = self.root
+            parentItem = self.__root
         else:
             parentItem = parent.internalPointer()
 
@@ -157,7 +131,7 @@ class SqlTreeModel(QAbstractItemModel):
             return QModelIndex()
 
         if not parent.isValid():
-            parentItem = self.root
+            parentItem = self.__root
         else:
             parentItem = parent.internalPointer()
 
@@ -180,7 +154,7 @@ class SqlTreeModel(QAbstractItemModel):
         childItem = index.internalPointer()
         parentItem = childItem.parent()
 
-        if parentItem == self.root:
+        if parentItem == self.__root:
             return QModelIndex()
 
         return self.createIndex(parentItem.row(), 0, parentItem)
@@ -210,7 +184,7 @@ class SqlTreeModel(QAbstractItemModel):
 
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return self.columns[section]
+            return self.__columns[section]
 
         return None
 
@@ -240,20 +214,16 @@ class SqlTreeModel(QAbstractItemModel):
         if parent.isValid():
             parent_item = parent.internalPointer()
         else:
-            parent_item = self.root
+            parent_item = self.__root
 
         new_item = None
 
-        child_level = parent_item.level()
-
-        # change level for multilevel model
-        if len(self.data) > 1:
-            child_level += 1
+        level = parent_item.level() + 1
 
         # create instance of model
-        model = self.data[child_level]
+        model = self.__data[level]
 
-        if child_level != 0:
+        if level != 0:
             # set foreign key (parent id) to the current model
             model.setParentId(parent_item.uid())
 
@@ -262,10 +232,9 @@ class SqlTreeModel(QAbstractItemModel):
             # model.refresh()
 
         # set default name for a new item
-        el_name = model.newItemName()
+        el_name = model.getNewItemName()
 
-        result_id = model.insert(model.newItemName())
-
+        result_id = model.insert(model.getNewItemName())
         child_count = parent_item.childCount()
 
         if result_id:
@@ -278,7 +247,7 @@ class SqlTreeModel(QAbstractItemModel):
             self.beginInsertRows(parent, child_count, child_count)
 
             new_item = SqlTreeItem(
-                (el_name,), child_level, result_id, parent_item, model)
+                (el_name,), level, result_id, parent_item, model)
 
             parent_item.childAppend(new_item)
 
@@ -296,7 +265,7 @@ class SqlTreeModel(QAbstractItemModel):
         if parent.isValid():
             parent_item = parent.internalPointer()
         else:
-            parent_item = self.root
+            parent_item = self.__root
 
         child_item = parent_item.child(row)
 

@@ -36,6 +36,9 @@ class SqlTreeItem(QAbstractItemView):
             return self.__children[row]
         return None
 
+    def clear(self):
+        self.__children = []
+
     def childCount(self):
         return len(self.__children)
 

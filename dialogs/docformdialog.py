@@ -50,6 +50,7 @@ class DocFormDialog(QDialog):
 
         # doctype model
         self.doctype_model = DoctypeModel()
+        #self.doctype_model = self.doc_model.relationModel(2) # does not work
         self.doctype_model.select()
         self.doctype_model.dataChanged.connect(self.formChanged)
 
@@ -61,6 +62,7 @@ class DocFormDialog(QDialog):
 
         # fund model
         self.fund_model = FundModel()
+        #self.fund_model = self.doc_model.relationModel(3) # does not work
         self.fund_model.select()
         self.fund_model.dataChanged.connect(self.formChanged)
 
@@ -174,6 +176,7 @@ class DocFormDialog(QDialog):
         idx = self.ui.year_listView.selectedIndexes()
         if len(idx) > 0:
             self.years_model.removeRows(idx[0].row(), 1)
+            self.formChanged()
 
     def formChanged(self):
         self.currentChanged = True
@@ -206,28 +209,21 @@ class DocFormDialog(QDialog):
         if self.m_row is None:
             doctype_index = self.doctype_model.index(
                 self.ui.doctype_comboBox.currentIndex(), 0)
-            doctype_id = self.doctype_model.data(doctype_index)
-            print("INDEX DATA SAVE:",doctype_index.data())
-            print("doctype_id:",doctype_id)
-
             fund_index = self.fund_model.index(
                 self.ui.fund_comboBox.currentIndex(), 0)
-            fund_id = self.fund_model.data(fund_index)
 
             record = self.doc_model.record()
             # remove id field
             record.remove(0)
             record.setValue("cfp_doc.church_id", self.doc_model.churchId())
-            record.setValue("cfp_doctype.name", doctype_id)
-            record.setValue("cfp_fund.name", fund_id)
+            record.setValue("cfp_doctype.name", doctype_index.data())
+            record.setValue("cfp_fund.name", fund_index.data())
             record.setValue("cfp_doc.inventory",
                             self.ui.inventory_lineEdit.text())
             record.setValue("cfp_doc.unit", self.ui.unit_lineEdit.text())
             record.setValue("cfp_doc.sheets", self.ui.sheet_spinBox.value())
             record.setValue("cfp_doc.comment",
                             self.ui.comment_textEdit.toPlainText())
-
-            print(record.value("cfp_doctype.name"))
 
             if self.doc_model.insertRecord(-1, record):
                 # set m_row to latest record row im model,
@@ -244,7 +240,6 @@ class DocFormDialog(QDialog):
             self.mapper.submit()
 
         if self.doc_model.submitAll():
-            print(self.doc_model.submitAll())
             # get current document ID and set to years/flags models
             doc_id = self.doc_model.getItemId(self.m_row)
 

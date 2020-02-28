@@ -2,14 +2,15 @@ from PyQt5.QtSql import QSqlQueryModel, QSqlQuery
 from PyQt5.QtGui import QIcon
 
 
-class GEOBaseModel(QSqlQueryModel):
+class SqlTreeBaseModel(QSqlQueryModel):
     def __init__(self):
-        super(GEOBaseModel, self).__init__()
+        super(SqlTreeBaseModel, self).__init__()
         self.m_table = None
         self.m_parent_id = None
         self.m_fk = None
 
-        self.diplay_name = "Новый элемент"
+        self.diplay_name = "объект"
+        self.new_item_name = "Новый объект"
         self.icon_resource = ":/icons/folder-16.png"
 
     def setTable(self, table_name):
@@ -24,11 +25,17 @@ class GEOBaseModel(QSqlQueryModel):
     def setParentId(self, parent_id):
         self.m_parent_id = parent_id
 
-    def getNewItemName(self):
+    def displayName(self):
         return self.diplay_name
 
-    def setNewItemName(self, name):
+    def setDisplayName(self, name):
         self.diplay_name = name
+
+    def newItemName(self):
+        return self.new_item_name
+
+    def setNewItemName(self, name):
+        self.new_item_name = name
 
     def setForeignKey(self, fk):
         self.m_fk = fk
@@ -39,11 +46,21 @@ class GEOBaseModel(QSqlQueryModel):
     def getIcon(self):
         return QIcon(self.icon_resource)
 
+    def reset(self):
+        self.beginResetModel()
+        self.__init__()
+        self.endResetModel()
+
     def refresh(self):
         query = "SELECT * FROM %s" % self.m_table
 
         if self.getParentId():
-            query += " WHERE %s = ?" % self.m_fk
+            if self.getParentId() == "NULL":
+                query += " WHERE %s IS NULL" % self.m_fk
+            else:
+                query += " WHERE %s = ?" % self.m_fk
+
+        query += " ORDER BY id"
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)
@@ -108,8 +125,11 @@ class GEOBaseModel(QSqlQueryModel):
     def count(self):
         query = "SELECT COUNT(id) FROM %s" % self.m_table
 
-        if self.m_parent_id:
-            query += " WHERE %s = ?" % self.m_fk
+        if self.getParentId():
+            if self.getParentId() == "NULL":
+                query += " WHERE %s IS NULL" % self.m_fk
+            else:
+                query += " WHERE %s = ?" % self.m_fk
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)

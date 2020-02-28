@@ -1,4 +1,5 @@
 from .view import View
-from .geoitemdelegate import GeoItemDelegate
-from .geoview import GEOView
+from .treeitemdelegate import TreeItemDelegate
+from .treebaseview import TreeBaseView
+from .geoview import GeoView
 from .docview import DocView

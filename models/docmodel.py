@@ -28,7 +28,35 @@ class DocModel(QSqlRelationalTableModel):
                 return rec.value("cfp_doctype.name")
 
             if item.column() == 10:
-                return self.docYears(item.row())
+                y_list = self.docYears(item.row()).split(",")
+
+                curr = y_list[0]
+                y_str = curr
+                i = 0
+                count = 0
+                while i < len(y_list) - 1:
+                    curr_y = int(y_list[i])
+                    next_y = int(y_list[i + 1])
+                    if (next_y - curr_y) > 1:
+                        if count < 2:
+                            y_str +=","
+                        else:
+                            y_str +="-"
+                        if count == 1:
+                            y_str +="%s" % curr_y
+                        else:
+                            y_str +="%s,%s" % (curr_y, next_y)
+                        count = 0
+                    elif i == len(y_list) - 2:
+                        if count > 1:
+                            y_str +="-%s" % next_y
+                        else:
+                            y_str +=",%s" % next_y
+                    elif (next_y - curr_y) == 1:
+                        count += 1
+                    i += 1
+
+                return y_str
 
             elif item.column() == 11:
                 rec = self.record(item.row())
