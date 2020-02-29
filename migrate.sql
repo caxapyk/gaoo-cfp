@@ -19,7 +19,6 @@
 -- Table structure for table `cfp_church`
 --
 
-DROP TABLE IF EXISTS `cfp_church`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cfp_church` (
@@ -36,7 +35,6 @@ CREATE TABLE `cfp_church` (
 -- Table structure for table `cfp_doc`
 --
 
-DROP TABLE IF EXISTS `cfp_doc`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cfp_doc` (
@@ -47,6 +45,7 @@ CREATE TABLE `cfp_doc` (
   `inventory` varchar(50) NOT NULL,
   `unit` varchar(50) NOT NULL,
   `sheets` int(11) NOT NULL,
+  `title` varchar(100) DEFAULT NULL,
   `comment` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_cfp_church` (`church_id`),
@@ -55,14 +54,13 @@ CREATE TABLE `cfp_doc` (
   CONSTRAINT `fk_cfp_church` FOREIGN KEY (`church_id`) REFERENCES `cfp_church` (`id`),
   CONSTRAINT `fk_cfp_doctype` FOREIGN KEY (`doctype_id`) REFERENCES `cfp_doctype` (`id`),
   CONSTRAINT `fk_cfp_fund` FOREIGN KEY (`fund_id`) REFERENCES `cfp_fund` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=277 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `cfp_docflag`
 --
 
-DROP TABLE IF EXISTS `cfp_docflag`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cfp_docflag` (
@@ -78,7 +76,6 @@ CREATE TABLE `cfp_docflag` (
 -- Table structure for table `cfp_docflags`
 --
 
-DROP TABLE IF EXISTS `cfp_docflags`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cfp_docflags` (
@@ -90,14 +87,13 @@ CREATE TABLE `cfp_docflags` (
   KEY `cfp_docFlags_FK` (`doc_id`),
   CONSTRAINT `cfp_docFlags_FK` FOREIGN KEY (`doc_id`) REFERENCES `cfp_doc` (`id`) ON DELETE CASCADE,
   CONSTRAINT `cfp_docFlags_FK_1` FOREIGN KEY (`docflag_id`) REFERENCES `cfp_docflag` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=543 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `cfp_doctype`
 --
 
-DROP TABLE IF EXISTS `cfp_doctype`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cfp_doctype` (
@@ -113,7 +109,6 @@ CREATE TABLE `cfp_doctype` (
 -- Table structure for table `cfp_docyears`
 --
 
-DROP TABLE IF EXISTS `cfp_docyears`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cfp_docyears` (
@@ -124,14 +119,13 @@ CREATE TABLE `cfp_docyears` (
   UNIQUE KEY `cfp_docyears_UN` (`year`,`doc_id`),
   KEY `fk_cfp_doc` (`doc_id`),
   CONSTRAINT `fk_cfp_doc` FOREIGN KEY (`doc_id`) REFERENCES `cfp_doc` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=887 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `cfp_fund`
 --
 
-DROP TABLE IF EXISTS `cfp_fund`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cfp_fund` (
@@ -143,10 +137,26 @@ CREATE TABLE `cfp_fund` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `cfp_group`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cfp_group` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `parent` int(11) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `type` int(1) DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `cfp_group_fk` (`parent`),
+  CONSTRAINT `cfp_group_fk` FOREIGN KEY (`parent`) REFERENCES `cfp_group` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `cfp_gubernia`
 --
 
-DROP TABLE IF EXISTS `cfp_gubernia`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cfp_gubernia` (
@@ -160,7 +170,6 @@ CREATE TABLE `cfp_gubernia` (
 -- Table structure for table `cfp_locality`
 --
 
-DROP TABLE IF EXISTS `cfp_locality`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cfp_locality` (
@@ -177,7 +186,6 @@ CREATE TABLE `cfp_locality` (
 -- Table structure for table `cfp_uezd`
 --
 
-DROP TABLE IF EXISTS `cfp_uezd`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cfp_uezd` (
@@ -203,4 +211,4 @@ CREATE TABLE `cfp_uezd` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-02-19 13:17:46
+-- Dump completed on 2020-02-29 13:12:32
