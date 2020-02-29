@@ -7,6 +7,7 @@ from PyQt5.uic import loadUi
 from models import (DoctypeModel, FundModel, DocFlagsModel, DocYearsModel)
 from .doctypedialog import DoctypeDialog
 from .funddialog import FundDialog
+from .inputdialog import InputDialog
 from .yearitemdelegate import YearItemDelegate
 
 
@@ -50,7 +51,7 @@ class DocFormDialog(QDialog):
 
         # doctype model
         self.doctype_model = DoctypeModel()
-        #self.doctype_model = self.doc_model.relationModel(2) # does not work
+        # self.doctype_model = self.doc_model.relationModel(2) # does not work
         self.doctype_model.select()
         self.doctype_model.dataChanged.connect(self.formChanged)
 
@@ -62,7 +63,7 @@ class DocFormDialog(QDialog):
 
         # fund model
         self.fund_model = FundModel()
-        #self.fund_model = self.doc_model.relationModel(3) # does not work
+        # self.fund_model = self.doc_model.relationModel(3) # does not work
         self.fund_model.select()
         self.fund_model.dataChanged.connect(self.formChanged)
 
@@ -83,6 +84,8 @@ class DocFormDialog(QDialog):
         self.year_delegate = YearItemDelegate()
         self.ui.year_listView.setItemDelegateForColumn(0, self.year_delegate)
 
+        self.ui.yearInsertRange_pushButton.clicked.connect(
+            self.yearRangeDialog)
         self.ui.yearInsert_pushButton.clicked.connect(self.insertYear)
         self.ui.yearRemove_pushButton.clicked.connect(self.removeYear)
 
@@ -103,11 +106,12 @@ class DocFormDialog(QDialog):
         self.ui.inventory_lineEdit.textChanged.connect(self.formChanged)
         self.ui.unit_lineEdit.textChanged.connect(self.formChanged)
         self.ui.sheet_spinBox.valueChanged.connect(self.formChanged)
+        self.ui.title_lineEdit.textChanged.connect(self.formChanged)
         self.ui.comment_textEdit.textChanged.connect(self.formChanged)
 
     def storageUnit(self):
         storage_unit = self.doc_model.data(
-            self.doc_model.index(self.m_row, 11))
+            self.doc_model.index(self.m_row, 12))
         return storage_unit
 
     def doctypeDialog(self):
@@ -159,10 +163,43 @@ class DocFormDialog(QDialog):
             doc_sheets_field = self.doc_model.fieldIndex("cfp_doc.sheets")
             self.mapper.addMapping(self.ui.sheet_spinBox, doc_sheets_field)
 
+            dt_title_field = self.doc_model.fieldIndex(
+                "cfp_doc.title")
+            self.mapper.addMapping(
+                self.ui.title_lineEdit, dt_title_field)
+
             doc_comm_field = self.doc_model.fieldIndex("cfp_doc.comment")
             self.mapper.addMapping(self.ui.comment_textEdit, doc_comm_field)
 
             self.mapper.setCurrentIndex(self.m_row)
+
+    def yearRangeDialog(self):
+        rangedialog = InputDialog(self)
+        title = "Задать диапазон лет"
+
+        val, res = rangedialog.getRange(title, QRegExp("[0-9]{4,4}"))
+
+        if res == InputDialog.Accepted:
+            _range = val.split(":")
+            _range_from = int(_range[0])
+            _range_to = int(_range[1])
+            _range_count = _range_to - _range_from
+
+            if _range_count > 100:
+                box = QMessageBox()
+                box.critical(
+                    self, title,
+                    'Нельзя задать диапазон более 100 лет!', QMessageBox.Ok)
+            elif _range_count > 0:
+                year = _range_from
+                while year <= _range_to:
+                    total_rows = self.years_model.rowCount()
+
+                    self.years_model.insertRows(total_rows, 1)
+                    self.years_model.setData(
+                        self.years_model.index(total_rows, 0), str(year))
+
+                    year += 1
 
     def insertYear(self):
         total_rows = self.years_model.rowCount()
@@ -192,7 +229,7 @@ class DocFormDialog(QDialog):
             return False
         elif not self.ui.unit_lineEdit.hasAcceptableInput():
             return False
-        #elif self.years_model.rowCount() == 0:
+        # elif self.years_model.rowCount() == 0:
         #    return False
 
         return True
@@ -222,6 +259,8 @@ class DocFormDialog(QDialog):
                             self.ui.inventory_lineEdit.text())
             record.setValue("cfp_doc.unit", self.ui.unit_lineEdit.text())
             record.setValue("cfp_doc.sheets", self.ui.sheet_spinBox.value())
+            record.setValue("cfp_doc.title",
+                            self.ui.title_lineEdit.text())
             record.setValue("cfp_doc.comment",
                             self.ui.comment_textEdit.toPlainText())
 

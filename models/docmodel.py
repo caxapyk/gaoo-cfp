@@ -1,7 +1,6 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QModelIndex
 from PyQt5.QtSql import QSqlRelationalTableModel, QSqlRelation, QSqlQuery
-from utils import AbbrMaker
 
 
 class DocModel(QSqlRelationalTableModel):
@@ -20,45 +19,17 @@ class DocModel(QSqlRelationalTableModel):
 
     def data(self, item, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
-            if item.column() == 8:
+            if item.column() == 9:
                 return item.row() + 1
 
-            elif item.column() == 9:
+            elif item.column() == 10:
                 rec = self.record(item.row())
                 return rec.value("cfp_doctype.name")
 
-            if item.column() == 10:
-                y_list = self.docYears(item.row()).split(",")
+            if item.column() == 11:
+                return self.__years__(item.row())
 
-                curr = y_list[0]
-                y_str = curr
-                i = 0
-                count = 0
-                while i < len(y_list) - 1:
-                    curr_y = int(y_list[i])
-                    next_y = int(y_list[i + 1])
-                    if (next_y - curr_y) > 1:
-                        if count < 2:
-                            y_str +=","
-                        else:
-                            y_str +="-"
-                        if count == 1:
-                            y_str +="%s" % curr_y
-                        else:
-                            y_str +="%s,%s" % (curr_y, next_y)
-                        count = 0
-                    elif i == len(y_list) - 2:
-                        if count > 1:
-                            y_str +="-%s" % next_y
-                        else:
-                            y_str +=",%s" % next_y
-                    elif (next_y - curr_y) == 1:
-                        count += 1
-                    i += 1
-
-                return y_str
-
-            elif item.column() == 11:
+            elif item.column() == 12:
                 rec = self.record(item.row())
 
                 storage_unit = "Ф. %s Оп. %s Д. %s" % (
@@ -68,15 +39,15 @@ class DocModel(QSqlRelationalTableModel):
 
                 return storage_unit
 
-            if item.column() == 12:
+            if item.column() == 13:
                 rec = self.record(item.row())
                 return rec.value("cfp_doc.sheets")
 
-            elif item.column() == 13:
-                val = self.docFlags(item.row())
+            elif item.column() == 14:
+                val = self.__flags__(item.row())
                 return val
 
-            if item.column() == 14:
+            if item.column() == 15:
                 rec = self.record(item.row())
                 return rec.value("cfp_doc.comment")
 
@@ -84,15 +55,15 @@ class DocModel(QSqlRelationalTableModel):
 
     def select(self):
         if super().select():
-            self.insertColumns(8, 7, QModelIndex())
+            self.insertColumns(9, 7, QModelIndex())
 
-            self.setHeaderData(8, Qt.Horizontal, "#")
-            self.setHeaderData(9, Qt.Horizontal, "Вид документа")
-            self.setHeaderData(10, Qt.Horizontal, "Годы документов")
-            self.setHeaderData(11, Qt.Horizontal, "Шифр")
-            self.setHeaderData(12, Qt.Horizontal, "Кол.-во листов")
-            self.setHeaderData(13, Qt.Horizontal, "Примечание")
-            self.setHeaderData(14, Qt.Horizontal, "Комментарий")
+            self.setHeaderData(9, Qt.Horizontal, "#")
+            self.setHeaderData(10, Qt.Horizontal, "Вид документа")
+            self.setHeaderData(11, Qt.Horizontal, "Годы документов")
+            self.setHeaderData(12, Qt.Horizontal, "Шифр")
+            self.setHeaderData(13, Qt.Horizontal, "Кол.-во листов")
+            self.setHeaderData(14, Qt.Horizontal, "Примечание")
+            self.setHeaderData(15, Qt.Horizontal, "Комментарий")
 
             self.__cache_years__.clear()
             self.__cache_flags__.clear()
@@ -101,13 +72,52 @@ class DocModel(QSqlRelationalTableModel):
         else:
             return False
 
+    def __years__(self, row):
+        # set years list to the local varible __cache_years__
+        if self.__cache_years__.get(row) is None:
+            y_list = self.docYears(row).split(",")
+            i = 0
+            count = 0
+
+            y_str = ""
+
+            while i <= len(y_list) - 1:
+                j = i
+                delimeter = ","
+                while j < len(y_list) - 1:
+                    curr_y = int(y_list[j])
+                    next_y = int(y_list[j + 1])
+                    if (next_y - curr_y) == 1:
+                        count += 1
+                    else:
+                        break
+                    j += 1
+
+                if count > 1:
+                    delimeter = "-"
+
+                while count:
+                    if count > 1:
+                        del y_list[i + 1]
+                    count -= 1
+
+                y_str += "%s%s" % (y_list[i], delimeter)
+                i += 1
+
+            self.__cache_years__[row] = y_str[:-1]
+
+        return self.__cache_years__[row]
+
+    def __flags__(self, row):
+        # set flag list to the local varible _cache_flags__
+        if self.__cache_flags__.get(row) is None:
+            self.__cache_flags__[row] = self.docFlags(row)
+
+        return self.__cache_flags__[row]
+
     def docYears(self, row):
         if row is None:
             return None
-
-        # get years from local varible
-        if self.__cache_years__.get(row) is not None:
-            return self.__cache_years__[row]
 
         doc_id = self.getItemId(row)
 
@@ -126,18 +136,11 @@ class DocModel(QSqlRelationalTableModel):
         sql_query.last()
         y_rec = sql_query.record().value("years")
 
-        # set flags to local varible
-        self.__cache_years__[row] = y_rec
-
         return y_rec
 
     def docFlags(self, row):
         if row is None:
             return None
-
-        # get flags from local varible
-        if self.__cache_flags__.get(row) is not None:
-            return self.__cache_flags__[row]
 
         doc_id = self.getItemId(row)
 
@@ -157,9 +160,6 @@ class DocModel(QSqlRelationalTableModel):
 
         sql_query.last()
         y_rec = sql_query.record().value("flags")
-
-        # set flags to local varible
-        self.__cache_flags__[row] = y_rec
 
         return y_rec
 

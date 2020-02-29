@@ -75,21 +75,16 @@ class DocView(View):
         # disable default sorting
         self.tree_view.sortByColumn(-1, Qt.AscendingOrder)
 
-        self.tree_view.hideColumn(0)
-        self.tree_view.hideColumn(1)
-        self.tree_view.hideColumn(2)
-        self.tree_view.hideColumn(3)
-        self.tree_view.hideColumn(4)
-        self.tree_view.hideColumn(5)
-        self.tree_view.hideColumn(6)
-        self.tree_view.hideColumn(7)
-        self.tree_view.resizeColumnToContents(8)
-        self.tree_view.setColumnWidth(9, 250)
-        self.tree_view.setColumnWidth(10, 150)
-        self.tree_view.setColumnWidth(11, 200)
-        self.tree_view.setColumnWidth(12, 125)
-        self.tree_view.setColumnWidth(13, 150)
-        self.tree_view.resizeColumnToContents(14)
+        for i in range(0, 9):
+            self.tree_view.hideColumn(i)
+
+        self.tree_view.resizeColumnToContents(9)
+        self.tree_view.setColumnWidth(10, 250)
+        self.tree_view.setColumnWidth(11, 150)
+        self.tree_view.setColumnWidth(12, 200)
+        self.tree_view.setColumnWidth(13, 125)
+        self.tree_view.setColumnWidth(14, 150)
+        self.tree_view.resizeColumnToContents(15)
 
         self.parent.doc_create.setDisabled(False)
         self.parent.doc_refresh.setDisabled(False)

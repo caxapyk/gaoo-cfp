@@ -8,7 +8,7 @@ class DocFlagsModel(DocflagModel):
         super(DocFlagsModel, self).__init__()
 
         if flag_list is not None and len(flag_list) > 0:
-            flags = flag_list.split(",")
+            flags = flag_list.split("/")
         else:
             flags = []
 

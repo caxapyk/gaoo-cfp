@@ -60,22 +60,23 @@ class ListViewDialog(QDialog):
         if res == InputDialog.Accepted:
             total = self.model.rowCount()
             column = self.ui.listView.modelColumn()
-
-            if self.model.insertRow(total):
-                index = self.model.index(total, column)
-                if (not self.model.setData(index, val)) | (not self.model.submit()):
+            if len(val) > 0:
+                if self.model.insertRow(total):
+                    index = self.model.index(total, column)
+                    if (not self.model.setData(index, val)) | (not self.model.submit()):
+                        self.model.removeRow(total)
+                        box = QMessageBox()
+                        box.critical(self, title,
+                                     "Не удалось сохранить объект!\n", QMessageBox.Ok)
+                        return False
+                else:
                     box = QMessageBox()
                     box.critical(self, title,
                                  "Не удалось сохранить объект!\n", QMessageBox.Ok)
                     return False
-            else:
-                box = QMessageBox()
-                box.critical(self, title,
-                             "Не удалось сохранить объект!\n", QMessageBox.Ok)
-                return False
 
-            self.listView.setCurrentIndex(index)
-            self.setButtonState()
+                self.listView.setCurrentIndex(index)
+                self.setButtonState()
 
     def editAction(self):
         index = self.ui.listView.currentIndex()

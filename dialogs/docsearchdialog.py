@@ -1,10 +1,8 @@
 from PyQt5.Qt import (Qt, QRegExp)
-from PyQt5.QtWidgets import (QDialog, QWidget, QDialogButtonBox,
-                             QMessageBox, QLineEdit, QComboBox, QGroupBox, QCompleter)
+from PyQt5.QtWidgets import (
+    QDialog, QMessageBox, QLineEdit, QComboBox, QCompleter)
 from PyQt5.uic import loadUi
-from PyQt5.QtCore import (QModelIndex, QItemSelection,
-                          QItemSelectionModel, QSortFilterProxyModel)
-from PyQt5.QtGui import (QIcon,  QRegExpValidator)
+from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtSql import QSqlTableModel
 from models import (ComboProxyModel, CheckListProxyModel, GuberniaModel,
                     DoctypeModel, DocflagModel, DocSearchModel, DocModel, FundModel, ChurchModel, DocSearchProxyModel)

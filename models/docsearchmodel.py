@@ -1,7 +1,5 @@
 from PyQt5.Qt import Qt
-from PyQt5.QtCore import QModelIndex, QAbstractItemModel
-from PyQt5.QtSql import QSqlQueryModel, QSqlQuery, QSqlRecord, QSqlField
-from utils import AbbrMaker
+from PyQt5.QtSql import QSqlQueryModel, QSqlQuery
 
 
 class DocSearchModel(QSqlQueryModel):
@@ -9,6 +7,7 @@ class DocSearchModel(QSqlQueryModel):
         super(DocSearchModel, self).__init__()
 
         self.__filter_str__ = ""
+        self.__cache_years__ = {}
 
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
@@ -19,6 +18,9 @@ class DocSearchModel(QSqlQueryModel):
             if index.column() == 0:
                 return index.row() + 1
 
+            elif index.column() == 8:
+                return self.__years__(index.row())
+
             elif index.column() == 12:
                 rec = self.record(index.row())
 
@@ -28,6 +30,7 @@ class DocSearchModel(QSqlQueryModel):
                     rec.value("cfp_doc.unit"))
 
                 return storage_unit
+
 
         return super().data(index, role)
 
@@ -40,7 +43,7 @@ class DocSearchModel(QSqlQueryModel):
         cfp_church.id AS `cfp_church.id`, \
         cfp_church.name AS `cfp_church.name`, \
         cfp_doctype.name AS `cfp_doctype.name`, \
-        (SELECT GROUP_CONCAT(cfp_docyears.year ORDER BY cfp_docyears.year SEPARATOR '/') FROM cfp_docyears WHERE cfp_docyears.doc_id = cfp_doc.id) AS years, \
+        (SELECT GROUP_CONCAT(cfp_docyears.year ORDER BY cfp_docyears.year) FROM cfp_docyears WHERE cfp_docyears.doc_id = cfp_doc.id) AS years, \
         cfp_fund.name AS `cfp_fund.name`, \
         cfp_doc.inventory AS `cfp_doc.inventory`, \
         cfp_doc.unit AS `cfp_doc.unit`, \
@@ -155,3 +158,39 @@ class DocSearchModel(QSqlQueryModel):
 
     def appendFilter(self, filter_str):
         self.__filter_str__ += filter_str
+
+    def __years__(self, row):
+        # set years list to the local varible __cache_years__
+        if self.__cache_years__.get(row) is None:
+            y_list = self.record(row).value("years").split(",")
+            i = 0
+            count = 0
+
+            y_str = ""
+
+            while i <= len(y_list) - 1:
+                j = i
+                delimeter = ","
+                while j < len(y_list) - 1:
+                    curr_y = int(y_list[j])
+                    next_y = int(y_list[j + 1])
+                    if (next_y - curr_y) == 1:
+                        count += 1
+                    else:
+                        break
+                    j += 1
+
+                if count > 1:
+                    delimeter = "-"
+
+                while count:
+                    if count > 1:
+                        del y_list[i + 1]
+                    count -= 1
+
+                y_str += "%s%s" % (y_list[i], delimeter)
+                i += 1
+
+            self.__cache_years__[row] = y_str[:-1]
+
+        return self.__cache_years__[row]
