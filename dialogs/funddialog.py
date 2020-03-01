@@ -3,11 +3,10 @@ from models import FundModel
 
 
 class FundDialog(ListViewDialog):
-    def __init__(self, parent, model=None):
+    def __init__(self, parent):
         super(FundDialog, self).__init__(parent)
         self.setWindowTitle("Справочник [Фонды]")
 
-        if not model:
-            model = FundModel()
+        model = FundModel()
 
         self.setModel(model)

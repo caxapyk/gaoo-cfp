@@ -8,7 +8,6 @@ from .localitymodel import LocalityModel
 from .churchmodel import ChurchModel
 from .sqltreemodel import SqlTreeModel
 from .sqltreeitem import SqlTreeItem
-from .defaultitemproxymodel import DefaultItemProxyModel
 from .doctypemodel import DoctypeModel
 from .docflagmodel import DocflagModel
 from .docyearsmodel import DocYearsModel

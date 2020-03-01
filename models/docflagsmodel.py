@@ -81,8 +81,6 @@ class DocFlagsModel(DocflagModel):
             query = "INSERT INTO cfp_docflags \
                 (doc_id, docflag_id) VALUES %s" % ",".join(flags)
 
-            print(query)
-
             sql_query.prepare(query)
 
             if not sql_query.exec_():

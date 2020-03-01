@@ -32,7 +32,7 @@ class DocModel(QSqlRelationalTableModel):
             elif item.column() == 12:
                 rec = self.record(item.row())
 
-                storage_unit = "Ф. %s Оп. %s Д. %s" % (
+                storage_unit = "Ф.%s Оп.%s Д.%s " % (
                     rec.value("cfp_fund.name"),
                     rec.value("cfp_doc.inventory"),
                     rec.value("cfp_doc.unit"))

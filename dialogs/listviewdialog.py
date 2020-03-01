@@ -3,8 +3,6 @@ from PyQt5.QtWidgets import (
     QDialog, QDialogButtonBox, QMessageBox, QInputDialog)
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import (QModelIndex, QSortFilterProxyModel)
-#from models import DefaultItemProxyModel
-from .listviewdelegate import ListViewDelegate
 from .inputdialog import InputDialog
 
 
@@ -19,9 +17,6 @@ class ListViewDialog(QDialog):
         self.ui.listView.pressed.connect(self.setButtonState)
         self.ui.buttonBox.rejected.connect(self.reject)
         self.ui.buttonBox.accepted.connect(self.accept)
-
-        self.delegate = ListViewDelegate()
-        self.ui.listView.setItemDelegate(self.delegate)
 
         self.model = None
         self.regex = QRegExp("^[(А-яA-z-0-9.,)\\s]+$")
@@ -63,7 +58,8 @@ class ListViewDialog(QDialog):
                                      "Не удалось сохранить объект!\n", QMessageBox.Ok)
                         return False
 
-                    self.model.sourceModel().select()
+                    self.ui.listView.setCurrentIndex(index)
+                    self.model.sort(self.model.sortColumn(), self.model.sortOrder())
                 else:
                     box = QMessageBox()
                     box.critical(self, title,

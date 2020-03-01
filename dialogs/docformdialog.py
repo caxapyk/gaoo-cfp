@@ -1,10 +1,10 @@
-from PyQt5.Qt import QRegExp
+from PyQt5.Qt import Qt, QRegExp
 from PyQt5.QtSql import QSqlRelationalDelegate
 from PyQt5.QtWidgets import (
     QDialog, QDialogButtonBox, QDataWidgetMapper, QMessageBox)
 from PyQt5.QtGui import (QIcon, QRegExpValidator)
 from PyQt5.uic import loadUi
-from models import (DoctypeModel, FundModel, DocFlagsModel, DocYearsModel)
+from models import (DocFlagsModel, DocYearsModel)
 from .doctypedialog import DoctypeDialog
 from .funddialog import FundDialog
 from .inputdialog import InputDialog
@@ -50,8 +50,8 @@ class DocFormDialog(QDialog):
         self.ui.locality_textEdit.setText(self.doc_model.locality())
 
         # doctype model
-        #self.doctype_model = DoctypeModel()
-        self.doctype_model = self.doc_model.relationModel(2) # does not work
+        self.doctype_model = self.doc_model.relationModel(2)
+        self.doctype_model.setSort(1, Qt.AscendingOrder)
         self.doctype_model.select()
         self.doctype_model.dataChanged.connect(self.formChanged)
 
@@ -59,19 +59,30 @@ class DocFormDialog(QDialog):
         self.ui.doctype_comboBox.setModelColumn(1)
         self.ui.doctype_comboBox.setCurrentIndex(-1)
 
-        self.ui.pushButton_doctype_dlg.clicked.connect(self.doctypeDialog)
+        self.ui.pushButton_doctype_dlg.clicked.connect(
+            lambda: self.chooseItemDialog(
+                self.ui.doctype_comboBox,
+                DoctypeDialog(self),
+                self.doctype_model
+                ))
 
         # fund model
-        #self.fund_model = FundModel()
-        self.fund_model = self.doc_model.relationModel(3) # does not work
-        self.fund_model.select()
+        self.fund_model = self.doc_model.relationModel(3)
+        self.doctype_model = self.doc_model.relationModel(2)
+        self.doctype_model.setSort(1, Qt.AscendingOrder)
+        self.doctype_model.select()
         self.fund_model.dataChanged.connect(self.formChanged)
 
         self.ui.fund_comboBox.setModel(self.fund_model)
         self.ui.fund_comboBox.setModelColumn(1)
         self.ui.fund_comboBox.setCurrentIndex(-1)
 
-        self.ui.pushButton_fund_dlg.clicked.connect(self.fundDialog)
+        self.ui.pushButton_fund_dlg.clicked.connect(
+            lambda: self.chooseItemDialog(
+                self.ui.fund_comboBox,
+                FundDialog(self),
+                self.fund_model
+                ))
 
         # years
         years_list = self.doc_model.docYears(self.m_row)
@@ -114,29 +125,25 @@ class DocFormDialog(QDialog):
             self.doc_model.index(self.m_row, 12))
         return storage_unit
 
-    def doctypeDialog(self):
-        dialog = DoctypeDialog(self, self.doctype_model)
+    def chooseItemDialog(self, widget, dialog, model):
         result = dialog.exec_()
 
         if result == dialog.Accepted:
-            # update relation
-            #self.doc_model.relationModel(2).select()
-
+            # get uid of item
             dlg_index = dialog.ui.listView.currentIndex()
-            dlg_index_source = dialog.model.mapToSource(dlg_index)
-            self.ui.doctype_comboBox.setCurrentIndex(dlg_index_source.row())
+            uid = dialog.model.data(dialog.model.index(dlg_index.row(), 0))
 
-    def fundDialog(self):
-        dialog = FundDialog(self, self.fund_model)
-        result = dialog.exec_()
+            # update relation model
+            model.select()
 
-        if result == dialog.Accepted:
-            # update relation
-            #self.doc_model.relationModel(3).select()
-
-            dlg_index = dialog.ui.listView.currentIndex()
-            dlg_index_source = dialog.model.mapToSource(dlg_index)
-            self.ui.fund_comboBox.setCurrentIndex(dlg_index_source.row())
+            # find uid in relation model
+            i = 0
+            while i < model.rowCount():
+                index = model.index(i, 0)
+                if index.data() == uid:
+                    widget.setCurrentIndex(i)
+                    break
+                i += 1
 
     def map(self):
         if self.m_row is not None:

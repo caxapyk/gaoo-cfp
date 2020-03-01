@@ -17,6 +17,7 @@ class DocViewDialog(DocFormDialog):
                     QPushButton)):
             if isinstance(widget, QComboBox):
                 widget.setDisabled(True)
+                widget.setStyleSheet("color: black")
             elif isinstance(widget, QPushButton):
                 widget.hide()
             else:

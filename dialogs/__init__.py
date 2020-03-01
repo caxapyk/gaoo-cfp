@@ -2,7 +2,6 @@ from .docformdialog import DocFormDialog
 from .docviewdialog import DocViewDialog
 from .funddialog import FundDialog
 from .yearitemdelegate import YearItemDelegate
-from .listviewdelegate import ListViewDelegate
 from .listviewdialog import ListViewDialog
 from .doctypedialog import DoctypeDialog
 from .docflagdialog import DocflagDialog

@@ -111,7 +111,7 @@ class DocView(View):
 
         self.tree_view.expandAll()
 
-        self.model.setFilterKeyColumn(11)
+        self.model.setFilterKeyColumn(12)
         self.model.setFilterRegExp(
             QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
 

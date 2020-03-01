@@ -3,11 +3,10 @@ from models import DoctypeModel
 
 
 class DoctypeDialog(ListViewDialog):
-    def __init__(self, parent, model=None):
+    def __init__(self, parent):
         super(DoctypeDialog, self).__init__(parent)
         self.setWindowTitle("Справочник [Виды документов]")
 
-        if not model:
-            model = DoctypeModel()
+        model = DoctypeModel()
 
         self.setModel(model)
