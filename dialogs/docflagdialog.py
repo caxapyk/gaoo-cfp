@@ -9,6 +9,5 @@ class DocflagDialog(ListViewDialog):
             "Справочник [Метки документов (примечания)]")
 
         model = DocflagModel()
-        model.select()
 
-        self.setModel(model, 2)
+        self.setModel(model)

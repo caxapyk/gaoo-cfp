@@ -2,16 +2,13 @@ from PyQt5.Qt import Qt, QRegExp
 from PyQt5.QtWidgets import (
     QDialog, QDialogButtonBox, QMessageBox, QInputDialog)
 from PyQt5.uic import loadUi
-from PyQt5.QtCore import QModelIndex
-from models import DefaultItemProxyModel
+from PyQt5.QtCore import (QModelIndex, QSortFilterProxyModel)
+#from models import DefaultItemProxyModel
 from .listviewdelegate import ListViewDelegate
 from .inputdialog import InputDialog
 
 
 class ListViewDialog(QDialog):
-
-    NO_DEFAULT_COLUMN = -1
-
     def __init__(self, parent):
         super(ListViewDialog, self).__init__(parent)
         self.ui = loadUi("ui/listview_dialog.ui", self)
@@ -31,24 +28,20 @@ class ListViewDialog(QDialog):
 
         self.setButtonState()
 
-    def setModel(self, model, col=-1):
-        """
-        col (int) need if model have default items,
-        col means column in database
-        """
-        self.model = model
-        self.model.setEditStrategy(self.model.OnRowChange)
-        self.model.setSort(0, Qt.AscendingOrder)
+    def setModel(self, model, model_column=1):
+        #self.model = model
+        model.setEditStrategy(model.OnRowChange)
+        model.select()
 
-        if col != self.NO_DEFAULT_COLUMN:
-            # model with default items
-            proxy_model = DefaultItemProxyModel(col)
-            proxy_model.setSourceModel(self.model)
+        self.model = QSortFilterProxyModel()
+        self.model.setSourceModel(model)
+        self.model.setDynamicSortFilter(False)
+        self.model.sort(model_column, Qt.AscendingOrder)
 
         self.model.dataChanged.connect(self.dataChangedAction)
 
         self.ui.listView.setModel(self.model)
-        self.ui.listView.setModelColumn(1)
+        self.ui.listView.setModelColumn(model_column)
 
     def insertAction(self):
         namedialog = InputDialog(self)
@@ -69,13 +62,14 @@ class ListViewDialog(QDialog):
                         box.critical(self, title,
                                      "Не удалось сохранить объект!\n", QMessageBox.Ok)
                         return False
+
+                    self.model.sourceModel().select()
                 else:
                     box = QMessageBox()
                     box.critical(self, title,
                                  "Не удалось сохранить объект!\n", QMessageBox.Ok)
                     return False
 
-                self.listView.setCurrentIndex(index)
                 self.setButtonState()
 
     def editAction(self):
@@ -109,7 +103,7 @@ class ListViewDialog(QDialog):
                 del_result = self.model.removeRow(index.row())
 
                 if del_result:
-                    self.model.select()
+                    self.model.sourceModel().select()
                 else:
                     self.model.revert()
                     self.ui.listView.setCurrentIndex(QModelIndex())

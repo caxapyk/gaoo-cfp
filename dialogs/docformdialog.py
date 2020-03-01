@@ -50,8 +50,8 @@ class DocFormDialog(QDialog):
         self.ui.locality_textEdit.setText(self.doc_model.locality())
 
         # doctype model
-        self.doctype_model = DoctypeModel()
-        # self.doctype_model = self.doc_model.relationModel(2) # does not work
+        #self.doctype_model = DoctypeModel()
+        self.doctype_model = self.doc_model.relationModel(2) # does not work
         self.doctype_model.select()
         self.doctype_model.dataChanged.connect(self.formChanged)
 
@@ -62,8 +62,8 @@ class DocFormDialog(QDialog):
         self.ui.pushButton_doctype_dlg.clicked.connect(self.doctypeDialog)
 
         # fund model
-        self.fund_model = FundModel()
-        # self.fund_model = self.doc_model.relationModel(3) # does not work
+        #self.fund_model = FundModel()
+        self.fund_model = self.doc_model.relationModel(3) # does not work
         self.fund_model.select()
         self.fund_model.dataChanged.connect(self.formChanged)
 
@@ -120,10 +120,11 @@ class DocFormDialog(QDialog):
 
         if result == dialog.Accepted:
             # update relation
-            self.doc_model.relationModel(2).select()
+            #self.doc_model.relationModel(2).select()
 
             dlg_index = dialog.ui.listView.currentIndex()
-            self.ui.doctype_comboBox.setCurrentIndex(dlg_index.row())
+            dlg_index_source = dialog.model.mapToSource(dlg_index)
+            self.ui.doctype_comboBox.setCurrentIndex(dlg_index_source.row())
 
     def fundDialog(self):
         dialog = FundDialog(self, self.fund_model)
@@ -131,10 +132,11 @@ class DocFormDialog(QDialog):
 
         if result == dialog.Accepted:
             # update relation
-            self.doc_model.relationModel(3).select()
+            #self.doc_model.relationModel(3).select()
 
             dlg_index = dialog.ui.listView.currentIndex()
-            self.ui.fund_comboBox.setCurrentIndex(dlg_index.row())
+            dlg_index_source = dialog.model.mapToSource(dlg_index)
+            self.ui.fund_comboBox.setCurrentIndex(dlg_index_source.row())
 
     def map(self):
         if self.m_row is not None:

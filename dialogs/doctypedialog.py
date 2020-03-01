@@ -9,6 +9,5 @@ class DoctypeDialog(ListViewDialog):
 
         if not model:
             model = DoctypeModel()
-            model.select()
 
-        self.setModel(model, 2)
+        self.setModel(model)

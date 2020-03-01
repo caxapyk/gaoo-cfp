@@ -9,6 +9,5 @@ class FundDialog(ListViewDialog):
 
         if not model:
             model = FundModel()
-            model.select()
 
         self.setModel(model)

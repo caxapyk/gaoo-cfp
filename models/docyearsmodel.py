@@ -45,8 +45,12 @@ class DocYearsModel(QAbstractListModel):
             return None
 
         if len(value) == 4:
-            self.__data[index.row()] = value
-            self.__data.sort()
+            # remove row if current list contains value
+            if value in self.__data:
+                self.removeRows(index.row(), 1)
+            else:
+                self.__data[index.row()] = value
+                self.__data.sort()
 
             self.current_changed = True
             self.dataChanged.emit(index, index)
