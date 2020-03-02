@@ -33,8 +33,9 @@ class TreeBaseView(View):
 
         self.model = None
 
+        self.__default_item_name__ = "объект"
+
         self.context_menu = QMenu(self.tree_view)
-        self.default_actions = []
 
         self.setMainWidget(self.tree_view)
 
@@ -43,10 +44,12 @@ class TreeBaseView(View):
         self.tree_view.setModel(self.model)
 
     def refreshModel(self):
+        self.clearAllFilters()
+
         self.model.sourceModel().select()
         self.parent.statusBar().showMessage("Загрука данных...", 500)
 
-    #def contextMenu(self):
+    # def contextMenu(self):
     #    return self.context_menu
 
     def onEditorClosed(self):
@@ -75,14 +78,14 @@ class TreeBaseView(View):
             if not self.model.insertRows(0, 1, index):
                 QMessageBox().critical(
                     self.parent, "Создание объекта",
-                    "Не удалось создать объект!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
+                    "Не удалось создать объект!", QMessageBox.Ok)
                 return False
         else:
             self.clearAllFilters()
             if not self.model.insertRows(0, 1, QModelIndex()):
                 QMessageBox().critical(
                     self.parent, "Создание объекта",
-                    "Не удалось создать объект!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
+                    "Не удалось создать объект!", QMessageBox.Ok)
                 return False
 
         # map underlying model index
@@ -114,65 +117,47 @@ class TreeBaseView(View):
             if result == QMessageBox.Yes:
                 if not self.model.removeRows(index.row(), 1, index.parent()):
                     QMessageBox().critical(self.parent, "Удаление объекта",
-                                           "Не удалось удалить объект!\n\nПроверьте нет ли связей с другими объектами или возможно у Вас недостаточно привилегий.",
+                                           "Не удалось удалить объект!",
                                            QMessageBox.Ok)
     #
     # CONTEXT MENU
     #
 
-    def isEndPointReached(self, index):
-        return False
-
     def showContextMenu(self, point):
         index = self.tree_view.indexAt(point)
 
-        self.default_actions = []
+        default_actions = []
 
-        # check model is last in models list, disable create new item
-        # only if model is multimodel
-        default_name = "объект"
-
-        if index.isValid():
-            if not self.isEndPointReached(index):
-                source_index = self.model.mapToSource(index)
-                level = source_index.internalPointer().level()
-                model = self.model.sourceModel().models()[level + 1]
-                default_name = model.displayName()
-
-                self.default_actions.append((":/icons/folder-new-16.png", "Создать %s" % default_name,
-                            self.insertRow))
-        else:
-            model = self.model.sourceModel().models()[0]
-            default_name = model.displayName()
-            self.default_actions.append((":/icons/folder-new-16.png", "Создать %s" % default_name,
-                            self.insertRow))
+        default_actions.append((":/icons/folder-new-16.png", "Создать %s" % self.defaultItemName(),
+                                self.insertRow))
 
         if index.isValid():
             item_actions = [
-                (":/icons/rename-16.png", "Переименовать", self.editRow),
+                (":/icons/doc-edit-16.png", "Редактировать", self.editRow),
                 (":/icons/delete-16.png", "Удалить", self.removeRow),
                 "separator"
             ]
-            self.default_actions.extend(item_actions)
+            default_actions.extend(item_actions)
 
-        sort_actions = [
-            "separator",
-            (":/icons/sort-az-16.png", "Сортировка по возрастанию",
-                lambda: self.sort(0)),
-            (":/icons/sort-za-16.png", "Сортировка по убыванию",
-                lambda: self.sort(1)),
-            (None, "Очистить сортировку",
-                lambda: self.sort(3)),
-            "separator",
-            (None, "Сбросить все фильтры", self.clearAllFilters),
-            "separator"
-        ]
-        self.default_actions.extend(sort_actions)
+        if not self.model.dynamicSortFilter():
+            sort_actions = [
+                "separator",
+                (":/icons/sort-az-16.png", "Сортировка по возрастанию",
+                    lambda: self.sort(0)),
+                (":/icons/sort-za-16.png", "Сортировка по убыванию",
+                    lambda: self.sort(1)),
+                (None, "Очистить сортировку",
+                    lambda: self.sort(3)),
+                "separator",
+                (None, "Сбросить все фильтры", self.clearAllFilters),
+                "separator"
+            ]
+            default_actions.extend(sort_actions)
 
-        self.default_actions.append((":/icons/refresh-16.png",
-                        "Обновить", self.refreshModel))
+        default_actions.append((":/icons/refresh-16.png",
+                                "Обновить", self.refreshModel))
 
-        for action in self.default_actions:
+        for action in default_actions:
             if action == "separator":
                 self.context_menu.addSeparator()
             else:
@@ -214,7 +199,8 @@ class TreeBaseView(View):
         self.__isFiltered__ = False
         self.__isSorted__ = False
 
-        self.sort(self.model.sortOrder())
+        if self.isSorted() and not self.model.dynamicSortFilter():
+            self.sort(self.model.sortOrder())
 
     def sort(self, order):
         current_sort = self.model.sortOrder()
@@ -225,6 +211,8 @@ class TreeBaseView(View):
             self.clearSort()
             return False
 
+        print(self.isSorted())
+
         if order == 0:
             sort_order = Qt.AscendingOrder
         elif order == 1:
@@ -232,6 +220,8 @@ class TreeBaseView(View):
         else:
             self.clearSort()
             return False
+
+        print(sort_order)
 
         self.model.sort(0, sort_order)
 
@@ -250,4 +240,18 @@ class TreeBaseView(View):
 
     def clearAllFilters(self):
         self.clearFilter()
-        self.clearSort()
+        if not self.model.dynamicSortFilter():
+            self.clearSort()
+
+    #
+    # OTHER
+    #
+
+    def isEndPointReached(self, index):
+        return False
+
+    def defaultItemName(self):
+        return self.__default_item_name__
+
+    def setDefaultItemName(self, name):
+        self.__default_item_name__ = name

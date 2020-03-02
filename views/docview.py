@@ -1,17 +1,13 @@
-from PyQt5.Qt import Qt, QCursor, QRegExp
-from PyQt5.QtCore import (QModelIndex, QItemSelectionModel, QSortFilterProxyModel,
-                          QSize, QModelIndex)
-from PyQt5.QtWidgets import (QWidget, QAbstractItemView, QFrame, QSizePolicy,
-                             QHBoxLayout, QVBoxLayout, QLineEdit,
-                             QButtonGroup, QPushButton, QTreeView, QMenu,
-                             QAction, QMessageBox)
-from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
+from PyQt5.Qt import Qt
+from PyQt5.QtCore import (QModelIndex, QItemSelectionModel)
+from PyQt5.QtWidgets import (QWidget, QFrame, QSizePolicy,
+                             QHBoxLayout, QVBoxLayout,
+                             QMessageBox)
 from PyQt5.QtSql import QSqlRelationalTableModel
-from PyQt5.QtCore import QModelIndex
 from models import (DocModel, DocProxyModel)
 from dialogs import (DocFormDialog, DocViewDialog)
 from views import TreeBaseView
-import time
+from widgets import TreeSortFilter
 
 
 class DocView(TreeBaseView):
@@ -19,112 +15,103 @@ class DocView(TreeBaseView):
         super(DocView, self).__init__(parent)
 
         self.parent = parent
+        self.__model_loaded__ = False
 
-        # main layout
-        main = QFrame()
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(85)
-        main.setSizePolicy(sizePolicy)
-
-        v_layout = QVBoxLayout(main)
-        v_layout.setContentsMargins(2, 0, 0, 0)
-        v_layout.setSpacing(0)
-
-        #self.tree_view = QTreeView(main)
-        self.tree_view.setSortingEnabled(True)
-        #self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        #self.tree_view.customContextMenuRequested.connect(
-        #    self.showContextMenu)
-        self.tree_view.doubleClicked.connect(self.viewDocDialog)
-
-        v_layout.addWidget(self.tree_view)
-
-        # context menu
-        #self.c_menu = QMenu(self.tree_view)
-
-        self.doc_model = None
-        self.model = None
-
-        self.setMainWidget(main)
-
-    def loadData(self, church_id):
-        self.church_id = church_id
-
-        self.parent.statusBar().showMessage("Загрука данных...", 1000)
-
-        self.doc_model = DocModel()
-        self.doc_model.setEditStrategy(QSqlRelationalTableModel.OnRowChange)
-        self.doc_model.setFilter("cfp_doc.church_id=%s" % self.church_id)
-        self.doc_model.setChurch(church_id)
-        self.doc_model.select()
-
-        self.parent.statusBar().showMessage("Загружено документов: %s" %
-                                            self.doc_model.query().size())
+        # set models
+        doc_model = DocModel()
+        doc_model.setEditStrategy(QSqlRelationalTableModel.OnRowChange)
 
         self.model = DocProxyModel()
-        self.model.setSourceModel(self.doc_model)
-        self.model.setDynamicSortFilter(False)
+        self.model.setSourceModel(doc_model)
+
+        # enable dynamic filtering
+        self.model.setDynamicSortFilter(True)
+
+        self.model.setFilterKeyColumn(12)
 
         self.sel_model = QItemSelectionModel()
         self.sel_model.setModel(self.model)
         self.sel_model.currentChanged.connect(self.docSelected)
-        self.sel_model.currentChanged.emit(QModelIndex(), QModelIndex())
 
-        self.tree_view.setModel(self.model)
-        self.tree_view.setSelectionModel(self.sel_model)
-        # disable default sorting
-        self.tree_view.sortByColumn(-1, Qt.AscendingOrder)
+        # self.main_widget layout
+        self.main_widget = QFrame()
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(85)
+        self.main_widget.setSizePolicy(sizePolicy)
 
-        for i in range(0, 9):
-            self.tree_view.hideColumn(i)
+        v_layout = QVBoxLayout(self.main_widget)
+        v_layout.setContentsMargins(2, 0, 0, 0)
+        v_layout.setSpacing(0)
 
-        self.tree_view.resizeColumnToContents(9)
-        self.tree_view.setColumnWidth(10, 250)
-        self.tree_view.setColumnWidth(11, 150)
-        self.tree_view.setColumnWidth(12, 200)
-        self.tree_view.setColumnWidth(13, 125)
-        self.tree_view.setColumnWidth(14, 150)
-        self.tree_view.resizeColumnToContents(15)
+        self.tree_view.setSortingEnabled(True)
+        self.tree_view.doubleClicked.connect(self.openDocDialog)
 
-        self.parent.doc_create.setDisabled(False)
-        self.parent.doc_refresh.setDisabled(False)
-        self.parent.filter_panel.setDisabled(False)
+        v_layout.addWidget(self.tree_view)
 
-        self.setModel(self.model)
+        # Toolbar actions
+        self.parent.doc_create.triggered.connect(self.insertRow)
+        self.parent.doc_update.triggered.connect(self.editRow)
+        self.parent.doc_remove.triggered.connect(self.removeRow)
+        self.parent.doc_refresh.triggered.connect(self.refreshModel)
 
-    #def showContextMenu(self, point):
-    #    index = self.tree_view.indexAt(point)
+        self.filter_panel = QWidget()
+        self.filter_panel.setDisabled(True)
+        f_layout = QHBoxLayout(self.filter_panel)
+        f_layout.setContentsMargins(0, 0, 0, 0)
+        f_layout.setAlignment(Qt.AlignRight)
 
-    #    self.c_menu.clear()
+        self.doc_filter = TreeSortFilter(self)
+        self.doc_filter.setMode(TreeSortFilter.FilterMode)
+        self.doc_filter.setFilterPlaceHolder("Фильтр по единице хранения...")
+        self.doc_filter.setMaximumWidth(300)
 
-    #    if index.isValid():
-    #        self.c_menu.addAction(self.parent.doc_update)
-    #        self.c_menu.addAction(self.parent.doc_remove)
-    #    else:
-    #        self.c_menu.addAction(self.parent.doc_create)
-    #        self.c_menu.addSeparator()
-    #        self.c_menu.addAction(self.parent.doc_refresh)
+        f_layout.addWidget(self.doc_filter)
 
-    #    self.c_menu.exec_(
-    #        self.tree_view.viewport().mapToGlobal(point))
+        self.parent.toolbar.addWidget(self.filter_panel)
 
-    #def filter(self, text):
-    #    self.parent.clearfilter_btn.setDisabled((len(text) == 0))
+        self.setMainWidget(self.main_widget)
 
-    #    self.tree_view.expandAll()
+    def loadData(self, church_id):
+        self.church_id = church_id
 
-    #    self.model.setFilterKeyColumn(12)
-    #    self.model.setFilterRegExp(
-    #        QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
+        self.model.sourceModel().setFilter(
+            "cfp_doc.church_id=%s" % self.church_id)
+        self.model.sourceModel().setChurch(church_id)
 
-    #def clearFilter(self):
-    #    if len(self.parent.filter_lineedit.text()) > 0:
-    #        self.parent.filter_lineedit.setText("")
-    #        self.parent.clearfilter_btn.setDisabled(True)
+        res = self.model.sourceModel().select()
+        if res:
+            self.sel_model.currentChanged.emit(QModelIndex(), QModelIndex())
 
-    #        self.model.invalidateFilter()
+            # set model
+            self.tree_view.setModel(self.model)
+            self.tree_view.setSelectionModel(self.sel_model)
 
-    def removeDoc(self):
+            for i in range(0, 9):
+                self.tree_view.hideColumn(i)
+
+            self.tree_view.resizeColumnToContents(9)
+            self.tree_view.setColumnWidth(10, 250)
+            self.tree_view.setColumnWidth(11, 150)
+            self.tree_view.setColumnWidth(12, 200)
+            self.tree_view.setColumnWidth(13, 125)
+            self.tree_view.setColumnWidth(14, 150)
+            self.tree_view.resizeColumnToContents(15)
+
+            # disable default sorting
+            self.tree_view.sortByColumn(-1, Qt.AscendingOrder)
+
+            self.parent.doc_create.setDisabled(False)
+            self.parent.doc_refresh.setDisabled(False)
+
+            self.filter_panel.setDisabled(False)
+
+            self.setModel(self.model)
+
+            self.__model_loaded__ = True
+
+            self.parent.statusBar().showMessage("Готово", 2000)
+
+    def removeRow(self):
         index = self.tree_view.currentIndex()
         if index:
             result = QMessageBox().critical(
@@ -133,41 +120,44 @@ class DocView(TreeBaseView):
                 QMessageBox.No | QMessageBox.Yes)
 
             if result == QMessageBox.Yes:
-                self.doc_model.clearCache(index.row())
+                self.model.sourceModel().clearCache(index.row())
                 self.tree_view.setRowHidden(
                     index.row(), QModelIndex(), True)
                 if self.model.removeRow(index.row()):
                     self.tree_view.setCurrentIndex(QModelIndex())
                 else:
                     self.tree_view.setRowHidden(
-                    index.row(), QModelIndex(), False)
+                        index.row(), QModelIndex(), False)
                     QMessageBox().critical(
                         self.tree_view, "Удаление документа",
-                        "Не удалось удалить документ!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
+                        "Не удалось удалить документ!", QMessageBox.Ok)
 
-    def viewDocDialog(self):
+    def openDocDialog(self):
         proxy_index = self.tree_view.currentIndex()
         index = self.model.mapToSource(proxy_index)
 
-        docview_dialog = DocViewDialog(self.parent, self.doc_model, index.row())
-        res = docview_dialog.exec()
+        docview_dialog = DocViewDialog(
+            self.parent, self.model.sourceModel(), index.row())
+        docview_dialog.exec_()
 
-    def editDocDialog(self):
+    def editRow(self):
         proxy_index = self.tree_view.currentIndex()
         index = self.model.mapToSource(proxy_index)
 
-        docform_dialog = DocFormDialog(self.parent, self.doc_model, index.row())
-        res = docform_dialog.exec()
+        docform_dialog = DocFormDialog(
+            self.parent, self.model.sourceModel(), index.row())
+        docform_dialog.exec_()
 
-    def createDocDialog(self):
+    def insertRow(self):
         self.tree_view.setCurrentIndex(QModelIndex())
 
-        docform_dialog = DocFormDialog(self.parent, self.doc_model)
-        res = docform_dialog.exec()
+        docform_dialog = DocFormDialog(self.parent, self.model.sourceModel())
+        res = docform_dialog.exec_()
 
         if res == DocFormDialog.Accepted:
             self.model.sort(-1)
-            index = self.doc_model.index(self.doc_model.rowCount() - 1, 0)
+            index = self.model.sourceModel().index(
+                self.model.sourceModel().rowCount() - 1, 0)
             proxy_index = self.model.mapFromSource(index)
 
             self.tree_view.setCurrentIndex(proxy_index)
@@ -176,5 +166,11 @@ class DocView(TreeBaseView):
         self.parent.doc_update.setDisabled(not index.isValid())
         self.parent.doc_remove.setDisabled(not index.isValid())
 
-    def refreshDocs(self):
+    def refreshModel(self):
+        self.clearAllFilters()
         self.loadData(self.church_id)
+
+    def showContextMenu(self, point):
+        if self.__model_loaded__:
+            self.setDefaultItemName("документ")
+            super().showContextMenu(point)

@@ -10,3 +10,5 @@ class DoctypeDialog(ListViewDialog):
         model = DoctypeModel()
 
         self.setModel(model)
+
+        self.setInputTitle("Новый вид документа")

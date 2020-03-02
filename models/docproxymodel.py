@@ -8,7 +8,7 @@ class DocProxyModel(QSortFilterProxyModel):
 
     def data(self, item, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
-            if item.column() == 8:
+            if item.column() == 9:
                 return item.row() + 1
 
         return super().data(item, role)

@@ -1,13 +1,12 @@
 from PyQt5.Qt import Qt
-from PyQt5.QtCore import (QCoreApplication, QSettings, QModelIndex)
-from PyQt5.QtWidgets import (QMainWindow, QMessageBox, QWidget, QToolBar, QStatusBar, QAction,
-                             QSizePolicy, QMenuBar, QSplitter, QTreeView, QHBoxLayout, QPushButton, QLineEdit)
+from PyQt5.QtCore import QSettings
+from PyQt5.QtWidgets import (
+    QMainWindow, QMessageBox, QToolBar, QStatusBar, QAction, QMenuBar, QSplitter)
 from PyQt5.QtGui import (QIcon, QPixmap, QKeySequence)
-from PyQt5.uic import loadUi
 
-from dialogs import (DoctypeDialog, DocflagDialog, FundDialog, DbSettingsDialog, DocSearchDialog)
+from dialogs import (DoctypeDialog, DocflagDialog,
+                     FundDialog, DbSettingsDialog, DocSearchDialog)
 from views import (GeoView, DocView)
-from models import ChurchModel
 
 
 class MainWindow(QMainWindow):
@@ -20,10 +19,6 @@ class MainWindow(QMainWindow):
         self.settings = QSettings()
         self.restoreSession()
 
-        # load views
-        self.doc_view = DocView(self)
-        self.geo_view = GeoView(self)
-
         # global actions
         self.doc_search = QAction("Поиск документов")
         self.doc_search.setIcon(QIcon(":/icons/doc-search-16.png"))
@@ -34,50 +29,29 @@ class MainWindow(QMainWindow):
         self.doc_create.setIcon(QIcon(":/icons/doc-new-16.png"))
         self.doc_create.setShortcut(QKeySequence.New)
         self.doc_create.setDisabled(True)
-        self.doc_create.triggered.connect(self.doc_view.createDocDialog)
 
         self.doc_update = QAction("Редактировать")
         self.doc_update.setIcon(QIcon(":/icons/doc-edit-16.png"))
         self.doc_update.setDisabled(True)
-        self.doc_update.triggered.connect(self.doc_view.editDocDialog)
 
         self.doc_remove = QAction("Удалить")
         self.doc_remove.setIcon(QIcon(":/icons/delete-16.png"))
         self.doc_remove.setDisabled(True)
         self.doc_remove.setShortcut(QKeySequence.Delete)
-        self.doc_remove.triggered.connect(self.doc_view.removeDoc)
 
         self.doc_refresh = QAction("Обновить")
         self.doc_refresh.setIcon(QIcon(":/icons/refresh-16.png"))
         self.doc_refresh.setShortcut(QKeySequence.Refresh)
         self.doc_refresh.setDisabled(True)
-        self.doc_refresh.triggered.connect(self.doc_view.refreshDocs)
-
-        self.filter_panel = QWidget()
-        self.filter_panel.setDisabled(True)
-        f_layout = QHBoxLayout(self.filter_panel)
-        f_layout.setContentsMargins(0, 0, 0, 0)
-        f_layout.setAlignment(Qt.AlignRight)
-
-        self.filter_lineedit = QLineEdit(self.filter_panel)
-        self.filter_lineedit.setPlaceholderText("Фильтр по единице хранения...")
-        self.filter_lineedit.setMaximumWidth(300)
-        self.filter_lineedit.textChanged.connect(self.doc_view.filter)
-
-        self.clearfilter_btn = QPushButton(self.filter_panel)
-        self.clearfilter_btn.setIcon(QIcon(":/icons/clear-filter-16.png"))
-        self.clearfilter_btn.setToolTip("Сбросить фильтр")
-        self.clearfilter_btn.setMaximumWidth(30)
-        self.clearfilter_btn.setDisabled(True)
-        self.clearfilter_btn.clicked.connect(self.doc_view.clearFilter)
-
-        f_layout.addWidget(self.filter_lineedit)
-        f_layout.addWidget(self.clearfilter_btn)
 
         # setup
         self.setupMenu()
         self.toolbar = self.setupToolBar()
         self.statusbar = self.setupStatusBar()
+
+        # load views
+        self.doc_view = DocView(self)
+        self.geo_view = GeoView(self)
 
         # main widget
         splitter = QSplitter(self)
@@ -108,7 +82,7 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self.doc_refresh)
 
         cat_menu = menubar.addMenu("Cправочники")
-        
+
         fund_action = cat_menu.addAction("Фонды")
         fund_action.triggered.connect(self.openFundDialog)
 
@@ -149,8 +123,6 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.doc_search)
         toolbar.addAction(self.doc_refresh)
 
-        toolbar.addWidget(self.filter_panel)
-
         self.addToolBar(toolbar)
 
         return toolbar
@@ -190,7 +162,7 @@ class MainWindow(QMainWindow):
         about_box.setTextFormat(Qt.RichText)
         about_box.setText(text)
 
-        about_box.exec()
+        about_box.exec_()
 
     def aboutQt5(self):
         return QMessageBox.aboutQt(self)

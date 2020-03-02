@@ -1,7 +1,6 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QHBoxLayout, QPushButton, QLineEdit, QButtonGroup, QFrame)
-from views import TreeBaseView
 
 
 class TreeSortFilter(QFrame):
@@ -14,7 +13,11 @@ class TreeSortFilter(QFrame):
     def __init__(self, parent):
         super(TreeSortFilter, self).__init__()
 
-        self.view = None
+        self.view = parent
+
+        self.view.treeSorted.connect(self.externalSorted)
+        self.view.treeFilterCleared.connect(self.clearFilter_)
+        self.view.treeSortCleared.connect(self.clearSort_)
 
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0, 5, 0, 5)
@@ -59,13 +62,6 @@ class TreeSortFilter(QFrame):
             self.layout.addWidget(sort_btn)
 
         self.sort_group.buttonClicked[int].connect(self.sort)
-
-    def setView(self, view):
-        self.view = view
-
-        self.view.treeSorted.connect(self.externalSorted)
-        self.view.treeFilterCleared.connect(self.clearFilter_)
-        self.view.treeSortCleared.connect(self.clearSort_)
 
     def setFilterPlaceHolder(self, text):
         self.filter_lineedit.setPlaceholderText(text)

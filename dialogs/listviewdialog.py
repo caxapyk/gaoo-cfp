@@ -21,10 +21,13 @@ class ListViewDialog(QDialog):
         self.model = None
         self.regex = QRegExp("^[(А-яA-z-0-9.,)\\s]+$")
 
+        self.__input_title__ = "Cоздание объекта"
+        self.__input_label__ = "Название"
+        self.__input_regex__ = self.regex
+
         self.setButtonState()
 
     def setModel(self, model, model_column=1):
-        #self.model = model
         model.setEditStrategy(model.OnRowChange)
         model.select()
 
@@ -38,12 +41,20 @@ class ListViewDialog(QDialog):
         self.ui.listView.setModel(self.model)
         self.ui.listView.setModelColumn(model_column)
 
+    def setInputTitle(self, title):
+        self.__input_title__ = title
+
+    def setInputLabel(self, label):
+        self.__input_label__ = label
+
+    def setInputRegex(self, regex):
+        self.__input_regex__ = regex
+
     def insertAction(self):
         namedialog = InputDialog(self)
-        title = "Cоздание объекта"
 
         val, res = namedialog.getText(
-            title, "Заголовок", "", self.regex)
+            self.__input_title__, self.__input_label__, "", self.__input_regex__)
 
         if res == InputDialog.Accepted:
             total = self.model.rowCount()
@@ -54,15 +65,16 @@ class ListViewDialog(QDialog):
                     if (not self.model.setData(index, val)) | (not self.model.submit()):
                         self.model.removeRow(total)
                         box = QMessageBox()
-                        box.critical(self, title,
+                        box.critical(self, self.__input_title__,
                                      "Не удалось сохранить объект!\n", QMessageBox.Ok)
                         return False
 
                     self.ui.listView.setCurrentIndex(index)
-                    self.model.sort(self.model.sortColumn(), self.model.sortOrder())
+                    self.model.sort(self.model.sortColumn(),
+                                    self.model.sortOrder())
                 else:
                     box = QMessageBox()
-                    box.critical(self, title,
+                    box.critical(self, self.__input_title__,
                                  "Не удалось сохранить объект!\n", QMessageBox.Ok)
                     return False
 
@@ -72,15 +84,14 @@ class ListViewDialog(QDialog):
         index = self.ui.listView.currentIndex()
 
         namedialog = InputDialog(self)
-        title = "Редактирование объекта"
 
         val, res = namedialog.getText(
-            title, "Заголовок", index.data(), self.regex)
+            self.__input_title__, self.__input_label__, index.data(), self.__input_regex__)
 
         if res == InputDialog.Accepted:
             if (not self.model.setData(index, val)) | (not self.model.submit()):
                 box = QMessageBox()
-                box.critical(self, title,
+                box.critical(self, self.__input_title__,
                              "Не удалось сохранить объект!\n", QMessageBox.Ok)
                 return False
 

@@ -11,7 +11,7 @@ class InputDialog(QDialog):
         self.v_layout = QVBoxLayout(self)
 
         self.form_layout = QFormLayout()
-        self.form_layout.setContentsMargins(0, 0, 0, 0)
+        self.form_layout.setContentsMargins(0, 10, 0, 10)
         self.form_layout.setSpacing(5)
 
         self.button_box = QDialogButtonBox(self)

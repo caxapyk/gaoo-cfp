@@ -42,12 +42,10 @@ class GeoView(TreeBaseView):
 
         # set model to tree_view
         self.tree_view.setModel(self.model)
-
         self.tree_view.doubleClicked.connect(self.loadDocs)
 
         # tree filter
         self.tree_filter = TreeSortFilter(self)
-        self.tree_filter.setView(self)
         self.tree_filter.setMode(TreeSortFilter.SortFilterMode)
 
         v_layout.addWidget(self.tree_filter)
@@ -81,6 +79,20 @@ class GeoView(TreeBaseView):
 
     def showContextMenu(self, point):
         index = self.tree_view.indexAt(point)
+
+        default_name = ""
+        if index.isValid():
+            if not self.isEndPointReached(index):
+                source_index = self.model.mapToSource(index)
+                level = source_index.internalPointer().level()
+                model = self.model.sourceModel().models()[level + 1]
+                default_name = model.displayName()
+        else:
+            model = self.model.sourceModel().models()[0]
+            default_name = model.displayName()
+
+        self.setDefaultItemName(default_name)
+
         if self.isEndPointReached(index):
             action_doc_open = self.context_menu.addAction(
                 "Документы")

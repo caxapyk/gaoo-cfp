@@ -31,7 +31,6 @@ class DocSearchModel(QSqlQueryModel):
 
                 return storage_unit
 
-
         return super().data(index, role)
 
     def refresh(self):

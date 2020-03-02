@@ -63,8 +63,7 @@ class DocFormDialog(QDialog):
             lambda: self.chooseItemDialog(
                 self.ui.doctype_comboBox,
                 DoctypeDialog(self),
-                self.doctype_model
-                ))
+                self.doctype_model))
 
         # fund model
         self.fund_model = self.doc_model.relationModel(3)
@@ -81,8 +80,7 @@ class DocFormDialog(QDialog):
             lambda: self.chooseItemDialog(
                 self.ui.fund_comboBox,
                 FundDialog(self),
-                self.fund_model
-                ))
+                self.fund_model))
 
         # years
         years_list = self.doc_model.docYears(self.m_row)
@@ -282,7 +280,7 @@ class DocFormDialog(QDialog):
                 print(self.doc_model.lastError().text())
                 QMessageBox().critical(
                     self, "Редактирование/Создание документа",
-                    "Не удалось сохранить документ!\nВозможно у Вас недостаточно привилегий", QMessageBox.Ok)
+                    "Не удалось сохранить документ!", QMessageBox.Ok)
                 return False
         else:
             self.mapper.submit()
@@ -309,7 +307,7 @@ class DocFormDialog(QDialog):
             self.doc_model.revertAll()
             QMessageBox().critical(
                 self, "Редактирование/Создание документа",
-                "Не удалось сохранить документ!\nВозможно у Вас недостаточно привилегий.", QMessageBox.Ok)
+                "Не удалось сохранить документ!", QMessageBox.Ok)
 
         return False
 

@@ -10,3 +10,6 @@ class FundDialog(ListViewDialog):
         model = FundModel()
 
         self.setModel(model)
+
+        self.setInputTitle("Новый фонд")
+        self.setInputLabel("Фонд №")

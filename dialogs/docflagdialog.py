@@ -11,3 +11,5 @@ class DocflagDialog(ListViewDialog):
         model = DocflagModel()
 
         self.setModel(model)
+
+        self.setInputTitle("Новая метка")
