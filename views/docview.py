@@ -10,11 +10,11 @@ from PyQt5.QtSql import QSqlRelationalTableModel
 from PyQt5.QtCore import QModelIndex
 from models import (DocModel, DocProxyModel)
 from dialogs import (DocFormDialog, DocViewDialog)
-from views import View
+from views import TreeBaseView
 import time
 
 
-class DocView(View):
+class DocView(TreeBaseView):
     def __init__(self, parent):
         super(DocView, self).__init__(parent)
 
@@ -30,17 +30,17 @@ class DocView(View):
         v_layout.setContentsMargins(2, 0, 0, 0)
         v_layout.setSpacing(0)
 
-        self.tree_view = QTreeView(main)
+        #self.tree_view = QTreeView(main)
         self.tree_view.setSortingEnabled(True)
-        self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.tree_view.customContextMenuRequested.connect(
-            self.showContextMenu)
+        #self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        #self.tree_view.customContextMenuRequested.connect(
+        #    self.showContextMenu)
         self.tree_view.doubleClicked.connect(self.viewDocDialog)
 
         v_layout.addWidget(self.tree_view)
 
         # context menu
-        self.c_menu = QMenu(self.tree_view)
+        #self.c_menu = QMenu(self.tree_view)
 
         self.doc_model = None
         self.model = None
@@ -90,37 +90,39 @@ class DocView(View):
         self.parent.doc_refresh.setDisabled(False)
         self.parent.filter_panel.setDisabled(False)
 
-    def showContextMenu(self, point):
-        index = self.tree_view.indexAt(point)
+        self.setModel(self.model)
 
-        self.c_menu.clear()
+    #def showContextMenu(self, point):
+    #    index = self.tree_view.indexAt(point)
 
-        if index.isValid():
-            self.c_menu.addAction(self.parent.doc_update)
-            self.c_menu.addAction(self.parent.doc_remove)
-        else:
-            self.c_menu.addAction(self.parent.doc_create)
-            self.c_menu.addSeparator()
-            self.c_menu.addAction(self.parent.doc_refresh)
+    #    self.c_menu.clear()
 
-        self.c_menu.exec_(
-            self.tree_view.viewport().mapToGlobal(point))
+    #    if index.isValid():
+    #        self.c_menu.addAction(self.parent.doc_update)
+    #        self.c_menu.addAction(self.parent.doc_remove)
+    #    else:
+    #        self.c_menu.addAction(self.parent.doc_create)
+    #        self.c_menu.addSeparator()
+    #        self.c_menu.addAction(self.parent.doc_refresh)
 
-    def filter(self, text):
-        self.parent.clearfilter_btn.setDisabled((len(text) == 0))
+    #    self.c_menu.exec_(
+    #        self.tree_view.viewport().mapToGlobal(point))
 
-        self.tree_view.expandAll()
+    #def filter(self, text):
+    #    self.parent.clearfilter_btn.setDisabled((len(text) == 0))
 
-        self.model.setFilterKeyColumn(12)
-        self.model.setFilterRegExp(
-            QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
+    #    self.tree_view.expandAll()
 
-    def clearFilter(self):
-        if len(self.parent.filter_lineedit.text()) > 0:
-            self.parent.filter_lineedit.setText("")
-            self.parent.clearfilter_btn.setDisabled(True)
+    #    self.model.setFilterKeyColumn(12)
+    #    self.model.setFilterRegExp(
+    #        QRegExp(text, Qt.CaseInsensitive, QRegExp.FixedString))
 
-            self.model.invalidateFilter()
+    #def clearFilter(self):
+    #    if len(self.parent.filter_lineedit.text()) > 0:
+    #        self.parent.filter_lineedit.setText("")
+    #        self.parent.clearfilter_btn.setDisabled(True)
+
+    #        self.model.invalidateFilter()
 
     def removeDoc(self):
         index = self.tree_view.currentIndex()

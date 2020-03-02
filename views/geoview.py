@@ -2,9 +2,8 @@ from PyQt5.QtCore import (QSortFilterProxyModel, QSize)
 from PyQt5.QtWidgets import (QSizePolicy, QFrame, QVBoxLayout)
 from models import (GuberniaModel, UezdModel,
                     LocalityModel, ChurchModel, SqlTreeModel)
-from views import View
+from views import TreeBaseView
 from widgets import TreeSortFilter
-from .treebaseview import TreeBaseView
 
 
 class GeoView(TreeBaseView):
