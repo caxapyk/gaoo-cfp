@@ -3,11 +3,13 @@ https://doc.qt.io/qt-5/sql-driver.html#qmysql
 
 After compilation done, copy driver to <path_to_pip3_packages_directory>/lib/python3.7/site-packages/PyQt5/Qt/plugins/sqldrivers/
 or on Windows C:\Users\user\AppData\Local\Programs\Python\Python37\Lib\site-packages\PyQt5\Qt\plugins\sqldrivers
-Drivers pre-builds for different os look at qt5/plugins/sqldrivers/<os>/libsqlmysql.so
 
 On Windows when you distribute your application, remember to include libmysql.dll in your installation package. It must be placed in the same folder as the application executable. libmysql.dll additionally needs the MSVC runtime libraries which can be installed with vcredist.exelibmysql.dll (https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)
 
+Use PyQt5==5.11.3 if "Driver is not loaded" but available on Windows after driver compilation.
 
+Pre-builds for different os types is suited on libs/arch/sqldrivers/
+libmysql.dll is placed in libs/arch/ folder
 
 if "Driver is not loaded" error ocured try:
 ldd <path_to_pip3_packages_directory>/lib/python3.7/site-packages/PyQt5/Qt/plugins/sqldrivers/libsqlmysql.so
