@@ -1,4 +1,5 @@
 from PyQt5.Qt import (Qt, QRegExp)
+from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import (
     QDialog, QMessageBox, QLineEdit, QComboBox, QCompleter)
 from PyQt5.uic import loadUi
@@ -10,10 +11,12 @@ from dialogs import DocViewDialog
 
 
 class DocSearchDialog(QDialog):
-
     def __init__(self):
         super(DocSearchDialog, self).__init__()
         self.ui = loadUi("ui/search_dialog.ui", self)
+
+        self.settings = QSettings()
+        self.restoreSession()
 
         self.ui.pushButton_search.clicked.connect(self.search)
         self.ui.pushButton_clear.clicked.connect(self.clearForm)
@@ -174,3 +177,16 @@ class DocSearchDialog(QDialog):
 
         docview_dialog = DocViewDialog(self, doc_model, 0)
         docview_dialog.exec_()
+
+    def restoreSession(self):
+        print("here")
+        if self.settings.contains("searchDialogGeometry"):
+            self.restoreGeometry(self.settings.value('searchDialogGeometry', None))
+        else:
+            self.resize(900, 600)
+
+    def closeEvent(self, event):
+        search_dialog_geometry = self.saveGeometry()
+        self.settings.setValue('searchDialogGeometry', search_dialog_geometry)
+
+        super(DocSearchDialog, self).closeEvent(event)
