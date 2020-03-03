@@ -1,5 +1,6 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtSql import QSqlQueryModel, QSqlQuery
+from utils import AbbrMaker
 
 
 class DocSearchModel(QSqlQueryModel):
@@ -8,6 +9,7 @@ class DocSearchModel(QSqlQueryModel):
 
         self.__filter_str__ = ""
         self.__cache_years__ = {}
+        self.__cache_flags__ = {}
 
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
@@ -30,6 +32,9 @@ class DocSearchModel(QSqlQueryModel):
                     rec.value("cfp_doc.unit"))
 
                 return storage_unit
+
+            elif index.column() == 14:
+                return self.__flags__(index.row())
 
         return super().data(index, role)
 
@@ -193,3 +198,14 @@ class DocSearchModel(QSqlQueryModel):
             self.__cache_years__[row] = y_str[:-1]
 
         return self.__cache_years__[row]
+
+    def __flags__(self, row):
+        if self.__cache_flags__.get(row) is None:
+            rec = self.record(row)
+            val = rec.value("flags")
+            if isinstance(val, str):
+                self.__cache_flags__[row] = AbbrMaker().make(val)
+            else:
+                self.__cache_flags__[row] = ""
+
+        return self.__cache_flags__[row]

@@ -1,6 +1,7 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QModelIndex
 from PyQt5.QtSql import QSqlRelationalTableModel, QSqlRelation, QSqlQuery
+from utils import AbbrMaker
 
 
 class DocModel(QSqlRelationalTableModel):
@@ -113,7 +114,11 @@ class DocModel(QSqlRelationalTableModel):
     def __flags__(self, row):
         # set flag list to the local varible _cache_flags__
         if self.__cache_flags__.get(row) is None:
-            self.__cache_flags__[row] = self.docFlags(row)
+            val = self.docFlags(row)
+            if isinstance(val, str):
+                self.__cache_flags__[row] = AbbrMaker().make(val)
+            else:
+                self.__cache_flags__[row] = ""
 
         return self.__cache_flags__[row]
 
