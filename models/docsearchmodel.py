@@ -60,7 +60,7 @@ class DocSearchModel(QSqlQueryModel):
         if len(self.filter()) > 0:
             query += " WHERE " + self.filter()
 
-        query += " ORDER BY cfp_doc.id LIMIT 500"
+        query += " ORDER BY cast(cfp_fund.name as unsigned),cast(cfp_doc.inventory as unsigned),cast(cfp_doc.unit as unsigned)  LIMIT 500"
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)

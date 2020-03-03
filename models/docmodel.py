@@ -13,6 +13,8 @@ class DocModel(QSqlRelationalTableModel):
         self.setRelation(3, QSqlRelation(
             "cfp_fund", "id", "name AS `cfp_fund.name`"))
 
+        self.setSort(0, Qt.AscendingOrder)
+
         self.__church_id__ = None
         self.__cache_years__ = {}
         self.__cache_flags__ = {}
