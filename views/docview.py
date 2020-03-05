@@ -16,22 +16,7 @@ class DocView(TreeBaseView):
 
         self.parent = parent
         self.__model_loaded__ = False
-
-        # set models
-        doc_model = DocModel()
-        doc_model.setEditStrategy(QSqlRelationalTableModel.OnRowChange)
-
-        self.model = DocProxyModel()
-        self.model.setSourceModel(doc_model)
-
-        # enable dynamic filtering
-        self.model.setDynamicSortFilter(True)
-
-        self.model.setFilterKeyColumn(12)
-
-        self.sel_model = QItemSelectionModel()
-        self.sel_model.setModel(self.model)
-        self.sel_model.currentChanged.connect(self.docSelected)
+        self.model = None
 
         # self.main_widget layout
         self.main_widget = QFrame()
@@ -74,12 +59,27 @@ class DocView(TreeBaseView):
     def loadData(self, church_id):
         self.church_id = church_id
 
-        self.model.sourceModel().setFilter(
+        # set models
+        doc_model = DocModel()
+        doc_model.setEditStrategy(QSqlRelationalTableModel.OnRowChange)
+        doc_model.setFilter(
             "cfp_doc.church_id=%s" % self.church_id)
-        self.model.sourceModel().setChurch(church_id)
+        doc_model.setChurch(church_id)
 
-        res = self.model.sourceModel().select()
+        res = doc_model.select()
         if res:
+            self.model = DocProxyModel()
+            self.model.setSourceModel(doc_model)
+
+            # enable dynamic filtering
+            self.model.setDynamicSortFilter(True)
+
+            self.model.setFilterKeyColumn(12)
+
+            self.sel_model = QItemSelectionModel()
+            self.sel_model.setModel(self.model)
+            self.sel_model.currentChanged.connect(self.docSelected)
+
             self.sel_model.currentChanged.emit(QModelIndex(), QModelIndex())
 
             # set model
