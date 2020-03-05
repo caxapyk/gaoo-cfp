@@ -139,10 +139,12 @@ class DocSearchDialog(QDialog):
 
     def setStatus(self):
         rows = self.doc_search_model.rowCount()
-        status_text = "Найдено результатов: %s" % rows
-        if rows > 499:
-            status_text += ". \
-Количество результатов ограничено до 500, уточните параметры поиска!"
+
+        count = self.doc_search_model.count()
+        status_text = "Найдено результатов: %s " % str(count)
+
+        if count > 100:
+            status_text += "(Часть результатов не показана, уточните параметры поиска!)"
         self.ui.label_status.setText(status_text)
 
     def clearForm(self):
@@ -161,7 +163,6 @@ class DocSearchDialog(QDialog):
             self.ui.listView_docflag.model().reset()
 
     def viewDocDialog(self):
-        print("here")
         proxy_index = self.ui.treeView_docs.currentIndex()
         index = self.proxy_model.mapToSource(proxy_index)
 
@@ -179,7 +180,6 @@ class DocSearchDialog(QDialog):
         docview_dialog.exec_()
 
     def restoreSession(self):
-        print("here")
         if self.settings.contains("searchDialogGeometry"):
             self.restoreGeometry(self.settings.value('searchDialogGeometry', None))
         else:

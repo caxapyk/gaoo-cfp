@@ -65,7 +65,7 @@ class DocSearchModel(QSqlQueryModel):
         if len(self.filter()) > 0:
             query += " WHERE " + self.filter()
 
-        query += " ORDER BY cast(cfp_fund.name as unsigned),cast(cfp_doc.inventory as unsigned),cast(cfp_doc.unit as unsigned)  LIMIT 500"
+        query += " ORDER BY cast(cfp_fund.name as unsigned),cast(cfp_doc.inventory as unsigned),cast(cfp_doc.unit as unsigned)  LIMIT 100"
 
         sql_query = QSqlQuery()
         sql_query.prepare(query)
@@ -97,6 +97,34 @@ class DocSearchModel(QSqlQueryModel):
         self.setHeaderData(13, Qt.Horizontal, "Кол.-во листов")
         self.setHeaderData(14, Qt.Horizontal, "Примечание")
         self.setHeaderData(15, Qt.Horizontal, "Комментарий")
+
+    def count(self):
+        query = "SELECT \
+        COUNT(cfp_doc.id) \
+        FROM cfp_doc \
+        LEFT JOIN cfp_church ON cfp_doc.church_id = cfp_church.id \
+        LEFT JOIN cfp_locality ON cfp_church.locality_id = cfp_locality.id \
+        LEFT JOIN cfp_uezd ON cfp_locality.uezd_id = cfp_uezd.id \
+        LEFT JOIN cfp_gubernia ON cfp_uezd.gub_id = cfp_gubernia.id \
+        LEFT JOIN cfp_doctype ON cfp_doc.doctype_id=cfp_doctype.id \
+        LEFT JOIN cfp_fund ON cfp_doc.fund_id=cfp_fund.id"
+
+        if len(self.filter()) > 0:
+            query += " WHERE " + self.filter()
+
+        sql_query = QSqlQuery()
+        sql_query.prepare(query)
+
+        if not sql_query.exec_():
+            print(sql_query.lastError().text())
+            return None
+
+        rec = sql_query.first()
+        if rec:
+            val = sql_query.record().value(0)
+            return int(val)
+
+        return 0
 
     def andFilterWhere(self, op, field, value, value2=""):
         a_filter = ""
