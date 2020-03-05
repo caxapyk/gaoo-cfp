@@ -51,8 +51,7 @@ class DocFormDialog(QDialog):
 
         # doctype model
         self.doctype_model = self.doc_model.relationModel(2)
-        self.doctype_model.setSort(1, Qt.AscendingOrder)
-        self.doctype_model.select()
+        self.doctype_model.sort(1, Qt.AscendingOrder)
         self.doctype_model.dataChanged.connect(self.formChanged)
 
         self.ui.doctype_comboBox.setModel(self.doctype_model)
@@ -67,8 +66,7 @@ class DocFormDialog(QDialog):
 
         # fund model
         self.fund_model = self.doc_model.relationModel(3)
-        self.fund_model.setSort(1, Qt.AscendingOrder)
-        self.fund_model.select()
+        self.fund_model.sort(1, Qt.AscendingOrder)
         self.fund_model.dataChanged.connect(self.formChanged)
 
         self.ui.fund_comboBox.setModel(self.fund_model)
@@ -250,10 +248,6 @@ class DocFormDialog(QDialog):
 
         # check document is a new
         if self.m_row is None:
-            # !important
-            # insert error: Unknown prepared statement handler given to mysqld_stmt_reset
-            # self.doc_model.submitAll()
-
             doctype_index = self.doctype_model.index(
                 self.ui.doctype_comboBox.currentIndex(), 0)
             fund_index = self.fund_model.index(

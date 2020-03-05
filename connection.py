@@ -7,8 +7,13 @@ from PyQt5.QtCore import QSettings
 class Connection():
     def __init__(self):
         db = QSqlDatabase().addDatabase("QMYSQL")
+        # !important
+        # Use options MYSQL_OPT_RECONNECT=1;CLIENT_INTERACTIVE=1
+        # to keep connection open until close programm
+        # Without option CLIENT_INTERACTIVE=1 error occured on QSqlTableModel
+        # insert: Unknown prepared statement handler given to mysqld_stmt_reset
         db.setConnectOptions(
-            "MYSQL_OPT_CONNECT_TIMEOUT=10;MYSQL_OPT_RECONNECT=1")
+            "MYSQL_OPT_CONNECT_TIMEOUT=10;MYSQL_OPT_RECONNECT=1;CLIENT_INTERACTIVE=1")
 
         settings = QSettings()
 
@@ -16,8 +21,6 @@ class Connection():
         db.setHostName(settings.value("server"))
         db.setDatabaseName(settings.value("db"))
         db.setUserName(settings.value("user"))
-        # db_nsa:qS4yMREesPtayIaO
-        # db_oiipd:qs}@yo(j62F5
         db.setPassword(settings.value("password"))
         settings.endGroup()
 

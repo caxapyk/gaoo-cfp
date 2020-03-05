@@ -96,6 +96,9 @@ class ListViewDialog(QDialog):
                 return False
 
             self.listView.setCurrentIndex(index)
+            self.model.sort(self.model.sortColumn(),
+                            self.model.sortOrder())
+
             self.setButtonState()
 
     def removeAction(self):
