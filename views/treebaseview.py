@@ -128,8 +128,9 @@ class TreeBaseView(View):
 
         default_actions = []
 
-        default_actions.append((":/icons/folder-new-16.png", "Создать %s" % self.defaultItemName(),
-                                self.insertRow))
+        if not self.isEndPointReached(index):
+            default_actions.append((":/icons/folder-new-16.png", "Создать %s" % self.defaultItemName(),
+                                    self.insertRow))
 
         if index.isValid():
             item_actions = [
