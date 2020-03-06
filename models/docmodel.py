@@ -1,7 +1,7 @@
 from PyQt5.Qt import Qt
 from PyQt5.QtCore import QModelIndex
 from PyQt5.QtSql import QSqlRelationalTableModel, QSqlRelation, QSqlQuery
-from utils import AbbrMaker
+from utils import AbbrMaker, YearRangeList
 
 
 class DocModel(QSqlRelationalTableModel):
@@ -79,35 +79,8 @@ class DocModel(QSqlRelationalTableModel):
         # set years list to the local varible __cache_years__
         if self.__cache_years__.get(row) is None:
             y_list = self.docYears(row).split(",")
-            i = 0
-            count = 0
 
-            y_str = ""
-
-            while i <= len(y_list) - 1:
-                j = i
-                delimeter = ","
-                while j < len(y_list) - 1:
-                    curr_y = int(y_list[j])
-                    next_y = int(y_list[j + 1])
-                    if (next_y - curr_y) == 1:
-                        count += 1
-                    else:
-                        break
-                    j += 1
-
-                if count > 1:
-                    delimeter = "-"
-
-                while count:
-                    if count > 1:
-                        del y_list[i + 1]
-                    count -= 1
-
-                y_str += "%s%s" % (y_list[i], delimeter)
-                i += 1
-
-            self.__cache_years__[row] = y_str[:-1]
+            self.__cache_years__[row] = YearRangeList().make(y_list)
 
         return self.__cache_years__[row]
 
